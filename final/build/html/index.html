@@ -1,0 +1,894 @@
+
+<!DOCTYPE html>
+
+<html lang="python">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to studienprojekt&#39;s documentation! &#8212; studienprojekt v1.0 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-main.schaffer">
+<span id="welcome-to-studienprojekt-s-documentation"></span><h1>Welcome to studienprojekt's documentation!<a class="headerlink" href="#module-main.schaffer" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-main.wahrsager"></span><dl class="py function">
+<dt id="main.wahrsager.main">
+<code class="sig-prename descclassname">main.wahrsager.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.wahrsager.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>#### Wahrsager: ####
+TYPE             = 'MEAN',
+NAME             = 'wahrsager_v5',
+num_past_periods = 12,
+num_outputs      = 1,
+PLOT_MODE        = False,
+großer_datensatz = True,
+val_data_size    = 2000,
+num_epochs       = 10,</p>
+</dd></dl>
+
+<span class="target" id="module-main.common_env"></span><dl class="py class">
+<dt id="main.common_env.common_env">
+<em class="property">class </em><code class="sig-prename descclassname">main.common_env.</code><code class="sig-name descname">common_env</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span></em>, <em class="sig-param"><span class="n">power_dem_arr</span></em>, <em class="sig-param"><span class="n">input_list</span></em>, <em class="sig-param"><span class="n">DATENSATZ_PATH</span></em>, <em class="sig-param"><span class="n">NAME</span></em>, <em class="sig-param"><span class="n">max_SMS_SoC</span></em>, <em class="sig-param"><span class="n">max_LION_SoC</span></em>, <em class="sig-param"><span class="n">PERIODEN_DAUER</span></em>, <em class="sig-param"><span class="n">ACTION_TYPE</span></em>, <em class="sig-param"><span class="n">num_discrete_obs</span></em>, <em class="sig-param"><span class="n">num_discrete_actions</span></em>, <em class="sig-param"><span class="n">reward_maker</span></em>, <em class="sig-param"><span class="n">AGENT_TYPE</span><span class="o">=</span><span class="default_value">'normal'</span></em>, <em class="sig-param"><span class="n">max_ziel</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">min_ziel</span><span class="o">=</span><span class="default_value">25</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>GYM environment to simulate the HIPE-dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<em>dataframe</em>) -- Pandas dataframe of the normalized HIPE-Dataset</p></li>
+<li><p><strong>power_dem_arr</strong> (<em>array</em>) -- Array of the local power demand, not normalized</p></li>
+<li><p><strong>input_list</strong> (<em>list</em>) -- List of strings, represents the columns of the dataframe that will be used as inputs. Possible column-names are: 'norm_total_power' and 'max_pred_seq'</p></li>
+<li><p><strong>DATENSATZ_PATH</strong> (<em>string</em>) -- Path of the dataset.</p></li>
+<li><p><strong>NAME</strong> (<em>string</em>) -- Name of the RL-Agent</p></li>
+<li><p><strong>max_SMS_SoC</strong> (<em>float</em>) -- Maximum Capacity of the flying wheel in kwh</p></li>
+<li><p><strong>max_LION_SoC</strong> (<em>float</em>) -- Maximum Capacity of the lithium-ion battery in kwh</p></li>
+<li><p><strong>PERIODEN_DAUER</strong> (<em>integer</em>) -- Period-lenght of one step in minutes</p></li>
+<li><p><strong>ACTION_TYPE</strong> (<em>string</em>) -- Sets the actions as discrete or continuous inputs. Use  'discrete' or 'contin'.</p></li>
+<li><p><strong>reward_maker</strong> (<em>object</em>) -- Takes the used reward_maker object</p></li>
+<li><p><strong>AGENT_TYPE</strong> (<em>string</em>) -- Inititates the environment to inputs from either heurtistic or RL-Agents. Use 'heuristic' or 'normal'.</p></li>
+<li><p><strong>max_ziel</strong> (<em>float</em>) -- Defines the maximum possible SECG (in kw), will only be used when AGENT_TYPE is set to 'normal'.</p></li>
+<li><p><strong>min_ziel</strong> (<em>float</em>) -- Defines the minimal possible SECG (in kw), will only be used when AGENT_TYPE is set to 'normal'.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="main.common_env.common_env.LION_entladen">
+<code class="sig-name descname">LION_entladen</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">akku_entladung</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.LION_entladen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to simulate discharging of the lithium-ion battery</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lade_menge</strong> (<em>float</em>) -- amount to be decharged in kw</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>real amount that could be discharged in kw</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>energieverbrauch (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.LION_laden">
+<code class="sig-name descname">LION_laden</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lade_menge</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.LION_laden" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to simulate charging of the lithium-ion battery</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lade_menge</strong> (<em>float</em>) -- amount to be charged in kw</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>real amount that could be charged in kw</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>energieverbrauch (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.SMS_entladen">
+<code class="sig-name descname">SMS_entladen</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">akku_entladung</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.SMS_entladen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to simulate discharging of the flying wheel</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lade_menge</strong> (<em>float</em>) -- amount to be decharged in kw</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>real amount that could be discharged in kw</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>energieverbrauch (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.SMS_laden">
+<code class="sig-name descname">SMS_laden</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lade_menge</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.SMS_laden" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to simulate charging of the flying wheel</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lade_menge</strong> (<em>float</em>) -- amount to be charged in kw</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>real amount that could be charged in kw</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>energieverbrauch (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.SMS_verlust">
+<code class="sig-name descname">SMS_verlust</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.SMS_verlust" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the loss of the flying wheel</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Charge loss in kw</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>SoC_loss (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.check_all_max_peak">
+<code class="sig-name descname">check_all_max_peak</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.check_all_max_peak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class-Function that will check at each step if there is a new maximum peak over a defined period of time.
+Checks for a day, a week and for the whole episode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>day_max_peak (float): Maximum daily peak that was recorded so far.</p>
+<p>week_max_peak (float): Maximum weekly peak that was recorded so far.</p>
+<p>episode_max_peak (float): Maximum peak of the episode that was recorded so far.</p>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>day_max_peak, week_max_peak, episode_max_peak (tuple)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.check_max_peak">
+<code class="sig-name descname">check_max_peak</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">past_max_peak</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.check_max_peak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class-Function that checks if there is a new maximum peak for a defined time-period.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>past_max_peak</strong> (<em>float</em>) -- The previous maximum peak.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Returns</dt><dd><p>new_max_peak (float): Returns either the previous maximum peak or a new maximum peak</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.get_contin_outputs">
+<code class="sig-name descname">get_contin_outputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">action</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.get_contin_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines the SECG and if SMS priority will be used from an continious action space</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>SECG (float): the energy consumption (in kw) that should come from the grit</p>
+<p>SMS_priority (bool): determines if the flywheel should be charged first</p>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>SECG, SMS_priority (tuple)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.get_discrete_outputs">
+<code class="sig-name descname">get_discrete_outputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">action</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.get_discrete_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines the SECG and if SMS priority will be used from an discrete action space</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>SECG (float): the energy consumption (in kw) that should come from the grit</p>
+<p>SMS_priority (bool): determines if the flywheel should be charged first</p>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>SECG, SMS_priority (tuple)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.get_multi_step_reward">
+<code class="sig-name descname">get_multi_step_reward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step_counter_episode</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.get_multi_step_reward" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a list of multi step rewards from the reward_maker</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>step_counter_episode</strong> (<em>integer</em>) -- counted step of the episode</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.next_observation">
+<code class="sig-name descname">next_observation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.next_observation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes an observation from the dataset. For discrete observation ACTION_TYPE must be set to 'discrete'.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>obs (integer): returns discrete observations, when ACTION_TYPE is set to 'discrete'</p>
+<p>obs (array): returns an continious observations, when ACTION_TYPE is set to 'contin'</p>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>obs (integer or array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the environment to an initial state and returns an initial observation.
+Randomizes both state of charges and the current step of the dataset to begin from.</p>
+<dl class="simple">
+<dt>Returns</dt><dd><p>obs (object): the initial observation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.set_soc_and_current_state">
+<code class="sig-name descname">set_soc_and_current_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">SoC_full</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.set_soc_and_current_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by heuristic agents, sets the current step of the dataset to 0 and can set the battery charges to full.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>SoC_full</strong> (<em>bool</em>) -- Sets the charge of both batteries to full when set to True</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">action</span></em>, <em class="sig-param"><span class="n">LION_activation</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run one timestep of the environment's dynamics. When end of episode is reached, you are responsible for calling reset() to reset this environment's state.
+Accepts an action and returns a tuple (observation, reward, done, info).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>action</strong> (<em>object</em>) -- an action provided by the agent</p></li>
+<li><p><strong>LION_activation</strong> (<em>bool</em>) -- can be used to turn of the lithium-ion battery when set to False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obs (float): agent's observation of the current environment</p>
+<p>reward (float): amount of reward returned after previous action</p>
+<p>done (bool): whether the episode has ended, in which case further step() calls will return undefined results</p>
+<p>info (dict): contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)</p>
+<p>step_counter_episode (integer): counted step of the episode, only returned when ACTION_TYPE is set to 'discrete'</p>
+<p>episode_max_peak (float): maximum peak of the episode so far, only returned when ACTION_TYPE is set to 'heuristic'</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>obs, reward, done, info (tuple)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.step_LOGGER">
+<code class="sig-name descname">step_LOGGER</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">action</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.step_LOGGER" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logs data for tensorboard</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>action</strong> (<em>integer</em><em> or </em><em>array</em>) -- integer when action space is discrete and array when action space is continious</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.step_counter">
+<code class="sig-name descname">step_counter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.step_counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class-Function that counts the steps in different timeframes.
+(sum of steps over all episodes, current step of the dataset, daily, weekly, step of the episode)
+It also passes the maximum peaks from the different recording timefrime to a logging function, which can be traced in Tensorboard.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.common_env.common_env.take_action">
+<code class="sig-name descname">take_action</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">action</span></em>, <em class="sig-param"><span class="n">LION_activation</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.common_env.common_env.take_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Agent takes action based on ACTION_TYPE and updates the simulation of the batteries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>action</strong> (<em>integer</em><em> or </em><em>array</em>) -- integer when action space is discrete and array when action space is continious</p></li>
+<li><p><strong>LION_activation</strong> (<em>bool</em>) -- turns off the lithium-ion battery when set to False, can be defined in the step() function</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-main.reward_maker"></span><dl class="py class">
+<dt id="main.reward_maker.reward_maker">
+<em class="property">class </em><code class="sig-prename descclassname">main.reward_maker.</code><code class="sig-name descname">reward_maker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">COST_TYPE</span><span class="o">=</span><span class="default_value">'exact_costs'</span></em>, <em class="sig-param"><span class="n">R_TYPE</span><span class="o">=</span><span class="default_value">'costs_focus'</span></em>, <em class="sig-param"><span class="n">R_HORIZON</span><span class="o">=</span><span class="default_value">'single_step'</span></em>, <em class="sig-param"><span class="n">M_STRATEGY</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cost_per_kwh</span><span class="o">=</span><span class="default_value">0.07</span></em>, <em class="sig-param"><span class="n">LION_Anschaffungs_Preis</span><span class="o">=</span><span class="default_value">32000</span></em>, <em class="sig-param"><span class="n">LION_max_Ladezyklen</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">SMS_Anschaffungs_Preis</span><span class="o">=</span><span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">SMS_max_Nutzungsjahre</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">Leistungspreis</span><span class="o">=</span><span class="default_value">90</span></em>, <em class="sig-param"><span class="n">focus_peak_multiplier</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">logging_list</span><span class="o">=</span><span class="default_value">['exact_costs', 'costs_focus', 'single_step', 'sum_exact_costs', 'sum_costs_focus', 'sum_single_step']</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for reward calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>COST_TYPE</strong> -- Mode by which costs are calculated:
+'exact_costs':
+'yearly_costs':
+'max_peak_focus':</p></li>
+<li><p><strong>R_TYPE</strong> -- Mode by which rewards are calulated:
+'costs_focus':
+'positive':
+'savings_focus': (use 'yearly_costs' as COST_TYPE when using this mode)</p></li>
+<li><p><strong>R_HORIZON</strong> -- Mode that determines the range of steps to calculate the reward
+'single_step': calculates reward at each step seperatly
+'episode': calculates the reward for complete dataset
+integer for multi-step: Number of steps for multi-step rewards</p></li>
+<li><p><strong>M_STRATEGY</strong> -- None: use None when R_HORIZON is set to 'single_step'
+'sum_to_terminal': Multi-step reward as described in paper ...
+'average_to_neighbour': Multi-step reward as described in paper ...
+'recurrent_to_Terminal' Multi-step reward as described in paper ...</p></li>
+<li><p><strong>cost_per_kwh</strong> -- Cost of 1 kwh in €</p></li>
+<li><p><strong>LION_Anschaffungs_Preis</strong> -- Cost of one lithium-ion battery in €</p></li>
+<li><p><strong>LION_max_Ladezyklen</strong> -- Number of maximum charging cycles of the lithium-ion battery</p></li>
+<li><p><strong>SMS_Anschaffungs_Preis</strong> -- Cost of one flywheel storage unit in €</p></li>
+<li><p><strong>SMS_max_Nutzungsjahre</strong> -- Number of years a flywheel storage can be used</p></li>
+<li><p><strong>Leistungspreis</strong> -- Cost of maximum peak per year calculated by €/kw</p></li>
+<li><p><strong>focus_peak_multiplier</strong> -- Factor by which the peak-costs are multiplied, used when COST_TYPE is set to 'max_peak_focus'</p></li>
+<li><p><strong>logging_list</strong> -- Creates callback to trace costs, tracebale costs:
+'exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step'</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.average_to_neighbour">
+<code class="sig-name descname">average_to_neighbour</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.average_to_neighbour" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a multi-step reward based on the average-to-neighbour strategy from the paper...
+Not implemented yet!</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.cost_function">
+<code class="sig-name descname">cost_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sum_power_dem</span></em>, <em class="sig-param"><span class="n">sum_LION_nutzung</span></em>, <em class="sig-param"><span class="n">max_peak</span></em>, <em class="sig-param"><span class="n">observed_period</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.cost_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the cost at a step when peak shaving is used</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.get_reward">
+<code class="sig-name descname">get_reward</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.get_reward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to get the reward based on the R_HORIZON mode</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.get_reward_range">
+<code class="sig-name descname">get_reward_range</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="o">=</span><span class="default_value">100</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.get_reward_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets reward range for a GYM environmet</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> -- Integer x sets range to (-x,x)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.get_step_reward">
+<code class="sig-name descname">get_step_reward</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.get_step_reward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to get a single-step reward based COST_TYPE and R_TYPE modes</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.get_sum_of_usual_costs">
+<code class="sig-name descname">get_sum_of_usual_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.get_sum_of_usual_costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculation of costs without peak shaving</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.multi_step_rewards">
+<code class="sig-name descname">multi_step_rewards</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.multi_step_rewards" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a multi-step reward based on M_STRATEGY mode</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.pass_env">
+<code class="sig-name descname">pass_env</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span></em>, <em class="sig-param"><span class="n">NAME</span></em>, <em class="sig-param"><span class="n">DATENSATZ_PATH</span></em>, <em class="sig-param"><span class="n">PERIODEN_DAUER</span></em>, <em class="sig-param"><span class="n">steps_per_episode</span></em>, <em class="sig-param"><span class="n">max_power_dem</span></em>, <em class="sig-param"><span class="n">mean_power_dem</span></em>, <em class="sig-param"><span class="n">sum_power_dem</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.pass_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes Init Parameter from GYM environment for the HIPE dataset, initiates all other necessary parameters and calculates the costs without peak shaving.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.pass_state">
+<code class="sig-name descname">pass_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_obs</span></em>, <em class="sig-param"><span class="n">action</span></em>, <em class="sig-param"><span class="n">done</span></em>, <em class="sig-param"><span class="n">day_max_peak</span></em>, <em class="sig-param"><span class="n">week_max_peak</span></em>, <em class="sig-param"><span class="n">episode_max_peak</span></em>, <em class="sig-param"><span class="n">power_dem</span></em>, <em class="sig-param"><span class="n">ziel_netzverbrauch</span></em>, <em class="sig-param"><span class="n">SMS_loss</span></em>, <em class="sig-param"><span class="n">LION_nutzung</span></em>, <em class="sig-param"><span class="n">SMS_SoC</span></em>, <em class="sig-param"><span class="n">LION_SoC</span></em>, <em class="sig-param"><span class="n">day_counter</span></em>, <em class="sig-param"><span class="n">week_counter</span></em>, <em class="sig-param"><span class="n">episode_counter</span></em>, <em class="sig-param"><span class="n">sum_steps</span></em>, <em class="sig-param"><span class="n">step_counter_episode</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.pass_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Passes necessary variables of a state</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.recurrent_to_Terminal">
+<code class="sig-name descname">recurrent_to_Terminal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.recurrent_to_Terminal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a multi-step reward based on the recurrent-to-Terminal strategy from the paper...
+Not implemented yet!</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.reward_maker.reward_maker.sum_to_terminal">
+<code class="sig-name descname">sum_to_terminal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.reward_maker.reward_maker.sum_to_terminal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a multi-step reward based on the sum-to-terminal strategy from the paper...</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-main.agent_heuristic"></span><dl class="py class">
+<dt id="main.agent_heuristic.heurisitc_agents">
+<em class="property">class </em><code class="sig-prename descclassname">main.agent_heuristic.</code><code class="sig-name descname">heurisitc_agents</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NAME</span></em>, <em class="sig-param"><span class="n">DATENSATZ_PATH</span></em>, <em class="sig-param"><span class="n">HEURISTIC_TYPE</span></em>, <em class="sig-param"><span class="n">df</span></em>, <em class="sig-param"><span class="n">env</span></em>, <em class="sig-param"><span class="n">global_zielverbrauch</span><span class="o">=</span><span class="default_value">50</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_heuristic.heurisitc_agents" title="Permalink to this definition">¶</a></dt>
+<dd><p>There are three main heuristic approaches, with the goal to minimize the maximum energy peak:</p>
+<ol class="arabic simple">
+<li><p>'Single-Value-Heuristic' approximates the best global value (for all steps), that is used to determine the should energy consumption from the grid.</p></li>
+<li><p>'Perfekt-Pred-Heuristic' finds the best should energy consumptions for each steps, under the assumption, that the future energy-need is perfectly predicted.</p></li>
+<li><p>'LSTM-Pred-Heuristic' approximates the best should energy consumptions for each step, with LSTM-predicted future energy-need.</p></li>
+</ol>
+<p>These three aproaches can also have the goal to minimize the sum of cost instead of the maximum peak.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>NAME</strong> -- Name of the model</p></li>
+<li><p><strong>DATENSATZ_PATH</strong> -- Path to save the model</p></li>
+<li><p><strong>HEURISTIC_TYPE</strong> -- Determines the type of heuristic to be used: 'Single-Value-Heuristic', 'Perfekt-Pred-Heuristic', 'LSTM-Pred-Heuristic'</p></li>
+<li><p><strong>df</strong> -- Takes in the HIPE-dataset as pandas dataframe</p></li>
+<li><p><strong>env</strong> -- Takes in a GYM environment, use the common_env module to simulate the HIPE-Dataset.</p></li>
+<li><p><strong>global_zielverbrauch</strong> -- Used to initilize the start value to approximate a global should energy consumption from the grid, relevant for 'Single-Value-Heuristic'</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="main.agent_heuristic.heurisitc_agents.act">
+<code class="sig-name descname">act</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">SMS_PRIO</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_heuristic.heurisitc_agents.act" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function, in which the heuristic decides an action, based on HEURISTIC_TYPE previously set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>SMS_PRIO</strong> (<em>float</em>) -- <p>Is either set to 0 or 1:</p>
+<p>0 sets the priority of SMS to true</p>
+<p>1 sets the priority of SMS to false</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>SECG (float): should energy-consumption from the grid at step</p>
+<p>SMS_PRIO (float): priority of SMS at step</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>SECG, SMS_PRIO (tuple)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_heuristic.heurisitc_agents.bar_printer">
+<code class="sig-name descname">bar_printer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_heuristic.heurisitc_agents.bar_printer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to print helpful information about the mean-value process at the process bar</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_heuristic.heurisitc_agents.find_optimum_for_perfect_pred">
+<code class="sig-name descname">find_optimum_for_perfect_pred</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">power_dem_arr</span></em>, <em class="sig-param"><span class="n">global_value</span><span class="o">=</span><span class="default_value">50</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_heuristic.heurisitc_agents.find_optimum_for_perfect_pred" title="Permalink to this definition">¶</a></dt>
+<dd><p>Funtion to prepare the SECG for each step, used when HEURISTIC_TYPE is set to 'Perfekt-Pred-Heuristic'. Used before iterating through each step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>power_dem_arr</strong> (<em>array</em>) -- Array that represents the local power consumption at each step</p></li>
+<li><p><strong>global_value</strong> (<em>float</em>) -- Minimal peak, that the battery arrangement is able to shave</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_heuristic.heurisitc_agents.global_single_value_for_max_peak">
+<code class="sig-name descname">global_single_value_for_max_peak</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_peak</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_heuristic.heurisitc_agents.global_single_value_for_max_peak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses the mean-value theorem to calculate at the end of each episode a new global SECG (should energy-consumption from the grid)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_peak</strong> -- Takes in max_peak at the end of each episode</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New global SECG, after calculation with the mean-value theorem</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>neu_global_zielverbrauch (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_heuristic.heurisitc_agents.global_single_value_for_reward">
+<code class="sig-name descname">global_single_value_for_reward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sum_reward</span></em>, <em class="sig-param"><span class="n">positivity_value</span><span class="o">=</span><span class="default_value">10000</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_heuristic.heurisitc_agents.global_single_value_for_reward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses the mean-value theorem to calculate a new SECG at the at of each episode, instead of minimizing the maximum peak, this function maximizes the sum of rewards.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sum_reward</strong> -- Takes in the sum of rewards after each episode</p></li>
+<li><p><strong>positivity_value</strong> -- Should be a large number, which is added to the sum of rewards to make sure that negative rewards will be transformed into positive ones</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New global SECG, after calculation with the mean-value theorem</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>neu_global_zielverbrauch (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="main.agent_heuristic.main">
+<code class="sig-prename descclassname">main.agent_heuristic.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_heuristic.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Example of an Agent that uses heuristics.</p>
+</dd></dl>
+
+<span class="target" id="module-main.agent_q_table"></span><dl class="py class">
+<dt id="main.agent_q_table.Q_Learner">
+<em class="property">class </em><code class="sig-prename descclassname">main.agent_q_table.</code><code class="sig-name descname">Q_Learner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">env</span></em>, <em class="sig-param"><span class="n">memory</span></em>, <em class="sig-param"><span class="n">gamma</span></em>, <em class="sig-param"><span class="n">epsilon</span></em>, <em class="sig-param"><span class="n">epsilon_min</span></em>, <em class="sig-param"><span class="n">epsilon_decay</span></em>, <em class="sig-param"><span class="n">lr</span></em>, <em class="sig-param"><span class="n">tau</span></em>, <em class="sig-param"><span class="n">Q_table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_q_table.Q_Learner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Basic Q-Agent that uses a Q-Table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<em>object</em>) -- Takes in a GYM environment, use the common_env to simulate the HIPE-Dataset.</p></li>
+<li><p><strong>memory</strong> (<em>object</em>) -- Takes in degue object: deque(maxlen=x)</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) -- Factor that determines the importance of futue Q-values, value between 0 and 1</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em>) -- Initial percent of random actions, value between 0 and 1</p></li>
+<li><p><strong>epsilon_min</strong> (<em>float</em>) -- Minimal percent of random actions, value between 0 and 1</p></li>
+<li><p><strong>epsilon_decay</strong> (<em>float</em>) -- Factor by which epsilon decays, value between 0 and 1</p></li>
+<li><p><strong>lr</strong> (<em>float</em>) -- Sets the learning rate of the RL-Agent</p></li>
+<li><p><strong>tau</strong> (<em>float</em>) -- Factor for copying weights from model network to target network</p></li>
+<li><p><strong>Q_table</strong> (<em>array</em>) -- Initial Q-Table, all values should be set to zero</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="main.agent_q_table.Q_Learner.act">
+<code class="sig-name descname">act</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">state</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_q_table.Q_Learner.act" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function, in which the agent decides an action, either from greedy-policy or from prediction. Use this function when iterating through each step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>state</strong> (<em>array</em>) -- Current state at the step</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>action (integer): Action that was chosen by the agent</p>
+<p>epsilon (float): Current (decayed) epsilon</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>action, epsilon (tuple)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_q_table.Q_Learner.remember">
+<code class="sig-name descname">remember</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">state</span></em>, <em class="sig-param"><span class="n">action</span></em>, <em class="sig-param"><span class="n">reward</span></em>, <em class="sig-param"><span class="n">new_state</span></em>, <em class="sig-param"><span class="n">done</span></em>, <em class="sig-param"><span class="n">step_counter_episode</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_q_table.Q_Learner.remember" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes in all necessery variables for the learning process and appends those to the memory. Use this function when iterating through each step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<em>array</em>) -- State at which the agent chose the action</p></li>
+<li><p><strong>action</strong> (<em>integer</em>) -- Chosen action</p></li>
+<li><p><strong>reward</strong> (<em>float</em>) -- Real reward for the action</p></li>
+<li><p><strong>new_state</strong> (<em>array</em>) -- State after action is performed</p></li>
+<li><p><strong>done</strong> (<em>bool</em>) -- If True the episode ends</p></li>
+<li><p><strong>step_counter_episode</strong> (<em>integer</em>) -- Episode step at which the action was performed</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_q_table.Q_Learner.replay">
+<code class="sig-name descname">replay</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index_len</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_q_table.Q_Learner.replay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Training-Process for the DQN from past steps. Use this function after a few iteration-steps (best use is the number of index_len). Alternatively use this function at each step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>index_len</strong> (<em>integer</em>) -- Number of past states to learn from</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_q_table.Q_Learner.save_agent">
+<code class="sig-name descname">save_agent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NAME</span></em>, <em class="sig-param"><span class="n">DATENSATZ_PATH</span></em>, <em class="sig-param"><span class="n">e</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_q_table.Q_Learner.save_agent" title="Permalink to this definition">¶</a></dt>
+<dd><p>For saving the agents model at specific epoch. Make sure to not use this function at each epoch, since this will take up your memory space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>NAME</strong> (<em>string</em>) -- Name of the model</p></li>
+<li><p><strong>DATENSATZ_PATH</strong> (<em>string</em>) -- Path to save the model</p></li>
+<li><p><strong>e</strong> (<em>integer</em>) -- Takes the epoch-number in which the model is saved</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="main.agent_q_table.main">
+<code class="sig-prename descclassname">main.agent_q_table.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_q_table.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Example of an RL-Agent that uses the basic Q-Table.</p>
+</dd></dl>
+
+<span class="target" id="module-main.agent_deep_q"></span><dl class="py class">
+<dt id="main.agent_deep_q.DQN">
+<em class="property">class </em><code class="sig-prename descclassname">main.agent_deep_q.</code><code class="sig-name descname">DQN</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">env</span></em>, <em class="sig-param"><span class="n">memory</span></em>, <em class="sig-param"><span class="n">gamma</span></em>, <em class="sig-param"><span class="n">epsilon</span></em>, <em class="sig-param"><span class="n">epsilon_min</span></em>, <em class="sig-param"><span class="n">epsilon_decay</span></em>, <em class="sig-param"><span class="n">lr</span></em>, <em class="sig-param"><span class="n">tau</span></em>, <em class="sig-param"><span class="n">model_lr</span></em>, <em class="sig-param"><span class="n">activation</span><span class="o">=</span><span class="default_value">'relu'</span></em>, <em class="sig-param"><span class="n">loss</span><span class="o">=</span><span class="default_value">'mean_squared_error'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_deep_q.DQN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deep Q Network</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<em>object</em>) -- Takes in a GYM environment, use the common_env to simulate the HIPE-Dataset.</p></li>
+<li><p><strong>memory</strong> (<em>object</em>) -- Takes in degue object: deque(maxlen=x)</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) -- Factor that determines the importance of futue Q-values, value between 0 and 1</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em>) -- Initial percent of random actions, value between 0 and 1</p></li>
+<li><p><strong>epsilon_min</strong> (<em>float</em>) -- Minimal percent of random actions, value between 0 and 1</p></li>
+<li><p><strong>epsilon_decay</strong> (<em>float</em>) -- Factor by which epsilon decays, value between 0 and 1</p></li>
+<li><p><strong>lr</strong> (<em>float</em>) -- Sets the learning rate of the RL-Agent</p></li>
+<li><p><strong>tau</strong> (<em>float</em>) -- Factor for copying weights from model network to target network</p></li>
+<li><p><strong>model_lr</strong> (<em>float</em>) -- Sets the learning rate for the Neural Network</p></li>
+<li><p><strong>activation</strong> (<em>string</em>) -- Defines Keras activation function for each Dense layer (except the ouput layer) for the DQN</p></li>
+<li><p><strong>loss</strong> (<em>string</em>) -- Defines Keras loss function to comile the DQN model</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="main.agent_deep_q.DQN.act">
+<code class="sig-name descname">act</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">state</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_deep_q.DQN.act" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function, in which the agent decides an action, either from greedy-policy or from prediction. Use this function when iterating through each step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>state</strong> (<em>array</em>) -- Current state at the step</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>action (integer): Action that was chosen by the agent</p>
+<p>epsilon (float): Current (decayed) epsilon</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>action, epsilon (tuple)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_deep_q.DQN.create_model">
+<code class="sig-name descname">create_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_lr</span></em>, <em class="sig-param"><span class="n">activation</span></em>, <em class="sig-param"><span class="n">loss</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_deep_q.DQN.create_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Deep Neural Network which predicts Q-Values, when the class is initilized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>activation</strong> (<em>string</em>) -- Previously defined Keras activation</p></li>
+<li><p><strong>loss</strong> (<em>string</em>) -- Previously defined Keras loss</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_deep_q.DQN.remember">
+<code class="sig-name descname">remember</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">state</span></em>, <em class="sig-param"><span class="n">action</span></em>, <em class="sig-param"><span class="n">reward</span></em>, <em class="sig-param"><span class="n">new_state</span></em>, <em class="sig-param"><span class="n">done</span></em>, <em class="sig-param"><span class="n">step_counter_episode</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_deep_q.DQN.remember" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes in all necessery variables for the learning process and appends those to the memory. Use this function when iterating through each step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<em>array</em>) -- State at which the agent chose the action</p></li>
+<li><p><strong>action</strong> (<em>integer</em>) -- Chosen action</p></li>
+<li><p><strong>reward</strong> (<em>float</em>) -- Real reward for the action</p></li>
+<li><p><strong>new_state</strong> (<em>array</em>) -- State after action is performed</p></li>
+<li><p><strong>done</strong> (<em>bool</em>) -- If True the episode ends</p></li>
+<li><p><strong>step_counter_episode</strong> (<em>integer</em>) -- Episode step at which the action was performed</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_deep_q.DQN.replay">
+<code class="sig-name descname">replay</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index_len</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_deep_q.DQN.replay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Training-Process for the DQN from past steps. Use this function after a few iteration-steps (best use is the number of index_len). Alternatively use this function at each step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>index_len</strong> (<em>integer</em>) -- Number of past states to learn from</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_deep_q.DQN.save_agent">
+<code class="sig-name descname">save_agent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NAME</span></em>, <em class="sig-param"><span class="n">DATENSATZ_PATH</span></em>, <em class="sig-param"><span class="n">e</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_deep_q.DQN.save_agent" title="Permalink to this definition">¶</a></dt>
+<dd><p>For saving the agents model at specific epoch. Make sure to not use this function at each epoch, since this will take up your memory space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>NAME</strong> (<em>string</em>) -- Name of the model</p></li>
+<li><p><strong>DATENSATZ_PATH</strong> (<em>string</em>) -- Path to save the model</p></li>
+<li><p><strong>e</strong> (<em>integer</em>) -- Takes the epoch-number in which the model is saved</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="main.agent_deep_q.DQN.target_train">
+<code class="sig-name descname">target_train</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_deep_q.DQN.target_train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the Target-Weights. Use this function after replay(index_len)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="main.agent_deep_q.discrete_input_space">
+<code class="sig-prename descclassname">main.agent_deep_q.</code><code class="sig-name descname">discrete_input_space</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">state_dim_size</span></em>, <em class="sig-param"><span class="n">state</span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_deep_q.discrete_input_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform the state to a discrete input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state_dim_size</strong> (<em>shape</em>) -- Size to which the state will be transformed</p></li>
+<li><p><strong>state</strong> (<em>array</em>) -- Takes in a state</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Transformed state for discrete inputs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>discrete_state (array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="main.agent_deep_q.main">
+<code class="sig-prename descclassname">main.agent_deep_q.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_deep_q.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Example of an RL-Agent that uses Dualing Deep Q-Networks.</p>
+</dd></dl>
+
+<span class="target" id="module-main.agent_PPO2"></span><dl class="py function">
+<dt id="main.agent_PPO2.main">
+<code class="sig-prename descclassname">main.agent_PPO2.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.agent_PPO2.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Example of an Agent that uses PPO2 provided by stable baselines</p>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="project">
+<h1>$project<a class="headerlink" href="#project" title="Permalink to this headline">¶</a></h1>
+<p>$project will solve your problem of where to start with documentation,
+by providing a basic explanation of how to do it easily.</p>
+<p>Look how easy it is to use:</p>
+<blockquote>
+<div><p>import project
+# Get your stuff done
+project.do_stuff()</p>
+</div></blockquote>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Be awesome</p></li>
+<li><p>Make things faster</p></li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Install $project by running:</p>
+<blockquote>
+<div><p>install project</p>
+</div></blockquote>
+</div>
+<div class="section" id="contribute">
+<h2>Contribute<a class="headerlink" href="#contribute" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Issue Tracker: github.com/$project/$project/issues</p></li>
+<li><p>Source Code: github.com/$project/$project</p></li>
+</ul>
+</div>
+<div class="section" id="support">
+<h2>Support<a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h2>
+<p>If you are having issues, please let us know.
+We have a mailing list located at: <a class="reference external" href="mailto:project&#37;&#52;&#48;google-groups&#46;com">project<span>&#64;</span>google-groups<span>&#46;</span>com</a></p>
+</div>
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>The project is licensed under the BSD license.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">studienprojekt</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Maik Schürmann, Sven Pultar.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
