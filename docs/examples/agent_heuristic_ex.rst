@@ -4,13 +4,6 @@
    contain the root `toctree` directive.
 
 Agent that uses a heuristic
-=========================
+===========================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
-
-.. automodule:: agent_heuristic
-   :members:
+.. literalinclude:: ../../peak-shaver/example_agent_heuristic.py

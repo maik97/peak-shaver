@@ -6,11 +6,4 @@
 RL-Agent with Deep Q-Learning that uses LSTMs
 =============================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
-
-.. automodule:: agent_lstm_q
-   :members:
+.. literalinclude:: ../../peak-shaver/example_agent_lstm_q.py

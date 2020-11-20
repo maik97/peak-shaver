@@ -6,12 +6,5 @@
 RL-Agent with basic Q-Learning
 ==============================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
-
-.. automodule:: agent_q_table
-   :members:
+.. literalinclude:: ../../peak-shaver/example_agent_q_table.py
 

@@ -6,13 +6,6 @@
 RL-Agent with PPO2
 ==================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
-
-.. automodule:: agent_PPO2
-   :members:
+.. literalinclude:: ../../peak-shaver/example_agent_PPO2.py
 
 
