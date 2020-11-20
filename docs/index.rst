@@ -11,6 +11,24 @@ Welcome to Studienprojekt's documentation!
    :caption: Contents:
 
 
+.. automodule:: main.schaffer
+   :members:
+.. automodule:: main.wahrsager
+   :members:
+.. automodule:: main.common_env
+   :members:
+.. automodule:: main.reward_maker
+   :members:
+.. automodule:: main.agent_heuristic
+   :members:
+.. automodule:: main.agent_q_table
+   :members:
+.. automodule:: main.agent_deep_q
+   :members:
+.. automodule:: main.agent_PPO2
+   :members:
+
+
 
 Indices and tables
 ==================
