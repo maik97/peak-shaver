@@ -10,23 +10,17 @@ Peak Shaver Documentation
    :maxdepth: 2
    :caption: Contents:
 
+   pages/schaffer_doc
+   pages/wahrsager_doc
+   pages/common_env_doc
+   pages/reward_maker_doc
+   pages/logger_doc
+   pages/agent_heuristic_doc
+   pages/agent_q_table_doc
+   pages/agent_deep_q_doc
+   pages/agent_lstm_q_doc
+   pages/agent_PPO2_doc
 
-.. automodule:: schaffer
-   :members:
-.. automodule:: wahrsager
-   :members:
-.. automodule:: common_env
-   :members:
-.. automodule:: reward_maker
-   :members:
-.. automodule:: agent_heuristic
-   :members:
-.. automodule:: agent_q_table
-   :members:
-.. automodule:: agent_deep_q
-   :members:
-.. automodule:: agent_PPO2
-   :members:
 
 
 
