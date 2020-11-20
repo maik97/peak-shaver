@@ -1,0 +1,7 @@
+matplotlib==3.3.3
+numpy==1.19.4
+pandas==0.25.3
+stable-baselines==2.10.1
+tensorboard==1.9.0
+tensorflow==1.9.0
+gym==0.17.3

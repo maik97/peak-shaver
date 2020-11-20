@@ -11,21 +11,21 @@ Peak Shaver Documentation
    :caption: Contents:
 
 
-.. automodule:: main.schaffer
+.. automodule:: schaffer
    :members:
-.. automodule:: main.wahrsager
+.. automodule:: wahrsager
    :members:
-.. automodule:: main.common_env
+.. automodule:: common_env
    :members:
-.. automodule:: main.reward_maker
+.. automodule:: reward_maker
    :members:
-.. automodule:: main.agent_heuristic
+.. automodule:: agent_heuristic
    :members:
-.. automodule:: main.agent_q_table
+.. automodule:: agent_q_table
    :members:
-.. automodule:: main.agent_deep_q
+.. automodule:: agent_deep_q
    :members:
-.. automodule:: main.agent_PPO2
+.. automodule:: agent_PPO2
    :members:
 
 
