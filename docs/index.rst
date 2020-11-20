@@ -1,16 +1,11 @@
-.. Studienprojekt documentation master file, created by
-   sphinx-quickstart on Fri Nov 20 14:43:01 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Peak Shaving: Leveling the power consumption of a production system through reinforcement learning
 ==================================================================================================
 
-This documentation provides an explanation for the code as part of the study project: Nivellierung der Leistungsaufnahme eines Produktionssystems durch Reinforcement Learning (link). Note that the pdf is only available in german. Further details in english can be read here: About the project(link).
+This documentation provides an explanation for the code as part of the study project: `Nivellierung der Leistungsaufnahme eines Produktionssystems durch Reinforcement Learning <https://www.stackoverflow.com>`_. Note that the pdf is only available in german. Further details in english can be read here: :ref:`About the project <about_project>`.
 
-Information about the installation, first steps and a general example are found in the Getting Started Guide(link).
+Information about the installation, first steps and a general example are found in the :ref:`Getting Started Guide <getting_started>`.
 
-We also provide detailed information and to some extend explanations of all the classes and functions used in the different modules in the section: Module Documentation. Look in the Example section if you want to see how to use the modules.
+We also provide detailed information of all the classes and functions used by the different modules in the section: Module Documentation. Look in the Example section if you want to see how to use the different RL-aproaches we explored within the study project.
 
 Contents
 ========
@@ -46,11 +41,3 @@ Contents
    examples/agent_deep_q_ex
    examples/agent_lstm_q_ex
    examples/agent_PPO2_ex
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
