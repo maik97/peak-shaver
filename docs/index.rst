@@ -3,25 +3,54 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Peak Shaver Documentation
-=========================
+Peak Shaving: Leveling the power consumption of a production system through reinforcement learning
+==================================================================================================
+
+This documentation provides an explanation for the code as part of the study project: Nivellierung der Leistungsaufnahme eines Produktionssystems durch Reinforcement Learning (link). Note that the pdf is only available in german. Further details in english can be read here: About the project(link).
+
+Information about the installation, first steps and a general example are found in the Getting Started Guide(link).
+
+We also provide detailed information and to some extend explanations of all the classes and functions used in the different modules in the section: Module Documentation. Look in the Example section if you want to see how to use the modules.
+
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Introduction:
 
-   pages/schaffer_doc
-   pages/wahrsager_doc
-   pages/common_env_doc
-   pages/reward_maker_doc
-   pages/logger_doc
-   pages/agent_heuristic_doc
-   pages/agent_q_table_doc
-   pages/agent_deep_q_doc
-   pages/agent_lstm_q_doc
-   pages/agent_PPO2_doc
+   about_project
+   getting_started
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Module Documentations:
 
+   modules/schaffer_doc
+   modules/wahrsager_doc
+   modules/common_env_doc
+   modules/reward_maker_doc
+   modules/logger_doc
+   modules/agent_heuristic_doc
+   modules/agent_q_table_doc
+   modules/agent_deep_q_doc
+   modules/agent_lstm_q_doc
+   modules/agent_PPO2_doc
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Examples:
+
+   examples/schaffer_ex
+   examples/wahrsager_ex
+   examples/common_env_ex
+   examples/reward_maker_ex
+   examples/logger_ex
+   examples/agent_heuristic_ex
+   examples/agent_q_table_ex
+   examples/agent_deep_q_ex
+   examples/agent_lstm_q_ex
+   examples/agent_PPO2_ex
 
 
 Indices and tables
