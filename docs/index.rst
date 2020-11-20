@@ -41,11 +41,6 @@ Contents
    :maxdepth: 2
    :caption: Examples:
 
-   examples/schaffer_ex
-   examples/wahrsager_ex
-   examples/common_env_ex
-   examples/reward_maker_ex
-   examples/logger_ex
    examples/agent_heuristic_ex
    examples/agent_q_table_ex
    examples/agent_deep_q_ex

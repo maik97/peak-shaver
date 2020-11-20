@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-agent_q_table
-=========================
+RL-Agent with basic Q-Learning
+==============================
 
 .. toctree::
    :maxdepth: 2
