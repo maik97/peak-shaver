@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'peak-shaver'
-copyright = '2020, Maik SChürmann'
+copyright = '2020, Maik Schürmann'
 author = 'Maik SChürmann'
 
 # The full version, including alpha/beta/rc tags
