@@ -10,9 +10,11 @@ build:
 
 python:
   version: 3.6
+  install:
+    - requirements: docs/requirements.txt
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
   configuration: docs/conf.py
 
-requirements_file: requirements.txt
+
