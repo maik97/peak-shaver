@@ -1,4 +1,4 @@
-.. _common_env_docs:
+.. _common_env_doc:
 
 common_env
 =========================
