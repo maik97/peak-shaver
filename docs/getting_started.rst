@@ -140,16 +140,16 @@ Assuming you have understood the basics of RL-Learning, the first thing to expla
         ...
 
         def replay(self, ...):
-        ....
+        ...
 
         save_agent(self, NAME, DATENSATZ_PATH, e):
-        ....
+        ...
 
-- ``__init__()`` is all about parameter tuning. Note that in this case we have a parameter called Q_table. This will be different for all the other types of RL-Agents.
+- ``__init__()`` is all about parameter tuning. Note that in this case we have a parameter called Q_table (This will be different for each type of RL-Agent).
 - ``act()`` is the function in which the agent decides on its actions based on the state. This is also the place where the greedy function will be applied.
 - ``remember()`` is necessary to save the all the necessary information for the learning process, since we dont want to update the Q-values every single step.
--``replay()`` is where the Q-function is applied and the learning process takes place, with the help of the memory from the ``remember()`` function.
--``save_agent()`` is used to make a backup of the agent. This should be used every x steps (x should be big, because the total steps can go into millions), since you dont want to make a backup every step. Note that each backup takes time as well as space on your device.
+- ``replay()`` is where the Q-function is applied and the learning process takes place, with the help of the memory from the ``remember()`` function.
+- ``save_agent()`` is used to make a backup of the agent. This should be used every x steps (x should be big, because the total steps can go into millions), since you dont want to make a backup every step. Note that each backup takes time as well as space on your device.
 
 The full code of the basic RL-Agent can be checked out on `Github <https://github.com/maik97/peak-shaver/blob/main/peak-shaver/main/agent_q_table.py>`_ .
 
