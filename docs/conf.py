@@ -14,8 +14,6 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../peak-shaver/main/'))
 
-
-
 # -- Project information -----------------------------------------------------
 
 project = 'peak-shaver'
@@ -46,6 +44,7 @@ language = 'python'
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+autodoc_mock_imports = ['tensorflow', 'stable_baselines']
 
 # -- Options for HTML output -------------------------------------------------
 

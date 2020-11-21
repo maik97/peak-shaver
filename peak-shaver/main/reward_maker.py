@@ -7,7 +7,7 @@ import matplotlib.pyplot  as plt
 
 from collections import deque
 
-#import logger
+import logger
 
 class reward_maker():
     '''

@@ -11,7 +11,6 @@ import h5py
 from tqdm import tqdm
 
 
-
 def global_var(_NAME='', _VERSION='', _DATENSATZ_PATH ='_BIG_D/', _großer_datensatz = True, _zeitintervall = '5min'):
     global NAME
     global VERSION

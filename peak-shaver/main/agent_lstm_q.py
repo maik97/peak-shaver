@@ -11,17 +11,14 @@ from datetime import datetime
 from collections import deque
 from tqdm import tqdm
 
-
-from LSTM_DQN_env import LSTM_DQN_env
-import wahrsager
+import schaffer
+from wahrsager import wahrsager, max_seq, mean_seq
+from common_env import common_env
+from reward_maker import reward_maker
 
 class DQN:
-    """Deep Q Network with LSTM Implementation"""
+    """Deep Q Network with LSTM Implementation
 
-    def __init__(self, env):
-        """
-    Deep Q Network with LSTM implementation
-    
     Args:
         env (object): Takes in a GYM environment, use the common_env to simulate the HIPE-Dataset.
         memory (object): Takes in degue object: deque(maxlen=x)
@@ -35,6 +32,9 @@ class DQN:
         activation (string): Defines Keras activation function for each Dense layer (except the ouput layer) for the DQN
         loss (string): Defines Keras loss function to comile the DQN model
     """
+
+    def __init__(self, env):
+        
         self.env            = env
         self.memory         = deque(maxlen=1000)
         self.heurisitic_mem = deque(maxlen=1000)
@@ -141,47 +141,47 @@ class DQN:
         function needs to be updated!
         '''
 
-    	power_dem = []
-    	SMS_SOC = []
-    	LION_SOC = []
-    	ziel_netzverbrauch = []
-    	max_peak = []
-    	new_peak_list = []
-    	soll_ist_diff = []
-    	action_liste = []
+        power_dem = []
+        SMS_SOC = []
+        LION_SOC = []
+        ziel_netzverbrauch = []
+        max_peak = []
+        new_peak_list = []
+        soll_ist_diff = []
+        action_liste = []
 
-    	for sample in self.memory:
-    		state, action, reward, new_state, done, new_peak, state_inputs = sample
+        for sample in self.memory:
+            state, action, reward, new_state, done, new_peak, state_inputs = sample
 
-    		power_dem.append(state[0][3])
-    		SMS_SOC.append(new_state[0][7])
-    		LION_SOC.append(new_state[0][8])
-    		#ziel_netzverbrauch.append(state[0][9])
-    		#max_peak.append(state[0][10])
-    		#soll_ist_diff.append(state[0][12])
-    		#new_peak_list.append(new_peak)
-    		action_liste.append(action)
+            power_dem.append(state[0][3])
+            SMS_SOC.append(new_state[0][7])
+            LION_SOC.append(new_state[0][8])
+            #ziel_netzverbrauch.append(state[0][9])
+            #max_peak.append(state[0][10])
+            #soll_ist_diff.append(state[0][12])
+            #new_peak_list.append(new_peak)
+            action_liste.append(action)
 
-    	action_list,SMS_SOC,LION_SOC = self.env.reverse_heuristic(power_dem,SMS_SOC,LION_SOC,action_liste)
-    	#action_list,SMS_SOC,LION_SOC,ziel_netz_dem,max_peak,soll_ist_diff = self.env.reverse_heuristic(power_dem,SMS_SOC,LION_SOC,ziel_netzverbrauch,max_peak,soll_ist_diff,new_peak_list,action_liste)
+        action_list,SMS_SOC,LION_SOC = self.env.reverse_heuristic(power_dem,SMS_SOC,LION_SOC,action_liste)
+        #action_list,SMS_SOC,LION_SOC,ziel_netz_dem,max_peak,soll_ist_diff = self.env.reverse_heuristic(power_dem,SMS_SOC,LION_SOC,ziel_netzverbrauch,max_peak,soll_ist_diff,new_peak_list,action_liste)
 
-    	i = 0
-    	for sample in self.memory:
-    		state, action, reward, new_state, done, new_peak, state_inputs = sample
-    		state[0][3] = power_dem[i]
-    		new_state[0][7] = SMS_SOC[i]
-    		new_state[0][8] = LION_SOC[i]
-    		#state[0][9] = ziel_netzverbrauch[i]
-    		#state[0][10] = max_peak[i]
-    		#state[0][12] = soll_ist_diff[i]
-    		#new_peak = new_peak_list[i]
-    		action = action_liste[i]
-    		reward = 100
+        i = 0
+        for sample in self.memory:
+            state, action, reward, new_state, done, new_peak, state_inputs = sample
+            state[0][3] = power_dem[i]
+            new_state[0][7] = SMS_SOC[i]
+            new_state[0][8] = LION_SOC[i]
+            #state[0][9] = ziel_netzverbrauch[i]
+            #state[0][10] = max_peak[i]
+            #state[0][12] = soll_ist_diff[i]
+            #new_peak = new_peak_list[i]
+            action = action_liste[i]
+            reward = 100
 
-    		if i > 30:
-    			state_inputs = self.past_states(heuristic_num = i)
-    		i += 1
-    		sample = [state, action, reward, new_state, done, new_peak, state_inputs]
+            if i > 30:
+            	state_inputs = self.past_states(heuristic_num = i)
+            i += 1
+            sample = [state, action, reward, new_state, done, new_peak, state_inputs]
 
 
     def replay(self, heurisitc_replay=False):

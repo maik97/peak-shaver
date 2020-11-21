@@ -11,12 +11,9 @@ import matplotlib.pyplot  as plt
 
 from collections import deque
 
-#import schaffer
-#import logger
+import schaffer
+import logger
 '''
-nvidia-smi
-tensorboard --logdir=_BIG_D/LOGS/
-
 ############   TO-DO  ############
 
 - epsilon in agents loggen

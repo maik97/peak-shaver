@@ -1,4 +1,4 @@
-.. _tensorboard:
+.. _tensorboard_doc:
 
 Tensorboard
 ===========
@@ -9,7 +9,7 @@ Make sure to be in the ``peak-shaver`` directory and open up a new command windo
    
     $ tensorboard --logdir=_BIG_D/logs/
 
-When using the small dataset, use:
+For the small dataset:
 
 .. code-block:: console
    

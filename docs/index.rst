@@ -20,7 +20,7 @@ Contents
 
    intro/about_project
    intro/getting_started
-   intro/tensorboard
+   intro/tensorboard_doc
 
 .. toctree::
    :maxdepth: 2

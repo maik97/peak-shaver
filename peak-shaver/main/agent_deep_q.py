@@ -1,4 +1,3 @@
-'''
 import sys
 
 import numpy as np
@@ -21,7 +20,7 @@ import schaffer
 from wahrsager import wahrsager, max_seq, mean_seq
 from common_env import common_env
 from reward_maker import reward_maker
-'''
+
 class DQN:
     """
     Deep Q Network

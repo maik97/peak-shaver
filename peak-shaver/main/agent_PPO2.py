@@ -1,7 +1,7 @@
 import numpy as np
 import gym
 import pandas as pd
-'''
+
 from stable_baselines.common.policies import MlpPolicy
 from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.common.callbacks import CheckpointCallback
@@ -9,11 +9,11 @@ from stable_baselines import PPO2
 
 from datetime import datetime
 
-#import schaffer
+import schaffer
 from wahrsager import wahrsager, max_seq, mean_seq
 from common_env import common_env
 from reward_maker import reward_maker
-'''
+
 
 def main():
     '''
