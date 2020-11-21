@@ -1,7 +1,7 @@
 Peak Shaving: Leveling the power consumption of a production system through reinforcement learning
 ==================================================================================================
 
-This documentation provides an explanation for the code as part of the study project: `Nivellierung der Leistungsaufnahme eines Produktionssystems durch Reinforcement Learning <https://www.stackoverflow.com>`_. Note that the pdf is only available in german. Further details in english can be read here: :ref:`About the project <about_project>`.
+This documentation provides an explanation for the code as part of the study project: `Nivellierung der Leistungsaufnahme eines Produktionssystems durch Reinforcement Learning <https://www.stackoverflow.com>`_. Note that the pdf is only available in german. Further details in english can be read here: :ref:`About the project <about_project>`. All abbreviations that will be used in the documentation will be explained there too.
 
 Information about the installation, first steps and a general example are found in the :ref:`Getting Started Guide <getting_started>`.
 
