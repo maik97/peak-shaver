@@ -210,16 +210,21 @@ When put together in order to iterate over each step it should look something li
 
     # number of epochs:
     epochs = x
-    # every update_num steps the agent will learn
-    update_num
+    # every y steps the agent will learn
+    update_num = y
 
     for e in range(epochs):
+        '''
+        you can add here some functionality for warm-up steps
+        (basically the same as below without learning)
+        '''
         cur_state = env.reset()
 
+        update_counter = 0
         for step in range(len(dataset)):
 
             action, epsilon            = Agent.act(cur_state)
-            new_state, reward, done, step_counter_episode, _ = env.step(action, ...)
+            new_state, reward, done, _ = env.step(action, ...)
             Agent.remember(cur_state, action, reward, new_state, done, ...)
             cur_state                  = new_state
 
@@ -233,3 +238,5 @@ When put together in order to iterate over each step it should look something li
 
         if e % 10 == 0:
             Agent.save_agent(NAME, DATENSATZ_PATH, e)
+
+Note that all the provided pseudo-codes are more complex when implementet.

@@ -2,3 +2,5 @@
 
 About the project
 =================
+
+In order to smooth the power consumption of a production system, the consumption must be adjusted or a buffer must be used. In this work a buffer is used to shift power peaks into periods with lower power requirements. A reinforcement learning agent should decide when to load and unload and it is checked whether this can achieve a better result than a conventional heuristic and whether a reinforcement learning agent is a suitable solution for this type of problem. The process of power peak capping, known as peak shaving, is a relevant topic in industry for reducing the production factor electricity costs. With the increasing share of renewable energies and the elimination of constant electricity generators, the topic is becoming more and more relevant and necessary on the generator side. The share of renewable energies can only be increased further if energy storage devices are used on the side of the producers and consumers in order not to overload the grid irregularly and to save grid fees [Fuch12].
