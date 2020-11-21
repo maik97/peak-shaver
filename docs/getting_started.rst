@@ -45,7 +45,7 @@ Set up these folders, if you want to follow the examples provided, and put (both
 
 Data Preparation
 ****************
-The data preparation will be executed automaticaly when you first run ``wahrsager`` or any of the agents (provided you didn#t do it manually). But it is recommended to create the preparetions seperately with ``schaffer`` since this can take up some time and you have the freedome to set up some parameters to your liking.
+The data preparation will be executed automaticaly when you first run ``wahrsager`` or any of the agents (provided you didn't do it manually). But it is recommended to create the preparetions seperately with ``schaffer`` since this can take up some time and you have the freedom to set up some parameters to your liking.
 - schaffer explanation
 
 Making Predictions
@@ -55,7 +55,8 @@ Following the same princible above (time consumption, more freedom to set up) it
 With the module ``wahrsager`` you can train a LSTM that aims to predict the future power consumption. It's possible to modify the ``main`` function and run ``wahrsager`` directly. You can also create your own python code following this example:
 
 .. code-block:: python
-    ''' Example Code to train a LSTM using the wahrsager module'''
+    
+    ''' Example code to train a LSTM using the wahrsager module'''
     from main.wahrsager import wahrsager, max_seq, mean_seq, try_training_on_gpu()
 
     # Check if GPU is available:
@@ -72,7 +73,7 @@ With the module ``wahrsager`` you can train a LSTM that aims to predict the futu
     max_prediction_seq  = max_seq(prediction_seq)
     mean_prediction_seq = mean_seq(prediction_seq)
 
-The ``train()`` function is used to ttrain a LSTM-model and will return predictions after the training is complete. You can use ``pred()`` instead of ``train()`` once you have run the training for the first time (This will be used by the agents).
+The ``train()`` function is used to train a LSTM-model and will return predictions after the training is complete. You can use ``pred()`` instead of ``train()`` once you have run the training for the first time (This will be used by the agents).
 
 There are different approaches to modify the input-dataset, which can be set with ``TYPE=...``. Below are explanations of the variables from the code snippet which are returns from an LSTM with a different ``TYPE``.
 
@@ -83,7 +84,7 @@ There are different approaches to modify the input-dataset, which can be set wit
 - ``prediction_mean_label_seq`` with ``TYPE='MEAN_LABEL_SEQ'``: Predictions where just the label data is modified with a rolling mean
 - ``prediction_seq`` with ``TYPE='SEQ'``: Sequence-Predictions of the unmodified dataset, each sequence can be transformed to the mean or max value with ``max_seq(prediction_seq)`` or ``mean_seq(prediction_seq)``
 
-All these different approaches will have similiar results, but can be used to optimize the predictions furthermore. If you want to tune the parameters, look up the ``wahrsager`` class :ref:`here <wahrsager_doc>` (change timeframe, LSTM size, ...).
+All these different approaches will have similiar results, but can be used to optimize the predictions furthermore. If you want to tune the parameters, look up the ``wahrsager`` class :ref:`here <wahrsager_doc>` (change timeframe, LSTM size, ...). Note that for every new timeframe a seperate dataset will be created.
 
 Set ``PLOT_MODE=True`` if you want to see a graph of the predictions compared to the actual data. An example graph is provided below:
 
