@@ -10,7 +10,9 @@ Installation and Dependencies
 
 You can download the zip file from the `github repository <https://github.com/maik97/peak-shaver>`_ (alternatively just clone the project to your own github) or run this command if you have `git <https://git-scm.com/downloads>`_ installed.
 
-$ git clone git://github.com/maik97/peak-shaver.git
+.. code-block:: console
+   
+    $ git clone git://github.com/maik97/peak-shaver.git
 
 Make sure to have these libraries with the right versions installed:
 
@@ -39,14 +41,39 @@ Set up these folders, if you want to follow the examples provided, and put (both
 | │   │   └── hipe_cleaned_v1.0.1_geq_2017-10-01_lt_2018-01-01
 | │   ├── _BIG_D
 | │   ├── _small_d
+| │   ├── [Put here any of your own code]
 | │   └── ...
 | └── ...
 
+When following the examples you should be in the directory /peak-shaver, this is also the place you would put your own code.
 
 Data Preparation
 ****************
 The data preparation will be executed automaticaly when you first run ``wahrsager`` or any of the agents (provided you didn't do it manually). But it is recommended to create the preparetions seperately with ``schaffer`` since this can take up some time and you have the freedom to set up some parameters to your liking.
-- schaffer explanation
+
+First all the necassary functions to transform the dataset are explained seperatly. You can run these step by step or just run the last one in which case all the previous steps will be run automaticly.
+
+- ``load_geglättet_df()`` will take the dataset and smoth the data to a specific timeframe
+- ``load_norm_data()`` will take the dataset from ``load_geglättet_df()`` and will first add differentiation between weekday, then add the activation time of each machine and lastly normalize the data. It also has a dataset where the sum of power consumption isn't normalized (Note that this function is deprecated, thus you dont need to run it)
+- ``load_only_norm_data()`` has the same functionality as ``load_norm_data()``, except the extra dataset where the sum of power consumption isn't normalized
+- ``load_total_power()`` has the same functionality as ``load_norm_data()``, except it returns only the extra dataset where the sum of power consumption isn't normalized
+- ``alle_inputs()`` will take the datasets of ``load_only_norm_data()`` and merge those in a single one 
+- ``alle_inputs_neu()`` is an extra funtion that makes a differentiation between work day and holiday (might be useful for predictions)
+
+Recommended way to run the necessary functions:
+
+.. code-block:: python
+    
+    import main.schaffer as schaffer
+
+    schaffer.global_var(_NAME='', _VERSION='', _DATENSATZ_PATH ='_BIG_D/', _großer_datensatz = True, _zeitintervall = '5min')
+    
+    schaffer.load_geglättet_df()
+    schaffer.load_only_norm_data()
+    schaffer.load_total_power()
+    schaffer.alle_inputs()
+    schaffer.alle_inputs_neu()
+
 
 Making Predictions
 ******************
@@ -73,9 +100,9 @@ With the module ``wahrsager`` you can train a LSTM that aims to predict the futu
     max_prediction_seq  = max_seq(prediction_seq)
     mean_prediction_seq = mean_seq(prediction_seq)
 
-The ``train()`` function is used to train a LSTM-model and will return predictions after the training is complete. You can use ``pred()`` instead of ``train()`` once you have run the training for the first time (This will be used by the agents).
+The ``train()`` function is used to train a LSTM-model and will return predictions after the training is complete. You can use ``pred()`` instead of ``train()`` once you have run the training for the first time (This will be used by the agents). You can find the saved models in either _BIG_D/LSTM-models/ or _small_d/LSTM-models/.
 
-There are different approaches to modify the input-dataset, which can be set with ``TYPE=...``. Below are explanations of the variables from the code snippet which are returns from an LSTM with a different ``TYPE``.
+There are different approaches to modify the input-dataset, which can be set with ``TYPE=...``. Below are explanations of the variables from the code snippet which are returns from a LSTM with a different ``TYPE``.
 
 - ``prediction_mean`` with ``TYPE='MEAN'``: Predictions of the dataset modified with a rolling mean
 - ``prediction_max`` with ``TYPE='MAX'``: Predictions of the dataset modified with a rolling max
@@ -86,7 +113,7 @@ There are different approaches to modify the input-dataset, which can be set wit
 
 All these different approaches will have similiar results, but can be used to optimize the predictions furthermore. If you want to tune the parameters, look up the ``wahrsager`` class :ref:`here <wahrsager_doc>` (change timeframe, LSTM size, ...). Note that for every new timeframe a seperate dataset will be created.
 
-Set ``PLOT_MODE=True`` if you want to see a graph of the predictions compared to the actual data. An example graph is provided below:
+Set ``PLOT_MODE=True`` if you want to see a graph of the predictions compared to the actual data. You also can find the saved graphs in either _BIG_D/LSTM-graphs/ or _small_d/LSTM-graphs/. An example graph is provided below:
 
 - hier kommt beispiel graph
 
