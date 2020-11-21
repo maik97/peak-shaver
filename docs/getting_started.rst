@@ -55,14 +55,14 @@ Following the same princible above (time consumption, more freedom to set up) it
 With the module ``wahrsager`` you can train a LSTM that aims to predict the future power consumption. It's possible to modify the ``main`` function and run ``wahrsager`` directly. You can also create your own python code following this example:
 
 .. code-block:: python
-	''' Example Code to train a LSTM using the wahrsager module'''
-	from main.wahrsager import wahrsager, max_seq, mean_seq, try_training_on_gpu()
+    ''' Example Code to train a LSTM using the wahrsager module'''
+    from main.wahrsager import wahrsager, max_seq, mean_seq, try_training_on_gpu()
 
-	# Check if GPU is available:
-	try_training_on_gpu()
+    # Check if GPU is available:
+    try_training_on_gpu()
 
-	# Predictions (and training) with different approaches:
-	prediction_mean           = wahrsager(PLOT_MODE=True, TYPE='MEAN').train()
+    # Predictions (and training) with different approaches:
+    prediction_mean           = wahrsager(PLOT_MODE=True, TYPE='MEAN').train()
     prediction_max            = wahrsager(PLOT_MODE=True, TYPE='MAX').train()
     prediction_normal         = wahrsager(PLOT_MODE=True, TYPE='NORMAL').train()
     prediction_max_label_seq  = wahrsager(PLOT_MODE=True, TYPE='MAX_LABEL_SEQ').train()
