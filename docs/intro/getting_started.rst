@@ -32,7 +32,7 @@ The dataset to simulate the can be downloaded here: `HIPE Dataset <https://www.e
 
 Folder Structure
 ****************
-Set up these folders, if you want to follow the examples provided, and put (both) unzipped datasets in the folder dataset. /peak-shaver-master is the downloded github folder.
+You should set up following folder structure so you can follow the examples:
 
 | peak-shaver-master
 | ├── peak-shaver
@@ -45,7 +45,10 @@ Set up these folders, if you want to follow the examples provided, and put (both
 | │   └── ...
 | └── ...
 
-When following the examples you should be in the directory /peak-shaver, this is also the place you would put your own code.
+- ``peak-shaver-master`` is the downloded github folder.
+- ``peak-shaver`` is where the actual package is located. When following the examples or if you want to create your own code you should be in this directory.
+- Create ``dataset`` und put in (both) unzipped HIPE-datasets.
+- Create ``_BIG_D`` (big dataset) and ``_small_d`` (small dataset): this is where datasets, models, statistics and logs will be saved.
 
 Data Preparation
 ****************
