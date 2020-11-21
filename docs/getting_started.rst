@@ -119,10 +119,10 @@ Set ``PLOT_MODE=True`` if you want to see a graph of the predictions compared to
 
 - hier kommt beispiel graph
 
-Basic RL-Agent with in-depth explanation
-***************************************
+Explanation of a basic RL-Agent
+*******************************
 
-In this section a basic RL-Agent that uses the HIPE-dataset simulation as an environment will be explained in detail. You can also find this agent in :ref:`RL-Agent with basic Q-Learning <agent_q_table_doc>`. All agents are build in a similar structure, thus this section aims to provide a basic understanding. The differences will be explained for each agent in the Examples section.
+In this section a basic RL-Agent that uses a gym environment will be explained. All agents are build in a similar structure, thus this section aims to provide a basic understanding. The differences will be explained for each agent in the Examples section. Note that all the code provided in this section is pseudo-code.
 
 Assuming you have understood the basics of RL-Learning, the first thing to explain is the general structure of a RL-Agent class:
 
@@ -185,3 +185,51 @@ The next thing to understand is the basic structure of a ``gym`` environment:
       def render(self, mode='human', close=False):
         # Render the environment to the screen
         ...
+
+      def more_functions_to_simulate_the_data(...):
+        # In the case of peak shaving the batteries need to be simulated
+        ...
+
+      ...
+
+When put together in order to iterate over each step it should look something like this:
+
+.. code-block:: python
+
+    from gym_env import CustomEnv
+    from agent import Q_Learner
+    from schaffer import dataset
+
+    env = CustomEnv(dataset,...)
+    Agent = Q_Learner(...)
+
+    # naming the model:
+    NAME = 'basic_agent'
+    # using the big dataset:
+    DATENSATZ_PATH = '_BIG_D'
+
+    # number of epochs:
+    epochs = x
+    # every update_num steps the agent will learn
+    update_num
+
+    for e in range(epochs):
+        cur_state = env.reset()
+
+        for step in range(len(dataset)):
+
+            action, epsilon            = Agent.act(cur_state)
+            new_state, reward, done, step_counter_episode, _ = env.step(action, ...)
+            Agent.remember(cur_state, action, reward, new_state, done, ...)
+            cur_state                  = new_state
+
+            update_counter += 1
+            if update_counter == update_num or done == True:
+                Agent.replay(...)
+                update_counter = 0
+
+            if done:
+                break
+
+        if e % 10 == 0:
+            Agent.save_agent(NAME, DATENSATZ_PATH, e)
