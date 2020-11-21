@@ -8,7 +8,7 @@ Getting Started Guide
 Installation and Dependencies
 *****************************
 
-You can download the zip file from the `github repository <https://github.com/maik97/peak-shaver>`_ (alternatively just clone the project to your own github) or run this command if you have `git <https://git-scm.com/downloads>`_ installed.
+You can download the zip file from the `github repository <https://github.com/maik97/peak-shaver>`_ (alternatively just clone the project to your own github) or run the command below if you have `git <https://git-scm.com/downloads>`_ installed. Since we want to encourage improvements of the project there won't be a pip available.
 
 .. code-block:: console
    
@@ -68,12 +68,14 @@ Recommended way to run the necessary functions:
 
     schaffer.global_var(_NAME='', _VERSION='', _DATENSATZ_PATH ='_BIG_D/', _großer_datensatz = True, _zeitintervall = '5min')
     
+    # If you want to check that everthing works fine, run those rather step by step:
     schaffer.load_geglättet_df()
     schaffer.load_only_norm_data()
     schaffer.load_total_power()
     schaffer.alle_inputs()
     schaffer.alle_inputs_neu()
 
+If you want to know more about possible parameters for the ``schaffer`` functions check out the :ref:`module page <schaffer_doc>`.
 
 Making Predictions
 ******************
@@ -119,5 +121,67 @@ Set ``PLOT_MODE=True`` if you want to see a graph of the predictions compared to
 
 Basic RL-Agent with in-depth explanation
 ***************************************
-- im gegensatz zu examples wird hier genau der aufbau erklärt (tut style)
 
+In this section a basic RL-Agent that uses the HIPE-dataset simulation as an environment will be explained in detail. You can also find this agent in :ref:`RL-Agent with basic Q-Learning <agent_q_table_doc>`. All agents are build in a similar structure, thus this section aims to provide a basic understanding. The differences will be explained for each agent in the Examples section.
+
+Assuming you have understood the basics of RL-Learning, the first thing to explain is the general structure of a RL-Agent class:
+
+.. code-block:: python
+    
+    class Q_Learner:
+        
+        def __init__(self, env, memory, gamma, epsilon, epsilon_min, epsilon_decay, lr, tau, Q_table):
+        ...
+
+        def act(self, state):
+        ...
+
+        def remember(self, state, action, reward, new_state, done, ...):
+        ...
+
+        def replay(self, ...):
+        ....
+
+        save_agent(self, NAME, DATENSATZ_PATH, e):
+        ....
+
+- ``__init__()`` is all about parameter tuning. Note that in this case we have a parameter called Q_table. This will be different for all the other types of RL-Agents.
+- ``act()`` is the function in which the agent decides on its actions based on the state. This is also the place where the greedy function will be applied.
+- ``remember()`` is necessary to save the all the necessary information for the learning process, since we dont want to update the Q-values every single step.
+-``replay()`` is where the Q-function is applied and the learning process takes place, with the help of the memory from the ``remember()`` function.
+-``save_agent()`` is used to make a backup of the agent. This should be used every x steps (x should be big, because the total steps can go into millions), since you dont want to make a backup every step. Note that each backup takes time as well as space on your device.
+
+The full code of the basic RL-Agent can be checked out on `Github <https://github.com/maik97/peak-shaver/blob/main/peak-shaver/main/agent_q_table.py>`_ .
+
+The next thing to understand is the basic structure of a ``gym`` environment:
+
+.. https://towardsdatascience.com/creating-a-custom-openai-gym-environment-for-stock-trading-be532be3910e
+
+.. code-block:: python
+    
+    import gym
+    from gym import spaces
+
+    class CustomEnv(gym.Env):
+      """Custom Environment that follows gym interface"""
+      metadata = {'render.modes': ['human']}
+
+      def __init__(self, arg1, arg2, ...):
+        super(CustomEnv, self).__init__()
+        # Define action and observation space
+        # They must be gym.spaces objects
+        # Example when using discrete actions:
+        self.action_space = spaces.Discrete(N_DISCRETE_ACTIONS)
+        # Example for using image as input:
+        self.observation_space = spaces.Box(low=0, high=255, shape=
+                        (HEIGHT, WIDTH, N_CHANNELS), dtype=np.uint8)
+
+      def step(self, action):
+        # Execute one time step within the environment
+        ...
+      def reset(self):
+        # Reset the state of the environment to an initial state
+        ...
+      def render(self, mode='human', close=False):
+        # Render the environment to the screen
+        ...
