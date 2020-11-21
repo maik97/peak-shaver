@@ -21,7 +21,7 @@ copyright = '2020, Maik Schürmann'
 author = 'Maik SChürmann'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -44,7 +44,7 @@ language = 'python'
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-autodoc_mock_imports = ['tensorflow', 'stable_baselines']
+autodoc_mock_imports = ['tensorflow', 'stable_baselines', 'seaborn', 'keras']
 
 # -- Options for HTML output -------------------------------------------------
 
