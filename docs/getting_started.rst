@@ -32,7 +32,7 @@ The dataset to simulate the can be downloaded here: `HIPE Dataset <https://www.e
 
 Folder Structure
 ****************
-Set up these folders, if you want to follow the examples provided, and put (both) unzipped datasets in the folder dataset.
+Set up these folders, if you want to follow the examples provided, and put (both) unzipped datasets in the folder dataset. /peak-shaver-master is the downloded github folder.
 
 | peak-shaver-master
 | ├── peak-shaver
@@ -119,7 +119,7 @@ Set ``PLOT_MODE=True`` if you want to see a graph of the predictions compared to
 
 - hier kommt beispiel graph
 
-Explanation of a basic RL-Agent
+Explanation of a Basic RL-Agent
 *******************************
 
 In this section a basic RL-Agent that uses a gym environment will be explained. All agents are build in a similar structure, thus this section aims to provide a basic understanding. The differences will be explained for each agent in the Examples section. Note that all the code provided in this section is pseudo-code.
@@ -142,7 +142,7 @@ Assuming you have understood the basics of RL-Learning, the first thing to expla
         def replay(self, ...):
         ...
 
-        save_agent(self, NAME, DATENSATZ_PATH, e):
+        def save_agent(self, NAME, DATENSATZ_PATH, e):
         ...
 
 - ``__init__()`` is all about parameter tuning. Note that in this case we have a parameter called Q_table (This will be different for each type of RL-Agent).
