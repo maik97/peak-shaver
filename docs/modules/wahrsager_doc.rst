@@ -10,4 +10,6 @@ wahrsager
 
 
 .. automodule:: wahrsager
-   :members:
+    :members:
+    :undoc-members:
+    :show-inheritance:
