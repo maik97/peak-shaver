@@ -63,7 +63,6 @@ class wahrsager:
         num_epochs (int):       
         
     '''
-
     def __init__(
                 self,
                 # Allgemeine Parameter
@@ -143,97 +142,8 @@ class wahrsager:
         self.max_total_power = np.max(self.total_power.to_numpy())
         #print('MAXIMUM:',self.max_total_power)
 
-    def save_parameter(self,path_and_name):
-        ''' Saves all the init parameters to a textfile. Might be useful for parameter tuning.
 
-        Args:
-            path_name_name (string): 
-        '''
-        f = open(path_and_name, 'w')
-
-        f.write('Allgemeine Parameter\n')
-        f.write('TYPE:              %s\n' % self.TYPE)
-        f.write('NAME:              %s\n' % self.NAME)
-        f.write('PLOT_MODE:         %s\n' % self.PLOT_MODE)
-        f.write('großer_datensatz:  %s\n' % self.großer_datensatz)
-        
-        f.write('\nModel-Parameter\n')
-        f.write('num_past_periods:  %s\n' % self.num_past_periods)
-        f.write('num_inputs:        %s\n' % self.num_inputs)
-        f.write('num_outputs:       %s\n' % self.num_outputs)
-        f.write('dropout:           %s\n' % self.dropout)
-        f.write('recurrent_dropout: %s\n' % self.recurrent_dropout)
-        f.write('activation_hidden: %s\n' % self.activation_hidden)
-        f.write('activation_end:    %s\n' % self.activation_end)
-        f.write('num_hidden:        %s\n' % self.num_hidden)
-        f.write('lstm_size:         %s\n' % self.lstm_size)
-        f.write('first_hidden_size: %s\n' % self.first_hidden_size)
-        f.write('neuron_num_change: %s\n' % self.neuron_num_change)
-
-        f.write('\nTrainings-Parameter\n')
-        f.write('val_data_size:     %s\n' % self.val_data_size)
-        f.write('num_epochs:        %s\n' % self.num_epochs)
-
-        f.close()
-
-    def import_data(self):
-        ''' Trys to import the training data based on ``TYPE`` and ``num_past_periods``. Will create a new dataset if the import fails.
-        
-        Returns:
-            training_data, label_data (tuple):
-
-            training_data (array):
-
-            label_data (array):
-        '''
-        if self.TYPE == 'MEAN':
-                training_data, label_data = schaffer.rolling_mean_training_data(self.num_past_periods)
-        elif self.TYPE == 'MAX':
-                training_data, label_data = schaffer.rolling_max_training_data(self.num_past_periods)
-        elif self.TYPE == 'NORMAL':
-                training_data, label_data = schaffer.normal_training_data(self.num_past_periods)
-        elif self.TYPE == 'SEQ':
-                training_data, label_data = schaffer.sequence_training_data(self.num_past_periods)
-        elif self.TYPE == 'MAX_LABEL_SEQ':
-                training_data, label_data_seq = schaffer.sequence_training_data(self.num_past_periods)
-                label_data = max_seq(label_data_seq)    
-        elif self.TYPE == 'MEAN_LABEL_SEQ':
-                training_data, label_data_seq = schaffer.sequence_training_data(self.num_past_periods)
-                label_data = mean_seq(label_data_seq)
-        else:
-            print("Error: Data-Import TYPE not understood! - Supported TYPES:'MEAN','MAX','NORMAL','SEQ','MAX_LABEL_SEQ','MEAN_LABEL_SEQ'")
-            exit()
-
-        training_data = np.nan_to_num(training_data)
-        label_data    = np.nan_to_num(label_data)
-
-        return training_data, label_data
-
-
-    def lstm_model(self):
-        '''Uses the Keras library to create an LSTM-Model based on the parameters in init.
-        
-        Returns:
-            model (keras model): Compiled Keras LSTM-model
-        '''
-    
-        model = Sequential()
-        model.add(LSTM(self.lstm_size, 
-                       input_shape       = (self.num_past_periods,self.num_inputs),
-                       dropout           = self.dropout,
-                       recurrent_dropout = self.recurrent_dropout))
-        
-        neuron_size = self.first_hidden_size
-        for i in range(self.num_hidden):
-            model.add(Dense(int(neuron_size), activation = self.activation_hidden))
-            model.add(Dropout(self.dropout))
-            neuron_size *= self.neuron_num_change
-
-        model.add(Dense(self.num_outputs, activation = self.activation_end))  
-        model.compile(loss='mse', optimizer='adam', metrics=['mae'])
-
-        #model.compile(loss='mse', optimizer=adam(lr=0.0001, decay=1e-6), metrics=['mse'])
-        return model
+    ''' External Class Functions:'''
 
     def train(self, use_model=None):
         ''' Trains the LSTM and saves the trained model (and the used parameters).
@@ -280,6 +190,7 @@ class wahrsager:
 
         return prediction
 
+    
     def pred(self,use_model):
         ''' Uses a saved LSTM-model to make predictions.
 
@@ -307,6 +218,103 @@ class wahrsager:
         else:
             print('\nWahrsager: Plotting is disabled.')
         return prediction
+    
+
+    '''Internal Class Functions:'''
+
+    def lstm_model(self):
+        '''Uses the Keras library to create an LSTM-Model based on the parameters in init.
+        
+        Returns:
+            model (keras model): Compiled Keras LSTM-model
+        '''
+    
+        model = Sequential()
+        model.add(LSTM(self.lstm_size, 
+                       input_shape       = (self.num_past_periods,self.num_inputs),
+                       dropout           = self.dropout,
+                       recurrent_dropout = self.recurrent_dropout))
+        
+        neuron_size = self.first_hidden_size
+        for i in range(self.num_hidden):
+            model.add(Dense(int(neuron_size), activation = self.activation_hidden))
+            model.add(Dropout(self.dropout))
+            neuron_size *= self.neuron_num_change
+
+        model.add(Dense(self.num_outputs, activation = self.activation_end))  
+        model.compile(loss='mse', optimizer='adam', metrics=['mae'])
+
+        #model.compile(loss='mse', optimizer=adam(lr=0.0001, decay=1e-6), metrics=['mse'])
+        return model
+
+
+    def import_data(self):
+        ''' Trys to import the training data based on ``TYPE`` and ``num_past_periods``. Will create a new dataset if the import fails.
+        
+        Returns:
+            training_data, label_data (tuple):
+
+            training_data (array):
+
+            label_data (array):
+        '''
+        if self.TYPE == 'MEAN':
+                training_data, label_data = schaffer.rolling_mean_training_data(self.num_past_periods)
+        elif self.TYPE == 'MAX':
+                training_data, label_data = schaffer.rolling_max_training_data(self.num_past_periods)
+        elif self.TYPE == 'NORMAL':
+                training_data, label_data = schaffer.normal_training_data(self.num_past_periods)
+        elif self.TYPE == 'SEQ':
+                training_data, label_data = schaffer.sequence_training_data(self.num_past_periods)
+        elif self.TYPE == 'MAX_LABEL_SEQ':
+                training_data, label_data_seq = schaffer.sequence_training_data(self.num_past_periods)
+                label_data = max_seq(label_data_seq)    
+        elif self.TYPE == 'MEAN_LABEL_SEQ':
+                training_data, label_data_seq = schaffer.sequence_training_data(self.num_past_periods)
+                label_data = mean_seq(label_data_seq)
+        else:
+            print("Error: Data-Import TYPE not understood! - Supported TYPES:'MEAN','MAX','NORMAL','SEQ','MAX_LABEL_SEQ','MEAN_LABEL_SEQ'")
+            exit()
+
+        training_data = np.nan_to_num(training_data)
+        label_data    = np.nan_to_num(label_data)
+
+        return training_data, label_data
+
+    
+    def save_parameter(self,path_and_name):
+        ''' Saves all the init parameters to a textfile. Might be useful for parameter tuning.
+
+        Args:
+            path_name_name (string): 
+        '''
+        f = open(path_and_name, 'w')
+
+        f.write('Allgemeine Parameter\n')
+        f.write('TYPE:              %s\n' % self.TYPE)
+        f.write('NAME:              %s\n' % self.NAME)
+        f.write('PLOT_MODE:         %s\n' % self.PLOT_MODE)
+        f.write('großer_datensatz:  %s\n' % self.großer_datensatz)
+        
+        f.write('\nModel-Parameter\n')
+        f.write('num_past_periods:  %s\n' % self.num_past_periods)
+        f.write('num_inputs:        %s\n' % self.num_inputs)
+        f.write('num_outputs:       %s\n' % self.num_outputs)
+        f.write('dropout:           %s\n' % self.dropout)
+        f.write('recurrent_dropout: %s\n' % self.recurrent_dropout)
+        f.write('activation_hidden: %s\n' % self.activation_hidden)
+        f.write('activation_end:    %s\n' % self.activation_end)
+        f.write('num_hidden:        %s\n' % self.num_hidden)
+        f.write('lstm_size:         %s\n' % self.lstm_size)
+        f.write('first_hidden_size: %s\n' % self.first_hidden_size)
+        f.write('neuron_num_change: %s\n' % self.neuron_num_change)
+
+        f.write('\nTrainings-Parameter\n')
+        f.write('val_data_size:     %s\n' % self.val_data_size)
+        f.write('num_epochs:        %s\n' % self.num_epochs)
+
+        f.close()
+
 
     def plot_pred_single(self,prediction,label_data):
         ''' Plots the predictions for single-value labels and gives some additional information about the error.
