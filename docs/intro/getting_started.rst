@@ -89,19 +89,17 @@ With the module ``wahrsager`` you can train a LSTM that aims to predict the futu
 .. code-block:: python
     
     ''' Example code to train a LSTM using the wahrsager module'''
-    from main.wahrsager import wahrsager, max_seq, mean_seq, try_training_on_gpu()
-
-    # Check if GPU is available:
-    try_training_on_gpu()
+    from main.wahrsager import wahrsager
+    from main.common_func import max_seq, mean_seq
 
     # Predictions (and training) with different approaches:
-    prediction_mean           = wahrsager(PLOT_MODE=True, TYPE='MEAN').train()
-    prediction_max            = wahrsager(PLOT_MODE=True, TYPE='MAX').train()
-    prediction_normal         = wahrsager(PLOT_MODE=True, TYPE='NORMAL').train()
-    prediction_max_label_seq  = wahrsager(PLOT_MODE=True, TYPE='MAX_LABEL_SEQ').train()
-    prediction_mean_label_seq = wahrsager(PLOT_MODE=True, TYPE='MEAN_LABEL_SEQ').train()
+    prediction_mean           = wahrsager(PLOTTING=True, TYPE='MEAN').train()
+    prediction_max            = wahrsager(PLOTTING=True, TYPE='MAX').train()
+    prediction_normal         = wahrsager(PLOTTING=True, TYPE='NORMAL').train()
+    prediction_max_label_seq  = wahrsager(PLOTTING=True, TYPE='MAX_LABEL_SEQ').train()
+    prediction_mean_label_seq = wahrsager(PLOTTING=True, TYPE='MEAN_LABEL_SEQ').train()
 
-    prediction_seq      = wahrsager(PLOT_MODE=True, TYPE='SEQ', num_outputs=12).train()
+    prediction_seq      = wahrsager(PLOTTING=True, TYPE='SEQ', num_outputs=12).train()
     max_prediction_seq  = max_seq(prediction_seq)
     mean_prediction_seq = mean_seq(prediction_seq)
 
@@ -118,7 +116,7 @@ There are different approaches to modify the input-dataset, which can be set wit
 
 All these different approaches will have similiar results, but can be used to optimize the predictions furthermore. If you want to tune the parameters, look up the ``wahrsager`` class :ref:`here <wahrsager_doc>` (change timeframe, LSTM size, ...). Note that for every new timeframe a seperate dataset will be created.
 
-Set ``PLOT_MODE=True`` if you want to see a graph of the predictions compared to the actual data. You also can find the saved graphs in either _BIG_D/LSTM-graphs/ or _small_d/LSTM-graphs/. An example graph is provided below:
+Set ``PLOTTING=True`` if you want to see a graph of the predictions compared to the actual data. You also can find the saved graphs in either _BIG_D/LSTM-graphs/ or _small_d/LSTM-graphs/. An example graph is provided below:
 
 - hier kommt beispiel graph
 

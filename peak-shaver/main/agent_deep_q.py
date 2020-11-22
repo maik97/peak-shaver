@@ -17,28 +17,29 @@ from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
 
 import schaffer
-from wahrsager import wahrsager, max_seq, mean_seq
+from wahrsager import wahrsager
 from common_env import common_env
 from reward_maker import reward_maker
+from common_func import try_training_on_gpu, max_seq, mean_seq
 
 class DQN:
     """
     Deep Q Network
     
     Args:
-        env (object): Takes in a GYM environment, use the common_env to simulate the HIPE-Dataset.
+        env (object): Takes in a ``gym`` environment, use the common_env to simulate the HIPE-Dataset.
         memory (object): Takes in degue object: deque(maxlen=x)
         gamma (float): Factor that determines the importance of futue Q-values, value between 0 and 1
         epsilon (float): Initial percent of random actions, value between 0 and 1
         epsilon_min (float): Minimal percent of random actions, value between 0 and 1
-        epsilon_decay (float): Factor by which epsilon decays, value between 0 and 1
+        epsilon_decay (float): Factor by which ``epsilon`` decays, value between 0 and 1
         lr (float): Sets the learning rate of the RL-Agent
         tau (float): Factor for copying weights from model network to target network
         model_lr (float): Sets the learning rate for the Neural Network
         activation (string): Defines Keras activation function for each Dense layer (except the ouput layer) for the DQN
         loss (string): Defines Keras loss function to comile the DQN model
     """
-    def __init__(self, env, memory, gamma, epsilon, epsilon_min, epsilon_decay, lr, tau, model_lr, activation='relu', loss='mean_squared_error'):
+    def __init__(self, env, memory=deque(maxlen=500), gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125, model_lr=0.5, activation='relu', loss='mean_squared_error'):
 
         self.env            = env
         self.memory         = memory

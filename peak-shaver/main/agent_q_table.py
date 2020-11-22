@@ -13,9 +13,10 @@ from collections import deque
 from tqdm import tqdm
 
 import schaffer
-from wahrsager import wahrsager, max_seq, mean_seq
+from wahrsager import wahrsager
 from common_env import common_env
 from reward_maker import reward_maker
+from common_func import try_training_on_gpu, max_seq, mean_seq
 
 class Q_Learner:
     """

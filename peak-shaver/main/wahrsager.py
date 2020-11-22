@@ -1,45 +1,29 @@
-# VERSION 5
-
-# Allgemein Module
 import pandas as pd
 import numpy as np
 import datetime
-import tqdm
-'''
-import tensorflow as tf
-import keras
 import time
+import tqdm
+
 import matplotlib as mpl
 import matplotlib.pyplot  as plt
-
-from keras import backend as K
-from keras.models import load_model
 from matplotlib.pyplot import *
 
+#import tensorflow as tf
+import keras
+from keras import backend as K
+from keras.models import load_model
 from keras.optimizers import RMSprop, adam
 from keras.models import Sequential
 from keras.layers import Dense, InputLayer, LSTM, Dropout
 from keras.callbacks import TensorBoard
 
-
-# Module aus selben Ordner
 import schaffer
-'''
-'''
-TENSORBOARD:
-Kommando in neue Konsole eingeben um TensorBoard zu benutzen:
-tensorboard --logdir=_small_d/logs/
-tensorboard --logdir=_BIG_D/logs/
-'''
+from common_func import try_training_on_gpu, max_seq, mean_seq
 
-def try_training_on_gpu():
-    try:
-        # Für Keras GPU machen:
-        config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 56} ) 
-        sess = tf.Session(config=config) 
-        keras.backend.set_session(sess)
-    except:
-        print('Keras konnte GPU Session nicht einrichten')
+# TO-DO:
+# dataset path als parameter
+# hidden layer eventuell auch none oder 0?
+# (possibility to create custom LSTM model)
 
 def teste_ordung_training_label_data(training_data,label_data):
     test_data = []
@@ -55,19 +39,30 @@ def teste_ordung_training_label_data(training_data,label_data):
     print(np.shape(training_data))
     print(np.shape(label_data))
 
-def max_seq(seq_data):
-    max_data = []
-    for i in range(len(seq_data)):
-        max_data.append(np.max(seq_data[i]))
-    return np.asarray(max_data, dtype=np.float32)
-
-def mean_seq(seq_data):
-    mean_data = []
-    for i in range(len(seq_data)):
-        mean_data.append(np.mean(seq_data[i]))
-    return np.asarray(mean_data, dtype=np.float32)
-
 class wahrsager:
+    '''
+    LSTM-Implementation to train and predict future energy requirements.
+
+    Args:
+        TYPE (string):
+        M_NAME (string):
+        D_PATH (string)
+        PLOTTING (bool):
+        num_past_periods (int):
+        num_inputs (int):
+        num_outputs (int):
+        dropout (float):
+        recurrent_dropout (float):
+        num_hidden (int):
+        lstm_size (int):
+        first_hidden_size (int):
+        neuron_num_change (float):
+        activation_hidden (string):
+        activation_end (string):
+        val_data_size (int):
+        num_epochs (int):       
+        
+    '''
 
     def __init__(
                 self,
@@ -82,12 +77,12 @@ class wahrsager:
                 num_outputs       = 1,
                 dropout           = 0.2,
                 recurrent_dropout = 0.2,
-                activation_hidden = 'sigmoid',
-                activation_end    = 'sigmoid',
                 num_hidden        = 3,
                 lstm_size         = 128,
                 first_hidden_size = 128,
                 neuron_num_change = 0.5,
+                activation_hidden = 'sigmoid',
+                activation_end    = 'sigmoid',
                 
                 # Trainings-Parameter
                 großer_datensatz  = True,
@@ -120,7 +115,7 @@ class wahrsager:
 
         # Überprüfe ob num_outputs bei seq passt:
         if self.num_outputs == 1 and TYPE == 'SEQ':
-            print('\nAchtung: Parameter num_outputs fehlt!')
+            print('\nAchtung: Parameter num_outputs darf nicht 1 sein, wenn TYPE="SEQ"!')
             print('Setzte num_outputs standartmäßig auf 12\n')
             self.num_outputs = 12
 
@@ -149,6 +144,11 @@ class wahrsager:
         #print('MAXIMUM:',self.max_total_power)
 
     def save_parameter(self,path_and_name):
+        ''' Saves all the init parameters to a textfile. Might be useful for parameter tuning.
+
+        Args:
+            path_name_name (string): 
+        '''
         f = open(path_and_name, 'w')
 
         f.write('Allgemeine Parameter\n')
@@ -177,7 +177,15 @@ class wahrsager:
         f.close()
 
     def import_data(self):
+        ''' Trys to import the training data based on ``TYPE`` and ``num_past_periods``. Will create a new dataset if the import fails.
+        
+        Returns:
+            training_data, label_data (tuple):
 
+            training_data (array):
+
+            label_data (array):
+        '''
         if self.TYPE == 'MEAN':
                 training_data, label_data = schaffer.rolling_mean_training_data(self.num_past_periods)
         elif self.TYPE == 'MAX':
@@ -196,22 +204,17 @@ class wahrsager:
             print("Error: Data-Import TYPE not understood! - Supported TYPES:'MEAN','MAX','NORMAL','SEQ','MAX_LABEL_SEQ','MEAN_LABEL_SEQ'")
             exit()
 
+        training_data = np.nan_to_num(training_data)
+        label_data    = np.nan_to_num(label_data)
+
         return training_data, label_data
 
 
     def lstm_model(self):
-        '''
-        self.num_past_periods  = 12
-        self.num_inputs        = 24
-        self.num_outputs       = 1
-        self.dropout           = 0.2
-        self.recurrent_dropout = 0.2
-        self.activation_hidden = 'sigmoid'
-        self.activation_end    = 'sigmoid'
-        self.num_hidden        = 3
-        self.lstm_size         = 128
-        self.first_hidden_size = 128
-        self.neuron_num_change = 0.5
+        '''Uses the Keras library to create an LSTM-Model based on the parameters in init.
+        
+        Returns:
+            model (keras model): Compiled Keras LSTM-model
         '''
     
         model = Sequential()
@@ -232,19 +235,26 @@ class wahrsager:
         #model.compile(loss='mse', optimizer=adam(lr=0.0001, decay=1e-6), metrics=['mse'])
         return model
 
+    def train(self, use_model=None):
+        ''' Trains the LSTM and saves the trained model (and the used parameters).
 
-    def train_model(self, training_data, label_data, model_name):
+        Args:
+            use_model (string, optional): Name of an existing model you want to continue to train. Note that the parameters will not be saved again, if you use this. Do not use this if you want to create a new model.
 
-        training_data = np.nan_to_num(training_data)
-        label_data    = np.nan_to_num(label_data)
+        Returns:
+            prediction (array): Future energy requirements
+        '''
+        if use_model != None:
+            model_name = use_model
+            model = load_model(self.DATENSATZ_PATH+'LSTM-models/'+model_name+'.h5')
+        else:
+            model_name = self.TYPE+self.NAME
+            model = self.lstm_model()
         
-        # Tensorboard:
+        training_data, label_data = self.import_data()
+
         tensorboard = TensorBoard(log_dir=self.DATENSATZ_PATH+'logs/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION)
 
-        # Erstelle Keras Model:
-        model = self.lstm_model()
-
-        # Trainiere:
         model.fit(training_data[:-self.val_data_size], label_data[:-self.val_data_size],
                   epochs          = self.num_epochs,
                   verbose         = 1,
@@ -254,21 +264,57 @@ class wahrsager:
         
         # Speichern:
         model.save(self.DATENSATZ_PATH+'LSTM-models/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION+'.h5')
-        self.save_parameter(self.DATENSATZ_PATH+'LSTM-models/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION+'.txt')
+        if use_model == None:
+            self.save_parameter(self.DATENSATZ_PATH+'LSTM-models/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION+'.txt')
 
         # Vorhersehen:
-        return model.predict(training_data).reshape(np.shape(label_data))
+        prediction = model.predict(training_data).reshape(np.shape(label_data))
 
-    def predict_model(self, training_data, label_data, model_name):
-    
-        training_data = np.nan_to_num(training_data)
-        label_data    = np.nan_to_num(label_data)
-        
-        model = load_model(self.DATENSATZ_PATH+'LSTM-models/'+model_name+'.h5')
-        return model.predict(training_data).reshape(np.shape(label_data))
+        if self.PLOTTING == True:
+            if self.num_outputs > 1:
+                self.plot_pred_multiple(prediction,label_data)
+            else:
+                self.plot_pred_single(prediction,label_data)
+        else:
+            print('\nWahrsager: Plotting is disabled.')
 
+        return prediction
+
+    def pred(self,use_model):
+        ''' Uses a saved LSTM-model to make predictions.
+
+        Args:
+            use_model (string): Name of the model you want to use
+
+        Returns:
+            prediction (array): Future energy requirements
+        '''
+        training_data, label_data = self.import_data()
+
+        try:
+            model = load_model(self.DATENSATZ_PATH+'LSTM-models/'+self.TYPE+'_MODEL.h5')
+        except:
+            print('Please name a model: '+self.TYPE+'_MODEL.h5! (Path: '+self.DATENSATZ_PATH+'LSTM-models/)')
+            exit()
+
+        prediction = model.predict(training_data).reshape(np.shape(label_data))
+
+        if self.PLOT_MODE == True:
+            if self.num_outputs > 1:
+                self.plot_pred_multiple(prediction,label_data)
+            else:
+                self.plot_pred_single(prediction,label_data)
+        else:
+            print('\nWahrsager: Plotting is disabled.')
+        return prediction
 
     def plot_pred_single(self,prediction,label_data):
+        ''' Plots the predictions for single-value labels and gives some additional information about the error.
+        
+        Args:
+            prediction (array): Predicted future energy requirements
+            label_data (array): Real future energy requirements
+        '''
         # Ausgabe Dataframe Vorhersage und richtige Werte:
         prediction_df = pd.DataFrame({
                 'Vorhersage'        : prediction * self.max_total_power,
@@ -288,6 +334,12 @@ class wahrsager:
 
     
     def plot_pred_multiple(self,prediction,label_data):
+        ''' Plots the predictions for sequence-value labels and gives some additional information about the error.
+        
+        Args:
+            prediction (array): Predicted future energy requirements
+            label_data (array): Real future energy requirements
+        '''
         prediction = np.transpose(prediction)
         label_data = np.transpose(label_data)
 
@@ -309,41 +361,6 @@ class wahrsager:
             plt.show()
 
 
-
-    def train(self):
-        training_data, label_data = self.import_data()
-
-        prediction = self.train_model(training_data, label_data, self.TYPE+self.NAME)
-
-        if self.PLOT_MODE == True:
-            if self.num_outputs > 1:
-                self.plot_pred_multiple(prediction,label_data)
-            else:
-                self.plot_pred_single(prediction,label_data)
-        else:
-            print('\nWahrsager: Plotting is disabled.')
-
-        return prediction
-
-    def pred(self):
-        training_data, label_data = self.import_data()
-
-        try:
-            prediction = self.predict_model(training_data, label_data, self.TYPE+'_MODEL')
-        except:
-            print('Please name a model: '+self.TYPE+'_MODEL.h5! (Path: '+self.DATENSATZ_PATH+'LSTM-models/)')
-            exit()
-
-        if self.PLOT_MODE == True:
-            if self.num_outputs > 1:
-                self.plot_pred_multiple(prediction,label_data)
-            else:
-                self.plot_pred_single(prediction,label_data)
-        else:
-            print('\nWahrsager: Plotting is disabled.')
-        return prediction
-
-
 def predictions_and_inputs():
     df = schaffer.alle_inputs_neu()[24:-12]
     
@@ -360,18 +377,7 @@ def predictions_and_inputs():
 
 
 def main():
-    '''
-    #### Wahrsager: ####
-    TYPE             = 'MEAN',
-    NAME             = 'wahrsager_v5',
-    num_past_periods = 12,
-    num_outputs      = 1,
-    PLOT_MODE        = False,
-    großer_datensatz = True,
-    val_data_size    = 2000,
-    num_epochs       = 10,
-    '''
-    
+
     print('Teste alle Trainings-Möglichkeiten mit den Standart-Einstellungen:')
 
     prediction_mean           = wahrsager(PLOT_MODE=True, TYPE='MEAN').train()
