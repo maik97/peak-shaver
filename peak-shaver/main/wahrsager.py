@@ -25,19 +25,6 @@ from common_func import try_training_on_gpu, max_seq, mean_seq
 # hidden layer eventuell auch none oder 0?
 # (possibility to create custom LSTM model)
 
-def teste_ordung_training_label_data(training_data,label_data):
-    test_data = []
-    for i in range(len(training_data)):
-        test_data.append(training_data[i][-1][10])
-
-    test_df = pd.DataFrame({
-                'training': test_data,
-                'label': label_data,
-                'Nicht NULL!': abs(test_data - label_data),
-                })
-    print(test_df)
-    print(np.shape(training_data))
-    print(np.shape(label_data))
 
 class wahrsager:
     '''
@@ -367,6 +354,22 @@ class wahrsager:
             # Plotte Dataframe
             prediction_df.plot()
             plt.show()
+
+
+
+def teste_ordung_training_label_data(training_data,label_data):
+    test_data = []
+    for i in range(len(training_data)):
+        test_data.append(training_data[i][-1][10])
+
+    test_df = pd.DataFrame({
+                'training': test_data,
+                'label': label_data,
+                'Nicht NULL!': abs(test_data - label_data),
+                })
+    print(test_df)
+    print(np.shape(training_data))
+    print(np.shape(label_data))
 
 
 def predictions_and_inputs():

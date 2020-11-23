@@ -7,9 +7,15 @@ Information about the installation, first steps and a general example are found 
 
 We also provide detailed information of all the classes and functions used by the different modules in the section: Module Documentation. Look in the Example section if you want to see how to use the different RL-aproaches we explored within the study project.
 
-`string`
-``peak-shaver``
-:class:`testModule.testClass`
+``module``
+:class:`someModule.someClass`
+:meth:`someModule.someClass.function`
+`type`
+
+``common_env``
+:class:`common_env.common_env`
+:meth:`common_env.common_env.step`
+`type`
 
 Contents
 ========
