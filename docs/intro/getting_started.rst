@@ -52,16 +52,31 @@ You should set up following folder structure so you can follow the examples:
 
 Data Preparation
 ****************
-The data preparation will be executed automaticaly when you first run ``wahrsager`` or any of the agents (provided you didn't do it manually). But it is recommended to create the preparetions seperately with ``schaffer`` since this can take up some time and you have the freedom to set up some parameters to your liking.
+The data preparation will be executed automaticaly when you first run ``wahrsager`` or any of the agents (provided you didn't do it manually). But it is recommended to create the preparations separately with ``schaffer`` since this can take up some time and you have the freedom to set up some parameters to your liking.
 
-First all the necassary functions to transform the dataset are explained seperatly. You can run these step by step or just run the last one in which case all the previous steps will be run automaticly.
+First all the necessary functions to transform the dataset are explained separately. You can run these step by step or just run the last one in which case all the previous steps will be run automatically.
 
-- ``load_geglättet_df()`` will take the dataset and smoth the data to a specific timeframe
-- ``load_norm_data()`` will take the dataset from ``load_geglättet_df()`` and will first add differentiation between weekday, then add the activation time of each machine and lastly normalize the data. It also has a dataset where the sum of power consumption isn't normalized (Note that this function is deprecated, thus you dont need to run it)
+- ``smoothed_df()`` will take the dataset and smooth the data to a specific time-frame.
+- ``normalized_df()`` will take the dataset from ``smoothed_df()`` and will first add differentiation between weekday, then add the activation time of each machine and lastly normalize the data. It also has a dataset where the sum of power consumption isn't normalized (Note that this function is deprecated, thus you don't need to run it)
 - ``load_only_norm_data()`` has the same functionality as ``load_norm_data()``, except the extra dataset where the sum of power consumption isn't normalized
 - ``load_total_power()`` has the same functionality as ``load_norm_data()``, except it returns only the extra dataset where the sum of power consumption isn't normalized
 - ``alle_inputs()`` will take the datasets of ``load_only_norm_data()`` and merge those in a single one 
 - ``alle_inputs_neu()`` is an extra function that makes a differentiation between work day and holiday (might be useful for predictions)
+
+Create the basic dataset:
+
+- :meth:`schaffer.mainDataset.smoothed_df` will take the dataset and smooth the data to a specific time-frame.
+- :meth:`schaffer.mainDataset.load_total_power` will take :meth:`schaffer.mainDataset.smoothed_df` and calculates the (not normalized) sum of the power requirements.
+- :meth:`schaffer.mainDataset.normalized_df` will take :meth:`schaffer.mainDataset.smoothed_df` and normalize the data
+- :meth:`schaffer.mainDataset.norm_activation_time_df` will take :meth:`schaffer.mainDataset.smoothed_df` and calculate the normalized activation times of the machines.
+
+Create an input-dataset:
+
+- :meth:`schaffer.lstmInputDataset.rolling_mean_training_data` will take :meth:`schaffer.mainDataset.make_input_df` to create an input-dataset that was transformed with a `rolling mean` operation
+- :meth:`schaffer.lstmInputDataset.rolling_max_training_data` will take :meth:`schaffer.mainDataset.make_input_df` to create an input-dataset that was transformed with a `rolling max` operation
+- :meth:`schaffer.lstmInputDataset.normal_training_data` will take :meth:`schaffer.mainDataset.make_input_df` to create a normale input-dataset.
+- :meth:`schaffer.lstmInputDataset.normal_training_data` will take :meth:`schaffer.mainDataset.make_input_df` to create an input-dataset with sequence-labels the size of ``num_seq_periods``.
+
 
 Recommended way to run the necessary functions:
 
@@ -69,18 +84,23 @@ Recommended way to run the necessary functions:
     
     from main.schaffer import mainDataset, lstmInputDataset
 
-    main_dataset_creator = mainDataset()
-    lstm_dataset_creator = lstmInputDataset()
+    main_dataset_creator = mainDataset(D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True)
 
     # If you want to check that everything works fine, run those rather step by step:
     main_dataset_creator.smoothed_df()
     main_dataset_creator.load_total_power()
     main_dataset_creator.normalized_df()
     main_dataset_creator.norm_activation_time_df()
+
+    lstm_dataset_creator = lstmInputDataset(D_PATH='_BIG_D/', period_string_min='5min',full_dataset=True,
+                                            num_past_periods=12, drop_main_terminal=False, use_time_diff=True,
+                                            day_diff='holiday-weekend')
+
+    # If you want to check that everything works fine, run those rather step by step:
     lstm_dataset_creator.rolling_mean_training_data()
     lstm_dataset_creator.rolling_max_training_data()
     lstm_dataset_creator.normal_training_data()
-    lstm_dataset_creator.sequence_training_data()
+    lstm_dataset_creator.sequence_training_data(num_seq_periods=12)
 
 
 

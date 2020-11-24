@@ -30,7 +30,7 @@ class mainDataset:
     def coulmn_to_smoothed_period_df(self, dataset_name, coulmn_name, c_num=None, c_total=None): # returns Datafram: Strombedarf (nur noch eine Spalte, Index = SensorDateTime, neuerstellt)
         ''' Trys to open the dataset for a specific machine that is already smoothed to the time-period. Creates a new dataset if a dataset for the given time-period can not be opened.
         Used by :meth:`schaffer.mainDataset.smoothed_df`.
-        
+
         Args:
             dataset_name (string): The name of the downloaded HIPE-dataset for a specific machine.
             coulmn_name (string): The name of the new dataset for a specif machine, that will be later used as a column name when all the machine-datasets are merged.
@@ -360,6 +360,17 @@ class mainDataset:
 
 
 class lstmInputDataset:
+    '''This class is used to create the LSTM-dataset as the inputs for ``wahrsager``.
+
+    Args:
+        D_PATH (string): Path that indicates which dataset is used. Use `'_BIG_D/'` for the full dataset and `'_small_d' for the small dataset, if you followed the propesed folder structure.
+        period_string_min (string): Sets the time-period for :class:`schaffer.mainDataset`. The string should look like this: ``xmin`` where x are the minutes of one period.
+        full_dataset (bool): Set this to ``True`` if you are using the full dataset and ``false`` otherwise. Parameter that will be used by :class:`schaffer.mainDataset`.
+        num_past_periods (int): The size of the input-sequence for the LSTM.
+        drop_main_terminal (bool): Parameter will be used for :meth:`schaffer.mainDataset.make_input_df`: The column main_terminal will be removed from the dataset if set to `True`.
+        use_time_diff (bool): Parameter will be used for :meth:`schaffer.mainDataset.make_input_df`:  Uses :meth:`schaffer.mainDataset.add_day_time_difference` when set to `True`.
+        day_diff (string): Parameter will be used for :meth:`schaffer.mainDataset.make_input_df`: Uses :meth:`schaffer.mainDataset.add_day_difference` when set to `'weekday-normal'`. `'weekend-binary'` or `'weekend-binary`. Does not use this function if set to `None`.
+    '''
 
     def __init__(self, D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True, num_past_periods=12, drop_main_terminal=False, use_time_diff=True, day_diff='holiday-weekend'):
 
@@ -383,9 +394,13 @@ class lstmInputDataset:
             self.name += '_no-main-t'
         
 
-    ### FÜR LSTM:
     def rolling_mean_training_data():
+        ''' Trys to open an LSTM-input-dataset that was transformed with a `rolling mean` operation with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
+        Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for the given paramerters.
 
+        Returns:
+            array, array: training-data, label-data
+        '''
         try:
             
             with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_rolling-mean_{}.h5'.format(self.num_past_periods), 'r') as hf:
@@ -417,8 +432,14 @@ class lstmInputDataset:
 
         return training_data, label_data
 
-    def rolling_max_training_data():
 
+    def rolling_max_training_data():
+        ''' Trys to open an LSTM-input-dataset that was transformed with a `rolling max` operation with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
+        Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for the given paramerters.
+
+        Returns:
+            array, array: training-data, label-data
+        '''
         try:
             
             with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_rolling-max_{}.h5'.format(self.num_past_periods), 'r') as hf:
@@ -450,8 +471,14 @@ class lstmInputDataset:
 
         return training_data, label_data
 
-    def normal_training_data():
 
+    def normal_training_data():
+        ''' Trys to open an LSTM-input-dataset that was transformed with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
+        Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for the given paramerters.
+
+        Returns:
+            array, array: training-data, label-data
+        '''
         try:
             
             with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_normal_{}.h5'.format(self.num_past_periods), 'r') as hf:
@@ -481,8 +508,14 @@ class lstmInputDataset:
 
         return training_data, label_data
 
-    def sequence_training_data(num_seq_periods=12):
 
+    def sequence_training_data(num_seq_periods=12):
+        ''' Trys to open an LSTM-input-dataset has time-frame ``num_past_periods`` for the sequence-input and ``num_seq_periods`` for the label-sequence. Creates a new dataset if the dataset can not be opened.
+        Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for them given paramerters.
+        
+        Returns:
+            array, array: training-data, label-data
+        '''
         try:
             
             with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_sequence_{}.h5'.format(self.num_past_periods), 'r') as hf:
@@ -521,7 +554,6 @@ class lstmInputDataset:
 
 
 
-
 def peak_len(peak_value=42):
 
     sum_total_power = load_total_power().to_numpy()
@@ -542,9 +574,6 @@ def peak_len(peak_value=42):
             
 
     return len_peak_list
-
-
-
 
 
 def plot_leistungs_benutzung():

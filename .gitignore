@@ -1,3 +1,6 @@
 _build
 old docs
 __pycache__
+dataset
+_BIG_D
+_small_d
