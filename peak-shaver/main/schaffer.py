@@ -9,544 +9,516 @@ import seaborn as sns
 import h5py
 
 from tqdm import tqdm
+from common_func import print_progress
 
 # TO-DO:
 # statt global var lieber class
 
-def global_var(_NAME='', _VERSION='', _DATENSATZ_PATH ='_BIG_D/', _großer_datensatz = True, _zeitintervall = '5min'):
-    global NAME
-    global VERSION
-    global großer_datensatz
-    global DATENSATZ_PATH
-    global zeitintervall
+class mainDataset:
+    '''This class is used to create the main dataset from wich the inputs for ``wahrsager`` and any of the agents can be chosen from.
 
-    NAME = _NAME
-    VERSION = _VERSION
-    großer_datensatz = _großer_datensatz
-    DATENSATZ_PATH = _DATENSATZ_PATH
-    zeitintervall = _zeitintervall
+    Args:
+        D_PATH (string): Path that indicates which dataset is used. Use `'_BIG_D/'` for the full dataset and `'_small_d' for the small dataset, if you followed the propesed folder structure.
+        period_string_min (string): Sets the time-period for the dataset. The string should look like this: ``xmin`` where x are the minutes of one period.
+        full_dataset (bool): Set this to ``True`` if you are using the full dataset and ``false`` otherwis
+    '''
+    def __init__(self, D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True):
 
-
-
-def power_csv(dateiname, name): # returns Datafram: Strombedarf (nur noch eine Spalte, Index = SensorDateTime, neuerstellt)
-    
-    # Falls möglich Daten öffnen
-    try: 
-        dataframe = pd.read_csv(DATENSATZ_PATH+'datensatz/5min/'+name+'.csv', index_col='SensorDateTime', parse_dates=True)
-    
-
-    # Sonst erstellen
-    except:
-
-        dataframe = pd.read_csv(DATENSATZ_PATH+'datensatz/OG/'+dateiname+'.csv', index_col='SensorDateTime', parse_dates=True)
-        dataframe = dataframe["P_kW"].to_frame()
-
-        # Converting the index as date
-        dataframe.index = pd.to_datetime(dataframe.index, utc=True)
-
-        dataframe = dataframe.resample(zeitintervall).mean().rename(columns={"P_kW": name})
-
-        #dataframe.to_csv(DATENSATZ_PATH+'datensatz/5min/'+name+'.csv')
+        self.D_PATH            = D_PATH
+        self.period_string_min = period_string_min
+        self.full_dataset      = full_dataset
 
 
-    return dataframe
+    def coulmn_to_smoothed_period_df(self, dataset_name, coulmn_name, c_num=None, c_total=None): # returns Datafram: Strombedarf (nur noch eine Spalte, Index = SensorDateTime, neuerstellt)
+        ''' Trys to open the dataset for a specific machine that is already smoothed to the time-period. Creates a new dataset if a dataset for the given time-period can not be opened.
 
+        Args:
+            dataset_name (string): The name of the downloaded HIPE-dataset for a specific machine.
+            coulmn_name (string): The name of the new dataset for a specif machine, that will be later used as a column name when all the machine-datasets are merged.
+            c_num (int): Can be used to show the progress and has to be the count of current the machine-dataset 
+            c_total (int): Can be used to show the progress and has to be the sum of all machine-dataset
 
-
-def alle_csv(): # returns geglätten Dataframe für alle Maschinen (komplette Tabelle, Index = SensorDateTime, neuerstellt)
-    
-    # Initialisiere Progress Bar
-    prog_bar_glätten = tqdm.tqdm(total=22, desc='Glätten der Daten mit dem Zeitintervall {}'.format(zeitintervall), position=1)
-    
-    # Der Zeitraum im Namen der beiden Datensätzen ist unterschiedlich:
-    if großer_datensatz == True:
-        zeitraum = '2017-10-01_lt_2018-01-01' # BIG_D
-    else:
-        zeitraum = '2017-10-23_lt_2017-10-30' # small_d
-
-    # Lade, bzw erstelle über den vorg. Zeitraum geglättete CSVs:
-    main_terminal = power_csv('MainTerminal_PhaseCount_3_geq_'+zeitraum,'main_terminal')
-    prog_bar_glätten.update(1)
-
-    chip_press = power_csv('ChipPress_PhaseCount_3_geq_'+zeitraum,'chip_press')
-    prog_bar_glätten.update(1)
-
-    chip_saw = power_csv('ChipSaw_PhaseCount_3_geq_'+zeitraum,'chip_saw')
-    prog_bar_glätten.update(1)
-
-    high_temperature_oven = power_csv('HighTemperatureOven_PhaseCount_3_geq_'+zeitraum,'high_temperature_oven')
-    prog_bar_glätten.update(1)
-
-    pick_and_place_unit = power_csv('PickAndPlaceUnit_PhaseCount_2_geq_'+zeitraum,'pick_and_place_unit')
-    prog_bar_glätten.update(1)
-
-    screen_printer = power_csv('ScreenPrinter_PhaseCount_2_geq_'+zeitraum,'screen_printer')
-    prog_bar_glätten.update(1)
-
-    soldering_oven = power_csv('SolderingOven_PhaseCount_3_geq_'+zeitraum,'soldering_oven')
-    prog_bar_glätten.update(1)
-
-    vacuum_oven = power_csv('VacuumOven_PhaseCount_3_geq_'+zeitraum,'vacuum_oven')
-    prog_bar_glätten.update(1)
-
-    vacuum_pump_1 = power_csv('VacuumPump1_PhaseCount_3_geq_'+zeitraum,'vacuum_pump_1')
-    prog_bar_glätten.update(1)
-
-    vacuum_pump_2 = power_csv('VacuumPump2_PhaseCount_2_geq_'+zeitraum,'vacuum_pump_2')
-    prog_bar_glätten.update(1)
-
-    washing_machine = power_csv('WashingMachine_PhaseCount_3_geq_'+zeitraum,'washing_machine')
-    prog_bar_glätten.update(1)
-
-
-    # Erstelle eine zusammengefügte Dataframe mit allen Maschinen:
-
-    df = pd.merge(main_terminal,chip_press,left_index=True, right_index=True, how='outer')
-    prog_bar_glätten.update(1)
-
-    df = pd.merge(df,chip_saw,left_index=True, right_index=True, how='outer')
-    prog_bar_glätten.update(1)
-
-    df = pd.merge(df,high_temperature_oven,left_index=True, right_index=True, how='outer')
-    prog_bar_glätten.update(1)
-
-    df = pd.merge(df,pick_and_place_unit,left_index=True, right_index=True, how='outer')
-    prog_bar_glätten.update(1)
-
-    df = pd.merge(df,screen_printer,left_index=True, right_index=True, how='outer')
-    prog_bar_glätten.update(1)
-
-    df = pd.merge(df,soldering_oven,left_index=True, right_index=True, how='outer')
-    prog_bar_glätten.update(1)
-
-    df = pd.merge(df,vacuum_oven,left_index=True, right_index=True, how='outer')
-    prog_bar_glätten.update(1)
-
-    df = pd.merge(df,vacuum_pump_1,left_index=True, right_index=True, how='outer')
-    prog_bar_glätten.update(1)
-
-    df = pd.merge(df,vacuum_pump_2,left_index=True, right_index=True, how='outer')
-    prog_bar_glätten.update(1)
-
-    df = pd.merge(df,washing_machine,left_index=True, right_index=True, how='outer')
-    prog_bar_glätten.update(1)
-
-    
-    # Spechere zusammengefügtes Dataframe als csv:
-    df.to_csv(DATENSATZ_PATH+'datensatz/5min/komplette_tabelle.csv')
-    return df
-
-
-
-def aktiverungszeit_berechnen(spalte): # returns array: aktivierungszeit einer bestimmten Maschine (neuerstellt)
-    
-    # Initialisiere:
-    aktivierungszeit = []
-    aktivierung = 0
-
-
-    # Iteration über jede Zeile der bestimmten Spalte:
-    for zeile in spalte:
+        Returns:
+            dataframe: The smoothed dataset for a given machine
+        '''
+        # Falls möglich Daten öffnen
+        try: 
+            dataframe = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/single-column-tables/'+coulmn_name+'.csv', index_col='SensorDateTime', parse_dates=True)
         
-        # Wenn Zeile nicht Null, dann ist die Maschine aktiv:
-        if zeile != 0:
-            aktivierung += 1 # Desto länger die Maschine aktiv ist, desto höher die Summe
+        # Sonst erstellen
+        except:
+
+            dataframe = pd.read_csv('dataset/'+dataset_name+'.csv', index_col='SensorDateTime', parse_dates=True)
+            dataframe = dataframe["P_kW"].to_frame()
+
+            # Converting the index as date
+            dataframe.index = pd.to_datetime(dataframe.index, utc=True)
+
+            dataframe = dataframe.resample(self.period_string_min).mean().rename(columns={"P_kW": coulmn_name})
+
+            dataframe.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/single-column-tables/'+coulmn_name+'.csv')
+
+            if c_num == None and c_total == None:
+                print('Created dataset for',coulmn_name,'from',dataset_name)
+            else:
+                print('Created dataset for',coulmn_name,'from',dataset_name, '({}/{})'.format(c_num,c_total))
+
+        return dataframe
+
+
+    def merge_columns_to_df(self, df, column_df, m_num=None, m_total=None):
+        ''' Used by :meth:`schaffer.mainDataset.smoothed_df` to merge to dataframes into one
+
+        Args:
+            df (dataframe): Smoothed dataset of (multiple) machines
+            column_df (dataframe): Smoothed dataset o a given machine that will be merged to ``df``
+            m_num (int): Can be used to show the progress and has to be the count of the current the machine-dataset 
+            m_total (int): Can be used to show the progress and has to be the sum of all amothed machine-dataset
         
-        # Wenn Zeile Null, dann ist Maschine inaktiv:
+        Returns:
+            dataframe: The merged dataframe of ``df`` and ``column_df``
+        '''
+        df = pd.merge(df,column_df,left_index=True, right_index=True, how='outer')
+        if m_num != None and num_total != None:
+            print_progress('Merging columns to one dataframe',m_num,m_total)
+        return df
+
+
+    def smoothed_df(self): # returns geglätten Dataframe für alle Maschinen (komplette Tabelle, Index = SensorDateTime, neuerstellt)
+        ''' Trys to open the merged and smoothed dataset that includes all machines. Creates a new dataset if the dataset can not be opened.
+        Uses :meth:`schaffer.mainDataset.coulmn_to_smoothed_period_df` to smooth and :meth:`schaffer.mainDataset.merge_columns_to_df` to merge, when creating a new dataset.
+
+        Returns:
+            dataframe: The merged and smothed dataframe that includes all machines.
+        '''
+        try:
+            df = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/smoothed_table.csv', index_col='SensorDateTime', parse_dates=True)
+
+        except:
+            print('Could not open:',self.D_PATH+'datasets/'+self.period_string_min+'/smoothed_table.csv')
+            print('Creating new smoothed_table.csv...')
+
+            # Der Zeitraum im Namen der beiden Datensätzen ist unterschiedlich:
+            if self.full_dataset  == True:
+                zeitraum = '2017-10-01_lt_2018-01-01' # BIG_D
+            else:
+                zeitraum = '2017-10-23_lt_2017-10-30' # small_d
+
+            # Lade, bzw erstelle über den vorg. Zeitraum geglättete CSVs:
+            main_terminal         = self.coulmn_to_smoothed_period_df('MainTerminal_PhaseCount_3_geq_'+zeitraum,'main_terminal',1,11)
+            chip_press            = self.coulmn_to_smoothed_period_df('ChipPress_PhaseCount_3_geq_'+zeitraum,'chip_press',2,11)
+            chip_saw              = self.coulmn_to_smoothed_period_df('ChipSaw_PhaseCount_3_geq_'+zeitraum,'chip_saw',3,11)
+            high_temperature_oven = self.coulmn_to_smoothed_period_df('HighTemperatureOven_PhaseCount_3_geq_'+zeitraum,'high_temperature_oven',4,11)
+            pick_and_place_unit   = self.coulmn_to_smoothed_period_df('PickAndPlaceUnit_PhaseCount_2_geq_'+zeitraum,'pick_and_place_unit',5,11)
+            screen_printer        = self.coulmn_to_smoothed_period_df('ScreenPrinter_PhaseCount_2_geq_'+zeitraum,'screen_printer',6,11)
+            soldering_oven        = self.coulmn_to_smoothed_period_df('SolderingOven_PhaseCount_3_geq_'+zeitraum,'soldering_oven',7,11)
+            vacuum_oven           = self.coulmn_to_smoothed_period_df('VacuumOven_PhaseCount_3_geq_'+zeitraum,'vacuum_oven',8,11)
+            vacuum_pump_1         = self.coulmn_to_smoothed_period_df('VacuumPump1_PhaseCount_3_geq_'+zeitraum,'vacuum_pump_1',9,11)
+            vacuum_pump_2         = self.coulmn_to_smoothed_period_df('VacuumPump2_PhaseCount_2_geq_'+zeitraum,'vacuum_pump_2',10,11)
+            washing_machine       = self.coulmn_to_smoothed_period_df('WashingMachine_PhaseCount_3_geq_'+zeitraum,'washing_machine',11,11)
+
+            # Erstelle eine zusammengefügte Dataframe mit allen Maschinen:
+            df = self.merge_columns_to_df(main_terminal,chip_press,1,10)
+            df = self.merge_columns_to_df(df,chip_saw,2,10)
+            df = self.merge_columns_to_df(df,high_temperature_oven,3,10)
+            df = self.merge_columns_to_df(df,pick_and_place_unit,4,10)
+            df = self.merge_columns_to_df(df,screen_printer,5,10)
+            df = self.merge_columns_to_df(df,soldering_oven,6,10)
+            df = self.merge_columns_to_df(df,vacuum_oven,7,10)
+            df = self.merge_columns_to_df(df,vacuum_pump_1,8,10)
+            df = self.merge_columns_to_df(df,vacuum_pump_2,9,10)
+            df = self.merge_columns_to_df(df,washing_machine,10,10)
+            
+            # Rauschen um Null entfernen:
+            df[df<0.01] = 0
+
+            # Spechere zusammengefügtes Dataframe als csv:
+            df.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/smoothed_table.csv')
+        return df
+
+
+    def load_total_power(self):
+        ''' Trys to open the dataset for the sum of all power requirements which are not normalized. Creates a new dataset if the dataset can not be opened.
+        Uses :meth:`schaffer.mainDataset.smoothed_df` when creating a new dataset.
+
+        Returns:
+            dataframe: The sum of all power reguieremts per period.
+        '''
+        # TO-DO: include option to drop main_terminal !!!!!!!
+        try:
+            total_power = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/total_power.csv', index_col='SensorDateTime', parse_dates=True)
+        except:
+            print('Could not open:', self.D_PATH+'datasets/'+self.period_string_min+'/total_power.csv')
+            print('Creating new total_power.csv...')
+
+            df = self.smoothed_df()
+            # Berechne Summe des insgesamt benötigten Stroms:
+            total_power = pd.DataFrame({
+                'total_power' : df.sum(axis = 1)
+                }, index = df.index)
+            # Speichere Summe des insgesamt benötigten Stroms als CSV:
+            total_power.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/total_power.csv')
+        return total_power
+
+    def normalize(column): # returns array: Normalisierter Strombededarf einer Maschine (neuerstellt)
+        ''' Is used by some class functions to normalize a dataframe-column.
+
+        Args:
+            column (series, array): The given dataframe-column
+
+        Returns:
+            array: A normalized array of the column that can be interpreted as a new (updated) column
+        '''
+        # Maximaler Wert im ganzen Array:
+        max_wert = np.max(column)
+        # Falls Werte exisitieren, d.h. kompletter Array ist nicht gleich Null:
+        if max_wert != 0:
+            normalisiert_array = column / max_wert 
+        # Sonst ist Normalisierung auch gleich Null:
         else:
-            aktivierung = 0 # Setze 'Summe' wieder auf Null
-
-        # Füge den Summen-Wert der Aktivierung dem Array hinzu:
-        aktivierungszeit.append(aktivierung)
-
-    return aktivierungszeit
-
-
-
-def normalisieren(array): # returns array: Normalisierter Strombededarf einer Maschine (neuerstellt)
-
-    # Maximaler Wert im ganzen Array:
-    max_wert = np.max(array)
-    
-    # Falls Werte exisitieren, d.h. kompletter Array ist nicht gleich Null:
-    if max_wert != 0:
-        normalisiert_array = array / max_wert 
-
-    # Sonst ist Normalisierung auch gleich Null:
-    else:
-        normalisiert_array = array
-
-    return normalisiert_array
-
-
-
-def load_geglättet_df(): # returns geglätten Dataframe für alle Maschinen (geladen falls möglich, sonst über alle_csv)
-
-    # Falls möglich Daten öffnen:
-    try:
-        df = pd.read_csv(DATENSATZ_PATH+'datensatz/5min/komplette_tabelle.csv', index_col='SensorDateTime', parse_dates=True)
-    
-    # Sonst Daten erstellen:
-    except:
-        print('Geglättete Daten nicht gefunden')
-        print('Erstelle zunächst geglättete Daten neu...')
-
-        df = alle_csv()
-
-    return df
-
-
-
-def datensatz_bearbeiten(): # returns total_power, norm_aktiv_df, norm_df, norm_time (jeweils neuerstellte dataframes)
-
-    # Geglätteten Dataframe lade:
-    df = load_geglättet_df()
-
-
-    # Berechne Summe des insgesamt benötigten Stroms:
-    total_power = pd.DataFrame({
-        'total_power' : df.sum(axis = 1)
-        }, index = df.index)
-
-    #df.sum(axis=1).rename('total_power')
-
-    # Rauschen um Null entfernen:
-    df[df<0.01] = 0
-    
-
-    # neue Spalte mit Wochentag:
-    df['Weekday'] = df.index.weekday * 0.1
-    df['time'] =  df.index.time
-
-    # Ändere Tageszeit-Format in Zahl:
-    df['time'] = df['time'].index.hour * 60 + df['time'].index.minute + df['time'].index.second/60
-    
-    # Arbeitstage = 1:
-    #df['Weekday'][df['Weekday'] < 5] = 1 
-
-    # Wochenende = 0:
-    #df['Weekday'][df['Weekday'] >= 5] = 0
-
-    # Erstelle neuen Dataframe für die Tageszeit und den Wochentag:
-    df_time = pd.DataFrame({
-        'time' : df['time'],
-        'Weekday' : df['Weekday']
-        })
-
-    # Lösche Spalten Tageszeit und Wochentag aus dem Maschinen-Dataframe:
-    df.drop(['time', 'Weekday'], axis=1)
-    
-
-    # Neues Dataframe, ohne Main_Terminal -> 'Rest':
-    #df_rest = df
-    #df_rest = df_rest.drop(['main_terminal'], axis=1)
-
-    # Summiere den 'Rest':
-    #rest_sum = df_rest.sum(axis=1)
-
-    # Berichtige Main_Terminal, da in Main_terminal zuvor der 'Rest' enthalten war:
-    #df['main_terminal'] -= rest_sum
-
-
-    # Berechen für jede Spalte die Aktivitätszeiten
-    aktiv_t_main_terminal = aktiverungszeit_berechnen(df['main_terminal'])
-    aktiv_t_chip_press = aktiverungszeit_berechnen(df['chip_press'])
-    aktiv_t_chip_saw = aktiverungszeit_berechnen(df['chip_saw'])
-    aktiv_t_high_temperature_oven = aktiverungszeit_berechnen(df['high_temperature_oven'])
-    aktiv_t_pick_and_place_unit = aktiverungszeit_berechnen(df['pick_and_place_unit'])
-    aktiv_t_screen_printer = aktiverungszeit_berechnen(df['screen_printer'])
-    aktiv_t_soldering_oven = aktiverungszeit_berechnen(df['soldering_oven'])
-    aktiv_t_vacuum_oven = aktiverungszeit_berechnen(df['vacuum_oven'])
-    aktiv_t_vacuum_pump_1 = aktiverungszeit_berechnen(df['vacuum_pump_1'])
-    aktiv_t_vacuum_pump_2 = aktiverungszeit_berechnen(df['vacuum_pump_2'])
-    aktiv_t_washing_machine = aktiverungszeit_berechnen(df['washing_machine'])
-
-
-
-    # Normalisiere Aktivitätszeiten:
-    norm_aktiv_df = pd.DataFrame({
-        #'aktiv_t_main_terminal' : normalisieren(aktiv_t_main_terminal),
-        #'norm_aktiv_t_main_terminal' : 1, # weil main terminal eh immer an ist
-        'norm_aktiv_t_chip_press' : normalisieren(aktiv_t_chip_press),
-        'norm_aktiv_t_chip_saw' : normalisieren(aktiv_t_chip_saw),
-        'norm_aktiv_t_high_temperature_oven' : normalisieren(aktiv_t_high_temperature_oven),
-        'norm_aktiv_t_pick_and_place_unit' : normalisieren(aktiv_t_pick_and_place_unit),
-        'norm_aktiv_t_screen_printer' : normalisieren(aktiv_t_screen_printer),
-        'norm_aktiv_t_soldering_oven' : normalisieren(aktiv_t_soldering_oven),
-        'norm_aktiv_t_vacuum_oven' : normalisieren(aktiv_t_vacuum_oven),
-        'norm_aktiv_t_vacuum_pump_1' : normalisieren(aktiv_t_vacuum_pump_1),
-        'norm_aktiv_t_vacuum_pump_2' : normalisieren(aktiv_t_vacuum_pump_2),
-        'norm_aktiv_t_washing_machine' : normalisieren(aktiv_t_washing_machine)
-        }, index=df.index)
-
-    # Normalisiere Maschinen-Dataframe:
-    norm_df = pd.DataFrame({
-        'norm_total_power': normalisieren(total_power['total_power']),
-        'norm_main_terminal' : normalisieren(df['main_terminal']), 
-        'norm_chip_press' : normalisieren(df['chip_press']),
-        'norm_chip_saw' : normalisieren(df['chip_saw']),
-        'norm_high_temperature_oven' : normalisieren(df['high_temperature_oven']),
-        'norm_pick_and_place_unit' : normalisieren(df['pick_and_place_unit']),
-        'norm_screen_printer' : normalisieren(df['screen_printer']),
-        'norm_soldering_oven' : normalisieren(df['soldering_oven']),
-        'norm_vacuum_oven' : normalisieren(df['vacuum_oven']),
-        'norm_vacuum_pump_1' : normalisieren(df['vacuum_pump_1']),
-        'norm_vacuum_pump_2' : normalisieren(df['vacuum_pump_2']),
-        'norm_washing_machine' : normalisieren(df['washing_machine'])
-        })
-
-    # Normalisiere Tageszeit-Wochentag-Dataframe:
-    norm_time = pd.DataFrame({
-        'norm_wochentag' : df_time['Weekday'],
-        'norm_tageszeit' : normalisieren(df_time['time'])
-        })
-
-
-    # Speichere Normalisierte Dataframes als CSVs:
-    norm_aktiv_df.to_csv(DATENSATZ_PATH+'datensatz/verarbeitet/norm_aktiv_df.csv')
-    norm_df.to_csv(DATENSATZ_PATH+'datensatz/verarbeitet/norm_df.csv')
-    norm_time.to_csv(DATENSATZ_PATH+'datensatz/verarbeitet/norm_time.csv')
-    
-
-    # Speichere Summe des insgesamt benötigten Stroms als CSV:
-    total_power.to_csv(DATENSATZ_PATH+'datensatz/verarbeitet/total_power.csv')
-
-    # Ausgabe:
-    print('Normalisierte Daten und Total-Power-Daten erfolgreich neu erstellt')
-
-    return total_power, norm_aktiv_df, norm_df, norm_time
-
-
-
-def load_norm_data(): # returns total_power, norm_aktiv_df, norm_df, norm_time (jeweils geladen falls möglich, sonst über datensatz_bearbeiten)
-    # Falls möglich Daten öffnen:
-    try:
-        total_power = pd.read_csv(DATENSATZ_PATH+'datensatz/verarbeitet/total_power.csv', index_col='SensorDateTime', parse_dates=True)
-        norm_aktiv_df = pd.read_csv(DATENSATZ_PATH+'datensatz/verarbeitet/norm_aktiv_df.csv', index_col='SensorDateTime', parse_dates=True)
-        norm_df = pd.read_csv(DATENSATZ_PATH+'datensatz/verarbeitet/norm_df.csv', index_col='SensorDateTime', parse_dates=True)
-        norm_time = pd.read_csv(DATENSATZ_PATH+'datensatz/verarbeitet/norm_time.csv', index_col='SensorDateTime', parse_dates=True)
-
-    # Sonst erstellen:
-    except:
-        print('Normalisierte Daten oder Total-Power-Daten nicht gefunden')
-        print('Erstelle normalisierte Daten, bzw Total-Power-Daten neu...')
-        total_power, norm_aktiv_df, norm_df, norm_time = datensatz_bearbeiten()
-
-    return total_power, norm_aktiv_df, norm_df, norm_time
-
-
-def load_only_norm_data(): # returns total_power, norm_aktiv_df, norm_df, norm_time (jeweils geladen falls möglich, sonst über datensatz_bearbeiten)
-    # Falls möglich Daten öffnen:
-    try:
-        norm_aktiv_df = pd.read_csv(DATENSATZ_PATH+'datensatz/verarbeitet/norm_aktiv_df.csv', index_col='SensorDateTime', parse_dates=True)
-        norm_df = pd.read_csv(DATENSATZ_PATH+'datensatz/verarbeitet/norm_df.csv', index_col='SensorDateTime', parse_dates=True)
-        norm_time = pd.read_csv(DATENSATZ_PATH+'datensatz/verarbeitet/norm_time.csv', index_col='SensorDateTime', parse_dates=True)
-
-    # Sonst erstellen:
-    except:
-        print('Normalisierte Daten nicht gefunden')
-        print('Erstelle normalisierte Daten, bzw Total-Power-Daten neu...')
-        total_power, norm_aktiv_df, norm_df, norm_time = datensatz_bearbeiten()
-
-    return norm_aktiv_df, norm_df, norm_time
-
-
-def load_total_power(): # returns total_power, norm_aktiv_df, norm_df, norm_time (jeweils geladen falls möglich, sonst über datensatz_bearbeiten)
-    # Falls möglich Daten öffnen:
-    try:
-        total_power = pd.read_csv(DATENSATZ_PATH+'datensatz/verarbeitet/total_power.csv', index_col='SensorDateTime', parse_dates=True)
-
-    # Sonst erstellen:
-    except:
-        print('Total-Power-Daten nicht gefunden')
-        print('Erstelle normalisierte Daten, bzw Total-Power-Daten neu...')
-        total_power = datensatz_bearbeiten()
-
-    return total_power
-
-
-def alle_inputs():
-
-    try:
-        alle_inputs_df = pd.read_csv(DATENSATZ_PATH+'datensatz/verarbeitet/alle_inputs_df.csv', index_col='SensorDateTime', parse_dates=True)
-    
-    except:
-        norm_aktiv_df, norm_df, norm_time  = load_only_norm_data()
-
-        # norm_aktiv_df, norm_df und norm_time zusammenfügen:
-        alle_inputs_df = pd.merge(norm_aktiv_df, norm_df, left_index=True, right_index=True, how='outer')
-        alle_inputs_df = pd.merge(alle_inputs_df, norm_time, left_index=True, right_index=True, how='outer')
-
-        alle_inputs_df.to_csv(DATENSATZ_PATH+'datensatz/verarbeitet/alle_inputs_df.csv')
-    
-    return alle_inputs_df
-
-
-#day_2h = Day_List[day_iteration].between_time(start_hour, end_hour)
-#pandas.DatetimeIndex.date
-#df.loc['2015-08-12':'2015-08-10']
-def alle_inputs_neu():
-    
-    df = alle_inputs()
-
-    feiertag_liste = ['2017-10-02','2017-10-03','2017-10-30','2017-10-31',
-                  '2017-11-01',
-                  '2017-12-25','2017-12-26','2017-12-27','2017-12-28','2017-12-29','2017-12-30'   
-                 ]
-
-    df['tagestyp'] = 1 # Arbeitstag
-    df['tagestyp'][df.index.normalize().isin(feiertag_liste)] = 0.5 # Feiertag
-    df['tagestyp'][df.index.weekday > 4] = 0 # Wochenende
-
-    df['tagestyp_morgen'] = df['tagestyp'].shift(periods=-len(df['tagestyp'][df.index.normalize().isin(['2017-10-02'])]), fill_value=df['tagestyp'][-1])
-
-    return df
-
-
-
-
-
-### FÜR LSTM:
-def rolling_mean_training_data(num_past_periods=12):
-
-    try:
+            normalisiert_array = column
+        return normalisiert_array
+
+
+    def normalized_df(self, drop_main_terminal=False):
+        ''' Trys to open the normalized dataset that includes all machines. Creates a new dataset if the dataset can not be opened.
+        Uses :meth:`schaffer.mainDataset.normalize` to normalize when creating a new dataset.
+
+        Returns:
+            dataframe: The normalized dataset that includes all machines.
+        '''
+        # main terminal könnte statt gedropped zu weren auch "berichtigt" werden indam man minus des rest rechnen
+        try:
+            if drop_main_terminal == False:
+                norm_df = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df.csv', index_col='SensorDateTime', parse_dates=True)
+            else:
+                norm_df = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df_without_main_terminal.csv', index_col='SensorDateTime', parse_dates=True)
+
+        except:
+            if drop_main_terminal == False:
+                print('Could not open:', self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df.csv')
+                print('Creating new norm_activ_df.csv...')
+            else:
+                print('Could not open:', self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df_without_main_terminal.csv')
+                print('Creating new normalized_df_without_main_terminal.csv...')
+
+            df          = self.smoothed_df()
+            total_power = self.load_total_power()
+            # Normalisiere Maschinen-Dataframe:
+            norm_df = pd.DataFrame({
+                'norm_total_power'           : normalize(total_power['total_power']),
+                'norm_main_terminal'         : normalize(df['main_terminal']), 
+                'norm_chip_press'            : normalize(df['chip_press']),
+                'norm_chip_saw'              : normalize(df['chip_saw']),
+                'norm_high_temperature_oven' : normalize(df['high_temperature_oven']),
+                'norm_pick_and_place_unit'   : normalize(df['pick_and_place_unit']),
+                'norm_screen_printer'        : normalize(df['screen_printer']),
+                'norm_soldering_oven'        : normalize(df['soldering_oven']),
+                'norm_vacuum_oven'           : normalize(df['vacuum_oven']),
+                'norm_vacuum_pump_1'         : normalize(df['vacuum_pump_1']),
+                'norm_vacuum_pump_2'         : normalize(df['vacuum_pump_2']),
+                'norm_washing_machine'       : normalize(df['washing_machine'])
+                })
+
+            if drop_main_terminal == False: 
+                norm_df.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df.csv')
+            else:
+                 # main terminal könnte statt gedropped zu weren auch "berichtigt" werden indam man minus des rest rechnen
+                norm_df = norm_df.drop(['norm_main_terminal'])
+                norm_df.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df_without_main_terminal.csv')
+
+        return norm_df
+
+
+    def aktiverungszeit_berechnen(column):
+        ''' Is used by :meth:`schaffer.mainDataset.norm_activation_time_df` to calculate the activation time a of a given machine.
+
+        Args:
+            column (series, array): The given dataframe-column
+
+        Returns:
+            list: List that counts the periods since when the machine is active,can be interpreted as a new (updated) column
+        '''
+        # Initialisiere:
+        aktivierungszeit = []
+        aktivierung = 0
+        # Iteration über jede Zeile der bestimmten Spalte:
+        for zeile in column:
+            # Wenn Zeile nicht Null, dann ist die Maschine aktiv:
+            if zeile != 0:
+                aktivierung += 1 # Desto länger die Maschine aktiv ist, desto höher die Summe
+            # Wenn Zeile Null, dann ist Maschine inaktiv:
+            else:
+                aktivierung = 0 # Setze 'Summe' wieder auf Null
+            # Füge den Summen-Wert der Aktivierung dem Array hinzu:
+            aktivierungszeit.append(aktivierung)
+        return aktivierungszeit
+
+
+    def norm_activation_time_df(self):
+        ''' Trys to open the normalized dataset that includes all activation times for the machines. Creates a new dataset if the dataset can not be opened.
+        Uses :meth:`schaffer.mainDataset.aktiverungszeit_berechnen` to calculate the activation time and :meth:`schaffer.mainDataset.normalize` to normalize, when creating a new dataset.
+
+        Returns:
+            dataframe: The normalized dataset that includes the activation times for all machines, except `main_terminal` since this is always active.
+        '''
+        try:
+            norm_aktiv_df = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/norm_activ_df.csv', index_col='SensorDateTime', parse_dates=True)
+        except:
+            print('Could not open:', self.D_PATH+'datasets/'+self.period_string_min+'/norm_activ_df.csv')
+            print('Creating new norm_activ_df.csv...')
+
+            df = self.smoothed_df()
+            # Normalisiere Aktivitätszeiten:
+            norm_aktiv_df = pd.DataFrame({
+                #'norm_aktiv_t_main_terminal'        : 1, # weil main terminal eh immer an ist
+                'norm_aktiv_t_chip_press'            : normalize(aktiverungszeit_berechnen(df['chip_press'])),
+                'norm_aktiv_t_chip_saw'              : normalize(aktiverungszeit_berechnen(df['chip_saw'])),
+                'norm_aktiv_t_high_temperature_oven' : normalize(aktiverungszeit_berechnen(df['high_temperature_oven'])),
+                'norm_aktiv_t_pick_and_place_unit'   : normalize(aktiverungszeit_berechnen(df['pick_and_place_unit'])),
+                'norm_aktiv_t_screen_printer'        : normalize(aktiverungszeit_berechnen(df['screen_printer'])),
+                'norm_aktiv_t_soldering_oven'        : normalize(aktiverungszeit_berechnen(df['soldering_oven'])),
+                'norm_aktiv_t_vacuum_oven'           : normalize(aktiverungszeit_berechnen(df['vacuum_oven'])),
+                'norm_aktiv_t_vacuum_pump_1'         : normalize(aktiverungszeit_berechnen(df['vacuum_pump_1'])),
+                'norm_aktiv_t_vacuum_pump_2'         : normalize(aktiverungszeit_berechnen(df['vacuum_pump_2'])),
+                'norm_aktiv_t_washing_machine'       : normalize(aktiverungszeit_berechnen(df['washing_machine']))
+                }, index=df.index)
+            norm_aktiv_df.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/norm_aktiv_df.csv')
+        return norm_aktiv_df
+
+
+    def add_day_time_difference(self, df):    
+        ''' Can be used by :meth:`schaffer.mainDataset.make_input_df` to create a new (normalized) column that represents the time of the day.
         
-        with h5py.File(DATENSATZ_PATH+'datensatz/training_LSTM/training_und_label_data_rolling_mean_{}.h5'.format(num_past_periods), 'r') as hf:
-            training_data = hf['training_data'][:]
-            label_data = hf['label_data'][:]
+        Args:
+            df (datafrme): The dataframe to wich the new coulmn will be added.
 
-    except:
-        alle_inputs_df = alle_inputs()
+        Returns:
+            dataframe: The new dataframe with the added column
+        '''
+        # Tageszeit-Format in Zahl:
+        df['time'] =  df.index.time
+        df['time'] = normalisieren(df['time'].index.hour * 60 + df['time'].index.minute + df['time'].index.second/60)
+        return df
+
+    def add_day_difference(self, df, day_diff='holiday-weekend'):
+        ''' Can be used by :meth:`schaffer.mainDataset.make_input_df` to create a new column that represents the day-type.
         
-        rolling_mean_inputs_df = alle_inputs_df.rolling(num_past_periods).mean()
-        rolling_mean_inputs = rolling_mean_inputs_df.to_numpy()
+        Args:
+            df (datafrme): The dataframe to wich the new coulmn will be added.
+            day_diff (string): The mode by which the day-type will be represented
 
-        training_data = []
+        Returns:
+            dataframe: The new dataframe with the added column(s)
 
-        #steps = tqdm.tqdm(total=len(rolling_mean_inputs[:-num_past_periods]), desc='Training Data'.format(i+1), position=1)
-        for i in tqdm(range(len(rolling_mean_inputs[:-num_past_periods]))):
-            #steps.update(1)
+        - ``day_diff='weekend-normal'`` will set each day of the week a value from 0.1 to 0.7
+        - ``day_diff='weekend-binary'`` will set 1 for normal work-days and 0 for weekend-days
+        - ``day_diff='holiday-weekend'`` will set 1 for normal work-days, 0.5 for holidays and 0 for weekend-days. This will also create a second column with those values for the next day.
+        '''
+        if day_diff == 'weekday-normal':
+            df['day'] = df.index.weekday * 0.1
+        elif day_diff == 'weekend-binary':
+            # Arbeitstage = 1:
+            df['day'][df['day'] < 5] = 1 
+            # Wochenende = 0:
+            df['day'][df['day'] >= 5] = 0
+        elif day_diff == 'holiday-weekend':
+            feiertag_liste = ['2017-10-02','2017-10-03','2017-10-30','2017-10-31',
+                          '2017-11-01', '2017-12-25','2017-12-26','2017-12-27',
+                          '2017-12-28','2017-12-29','2017-12-30']
+            df['day-type'] = 1 # Arbeitstag
+            df['day-type'][df.index.normalize().isin(feiertag_liste)] = 0.5 # Feiertag
+            df['day-type'][df.index.weekday > 4] = 0 # Wochenende
+            df['day-type-tomorrow'] = df['day-type'].shift(periods=-len(df['day-type'][df.index.normalize().isin(['2017-10-02'])]), fill_value=df['day-type'][-1])
+        else:
+            Print("Error: day_diff was set to {}, use 'weekday-normal',  'weekend-binary', 'holiday-weekend' or None!" )
+            exit()
+        return df
 
-            training_data = np.append(training_data, rolling_mean_inputs[i:i+num_past_periods])
-
-
-        num_inputs_t = len(rolling_mean_inputs[0]) 
-        num_t = len(rolling_mean_inputs[num_past_periods:])
-
-
-        training_data = np.reshape(training_data, (num_t, num_past_periods, num_inputs_t))[num_past_periods:]
-        label_data = rolling_mean_inputs_df['norm_total_power'].to_numpy()[num_past_periods:][num_past_periods:]
-
-        with h5py.File(DATENSATZ_PATH+'datensatz/training_LSTM/training_und_label_data_rolling_mean_{}.h5'.format(num_past_periods), 'w') as hf:
-            hf.create_dataset("training_data",  data=training_data)
-            hf.create_dataset("label_data",  data=label_data)
-
-    return training_data, label_data
-
-def rolling_max_training_data(num_past_periods=12):
-
-    try:
+    def make_input_df(self, drop_main_terminal=False, use_time_diff=True, day_diff='holiday-weekend'):
+        ''' Returns an input-dataset using :meth:`schaffer.mainDataset.normalized_df` and :meth:`schaffer.mainDataset.norm_activation_time_df`, by merging those datasets.
+        Optionally uses :meth:`schaffer.mainDataset.add_day_time_difference` when ``use_time_diff=True`` and :meth:`schaffer.mainDataset.add_day_difference` when ``day_diff`` is NOT `None`.
         
-        with h5py.File(DATENSATZ_PATH+'datensatz/training_LSTM/training_und_label_data_rolling_max_{}.h5'.format(num_past_periods), 'r') as hf:
-            training_data = hf['training_data'][:]
-            label_data = hf['label_data'][:]
+        Args:
+            drop_main_terminal (bool): The column main_terminal will be removed from the dataset if set to `True`
+            use_time_diff (bool): Uses :meth:`schaffer.mainDataset.add_day_time_difference` when set to `True`
+            day_diff (string, null): Uses :meth:`schaffer.mainDataset.add_day_difference` when set to `'weekday-normal'`. `'weekend-binary'` or `'weekend-binary`. Does not use this function if set to `None`.
 
-    except:
-        alle_inputs_df = alle_inputs()
+        Returns:
+            dataframe: A dataframe that can be used as inputs for ``wahrsager`` or any of the agents.
+        '''
+        norm_df       = normalized_df(drop_main_terminal)
+        norm_aktiv_df = norm_activation_time_df()
+        input_df = pd.merge(norm_df, norm_aktiv_df, left_index=True, right_index=True, how='outer')
+
+        if use_time_diff == True:
+            input_df = add_day_time_difference(input_df)
+
+        if day_diff != None:
+            input_df = add_day_difference(input_df, day_diff)
+        return input_df
+
+
+
+class lstmInputDataset:
+
+    def __init__(self, D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True, num_past_periods=12, drop_main_terminal=False, use_time_diff=True, day_diff='holiday-weekend'):
+
+        self.D_PATH             = D_PATH
+        self.num_past_periods   = num_past_periods
+        self.drop_main_terminal = drop_main_terminal
+        self.use_time_diff      = use_time_diff
+        self.day_diff           = day_diff
+
+        self.name               = ''
+        self.main_dataset_obj   = mainDataset(self.D_PATH, period_string_min, full_dataset)
+
+        if use_time_diff == True:
+            self.name += '_time-diff'
+
+        if day_diff != None:
+            self.name += '_'+day_diff
+            # day_diff = 'holiday-weekend', 'weekend-normal', 'weekend-binary', None
+
+        if drop_main_terminal == True:
+            self.name += '_no-main-t'
         
-        rolling_max_inputs_df = alle_inputs_df.rolling(num_past_periods).max()
-        rolling_max_inputs = rolling_max_inputs_df.to_numpy()
 
-        training_data = []
+    ### FÜR LSTM:
+    def rolling_mean_training_data():
 
-        #steps = tqdm.tqdm(total=len(rolling_mean_inputs[:-num_past_periods]), desc='Training Data'.format(i+1), position=1)
-        for i in tqdm(range(len(rolling_max_inputs[:-num_past_periods]))):
-            #steps.update(1)
+        try:
+            
+            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_rolling-mean_{}.h5'.format(self.num_past_periods), 'r') as hf:
+                training_data = hf['training_data'][:]
+                label_data = hf['label_data'][:]
 
-            training_data = np.append(training_data, rolling_max_inputs[i:i+num_past_periods])
+        except:
+            alle_inputs_df = self.main_dataset_obj.make_input_df(self.drop_main_terminal, self.use_time_diff, self.day_diff)
+            
+            rolling_mean_inputs_df = alle_inputs_df.rolling(self.num_past_periods).mean()
+            rolling_mean_inputs = rolling_mean_inputs_df.to_numpy()
 
-
-        num_inputs_t = len(rolling_max_inputs[0]) 
-        num_t = len(rolling_max_inputs[num_past_periods:])
-
-
-        training_data = np.reshape(training_data, (num_t, num_past_periods, num_inputs_t))[num_past_periods:]
-        label_data = rolling_max_inputs_df['norm_total_power'].to_numpy()[num_past_periods:][num_past_periods:]
-
-        with h5py.File(DATENSATZ_PATH+'datensatz/training_LSTM/training_und_label_data_rolling_max_{}.h5'.format(num_past_periods), 'w') as hf:
-            hf.create_dataset("training_data",  data=training_data)
-            hf.create_dataset("label_data",  data=label_data)
-
-    return training_data, label_data
-
-def normal_training_data(num_past_periods=12):
-
-    try:
-        
-        with h5py.File(DATENSATZ_PATH+'datensatz/training_LSTM/training_und_label_data_normal_{}.h5'.format(num_past_periods), 'r') as hf:
-            training_data = hf['training_data'][:]
-            label_data = hf['label_data'][:]
-
-    except:
-        alle_inputs_df = alle_inputs()
-        
-        normal_inputs = alle_inputs_df.to_numpy()
-
-        training_data = []
-
-        #steps = tqdm.tqdm(total=len(rolling_mean_inputs[:-num_past_periods]), desc='Training Data'.format(i+1), position=1)
-        for i in tqdm(range(len(normal_inputs[:-num_past_periods]))):
-            #steps.update(1)
-
-            training_data = np.append(training_data, normal_inputs[i:i+num_past_periods])
+            training_data = []
+            for i in range(len(rolling_mean_inputs[:-self.num_past_periods])):
+                training_data = np.append(training_data, rolling_mean_inputs[i:i+self.num_past_periods])
+                print_progress('Creating training data', len(rolling_mean_inputs[:-self.num_past_periods]), i)
 
 
-        num_inputs_t = len(normal_inputs[0]) 
-        num_t = len(normal_inputs[num_past_periods:])
+            num_inputs_t = len(rolling_mean_inputs[0]) 
+            num_t = len(rolling_mean_inputs[self.num_past_periods:])
 
 
-        training_data = np.reshape(training_data, (num_t, num_past_periods, num_inputs_t))[num_past_periods:]
-        label_data = alle_inputs_df['norm_total_power'].to_numpy()[num_past_periods:][num_past_periods:]
+            training_data = np.reshape(training_data, (num_t, self.num_past_periods, num_inputs_t))[self.num_past_periods:]
+            label_data = rolling_mean_inputs_df['norm_total_power'].to_numpy()[self.num_past_periods:][self.num_past_periods:]
 
-        with h5py.File(DATENSATZ_PATH+'datensatz/training_LSTM/training_und_label_data_normal_{}.h5'.format(num_past_periods), 'w') as hf:
-            hf.create_dataset("training_data",  data=training_data)
-            hf.create_dataset("label_data",  data=label_data)
+            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_rolling-mean_{}.h5'.format(self.num_past_periods), 'w') as hf:
+                hf.create_dataset("training_data",  data=training_data)
+                hf.create_dataset("label_data",  data=label_data)
 
-    return training_data, label_data
+        return training_data, label_data
 
-def sequence_training_data(num_past_periods=12):
+    def rolling_max_training_data():
 
-    try:
-        
-        with h5py.File(DATENSATZ_PATH+'datensatz/training_LSTM/training_und_label_data_sequence_{}.h5'.format(num_past_periods), 'r') as hf:
-            training_data = hf['training_data'][:]
-            label_data = hf['label_data'][:]
+        try:
+            
+            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_rolling-max_{}.h5'.format(self.num_past_periods), 'r') as hf:
+                training_data = hf['training_data'][:]
+                label_data = hf['label_data'][:]
 
-    except:
-        alle_inputs_df = alle_inputs()
-        
-        sequence_inputs = alle_inputs_df.to_numpy()
-        sequence_outputs = alle_inputs_df['norm_total_power'].to_numpy()
+        except:
+            alle_inputs_df = self.main_dataset_obj.make_input_df(self.drop_main_terminal, self.use_time_diff, self.day_diff)
+            
+            rolling_max_inputs_df = alle_inputs_df.rolling(self.num_past_periods).max()
+            rolling_max_inputs = rolling_max_inputs_df.to_numpy()
 
-        label_data = []
-        for i in tqdm(range(len(sequence_outputs[:-num_past_periods]))):
-            label_data = np.append(label_data, sequence_outputs[i:i+num_past_periods])
-        #num_inputs_t = len(sequence_outputs[0]) 
-        num_t = len(sequence_outputs[num_past_periods:])
-        label_data = np.reshape(label_data, (num_t, num_past_periods))[num_past_periods:][num_past_periods:]
+            training_data = []
+            for i in range(len(rolling_max_inputs[:-self.num_past_periods])):
+                training_data = np.append(training_data, rolling_max_inputs[i:i+self.num_past_periods])
+                print_progress('Creating training data', len(rolling_max_inputs[:-self.num_past_periods]), i)
 
-        training_data = []
-        for i in tqdm(range(len(sequence_inputs[:-num_past_periods]))):
-            training_data = np.append(training_data, sequence_inputs[i:i+num_past_periods])
-        num_inputs_t = len(sequence_inputs[0]) 
-        num_t = len(sequence_inputs[num_past_periods:])
-        training_data = np.reshape(training_data, (num_t, num_past_periods, num_inputs_t))[num_past_periods:-num_past_periods]
 
-        with h5py.File(DATENSATZ_PATH+'datensatz/training_LSTM/training_und_label_data_sequence_{}.h5'.format(num_past_periods), 'w') as hf:
-            hf.create_dataset("training_data",  data=training_data)
-            hf.create_dataset("label_data",  data=label_data)
+            num_inputs_t = len(rolling_max_inputs[0]) 
+            num_t = len(rolling_max_inputs[self.num_past_periods:])
 
-    return training_data, label_data
+
+            training_data = np.reshape(training_data, (num_t, self.num_past_periods, num_inputs_t))[self.num_past_periods:]
+            label_data = rolling_max_inputs_df['norm_total_power'].to_numpy()[self.num_past_periods:][self.num_past_periods:]
+
+            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_rolling-max_{}.h5'.format(self.num_past_periods), 'w') as hf:
+                hf.create_dataset("training_data",  data=training_data)
+                hf.create_dataset("label_data",  data=label_data)
+
+        return training_data, label_data
+
+    def normal_training_data():
+
+        try:
+            
+            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_normal_{}.h5'.format(self.num_past_periods), 'r') as hf:
+                training_data = hf['training_data'][:]
+                label_data = hf['label_data'][:]
+
+        except:
+            alle_inputs_df = self.main_dataset_obj.make_input_df(self.drop_main_terminal, self.use_time_diff, self.day_diff)
+            
+            normal_inputs = alle_inputs_df.to_numpy()
+
+            training_data = []
+            for i in range(len(normal_inputs[:-self.num_past_periods])):
+                training_data = np.append(training_data, normal_inputs[i:i+self.num_past_periods])
+                print_progress('Creating training data', len(normal_inputs[:-self.num_past_periods]), i)
+
+            num_inputs_t = len(normal_inputs[0]) 
+            num_t = len(normal_inputs[self.num_past_periods:])
+
+
+            training_data = np.reshape(training_data, (num_t, self.num_past_periods, num_inputs_t))[self.num_past_periods:]
+            label_data = alle_inputs_df['norm_total_power'].to_numpy()[self.num_past_periods:][self.num_past_periods:]
+
+            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_normal_{}.h5'.format(self.num_past_periods), 'w') as hf:
+                hf.create_dataset("training_data",  data=training_data)
+                hf.create_dataset("label_data",  data=label_data)
+
+        return training_data, label_data
+
+    def sequence_training_data(num_seq_periods=12):
+
+        try:
+            
+            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_sequence_{}.h5'.format(self.num_past_periods), 'r') as hf:
+                training_data = hf['training_data'][:]
+                label_data = hf['label_data'][:]
+
+        except:
+            alle_inputs_df = self.main_dataset_obj.make_input_df(self.drop_main_terminal, self.use_time_diff, self.day_diff)
+            
+            sequence_inputs = alle_inputs_df.to_numpy()
+            sequence_outputs = alle_inputs_df['norm_total_power'].to_numpy()
+
+            label_data = []
+            for i in range(len(sequence_outputs[:-self.num_past_periods])):
+                label_data = np.append(label_data, sequence_outputs[i:i+self.num_past_periods])
+                print_progress('Creating label data (sequence)', len(sequence_outputs[:-self.num_past_periods]), i)
+
+            #num_inputs_t = len(sequence_outputs[0]) 
+            num_t = len(sequence_outputs[self.num_past_periods:])
+            label_data = np.reshape(label_data, (num_t, self.num_past_periods))[self.num_past_periods:][self.num_past_periods:]
+
+            training_data = []
+            for i in range(len(sequence_inputs[:-self.num_past_periods])):
+                training_data = np.append(training_data, sequence_inputs[i:i+self.num_past_periods])
+                print_progress('Creating training data (sequence)', len(sequence_inputs[:-self.num_past_periods]), i)
+
+            num_inputs_t = len(sequence_inputs[0]) 
+            num_t = len(sequence_inputs[num_seq_periods:])
+            training_data = np.reshape(training_data, (num_t, num_seq_periods, num_inputs_t))[num_seq_periods:-num_seq_periods]
+
+            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_sequence_{}-{}.h5'.format(self.num_past_periods,num_seq_periods), 'w') as hf:
+                hf.create_dataset("training_data",  data=training_data)
+                hf.create_dataset("label_data",  data=label_data)
+
+        return training_data, label_data
 
 
 
