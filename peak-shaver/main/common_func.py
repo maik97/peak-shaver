@@ -25,6 +25,17 @@ def try_training_on_gpu():
     except:
         print('Keras could not setup a GPU session. CPU will be used instead.')
 
+def temp_line_print(text):
+    print(text, end='')
+    print('\b' * len(text), end='', flush=True)
+
+def print_progress(proess_name, max_i, i):
+    if i <= max_i:
+        percentage = i/max_i*100
+        temp_line_print(proess_name+': {}%'.format(percentage))
+    else:
+        print(proess_name+': 100%')
+
 def max_seq(seq_data):
     max_data = []
     for i in range(len(seq_data)):
@@ -36,6 +47,7 @@ def mean_seq(seq_data):
     for i in range(len(seq_data)):
         mean_data.append(np.mean(seq_data[i]))
     return np.asarray(mean_data, dtype=np.float32)
+
 
 
 
