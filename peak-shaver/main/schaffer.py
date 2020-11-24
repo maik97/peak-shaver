@@ -1,14 +1,12 @@
 import pandas as pd
 import numpy as np
 import datetime
-import tqdm
 import csv
 import matplotlib as mpl
 import matplotlib.pyplot  as plt
 import seaborn as sns
 import h5py
 
-from tqdm import tqdm
 from common_func import print_progress
 
 # TO-DO:
@@ -31,7 +29,8 @@ class mainDataset:
 
     def coulmn_to_smoothed_period_df(self, dataset_name, coulmn_name, c_num=None, c_total=None): # returns Datafram: Strombedarf (nur noch eine Spalte, Index = SensorDateTime, neuerstellt)
         ''' Trys to open the dataset for a specific machine that is already smoothed to the time-period. Creates a new dataset if a dataset for the given time-period can not be opened.
-
+        Used by :meth:`schaffer.mainDataset.smoothed_df`.
+        
         Args:
             dataset_name (string): The name of the downloaded HIPE-dataset for a specific machine.
             coulmn_name (string): The name of the new dataset for a specif machine, that will be later used as a column name when all the machine-datasets are merged.
@@ -67,7 +66,7 @@ class mainDataset:
 
 
     def merge_columns_to_df(self, df, column_df, m_num=None, m_total=None):
-        ''' Used by :meth:`schaffer.mainDataset.smoothed_df` to merge to dataframes into one
+        ''' Used by :meth:`schaffer.mainDataset.smoothed_df` to merge two dataframes into one
 
         Args:
             df (dataframe): Smoothed dataset of (multiple) machines
