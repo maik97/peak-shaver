@@ -61,28 +61,34 @@ First all the necassary functions to transform the dataset are explained seperat
 - ``load_only_norm_data()`` has the same functionality as ``load_norm_data()``, except the extra dataset where the sum of power consumption isn't normalized
 - ``load_total_power()`` has the same functionality as ``load_norm_data()``, except it returns only the extra dataset where the sum of power consumption isn't normalized
 - ``alle_inputs()`` will take the datasets of ``load_only_norm_data()`` and merge those in a single one 
-- ``alle_inputs_neu()`` is an extra funtion that makes a differentiation between work day and holiday (might be useful for predictions)
+- ``alle_inputs_neu()`` is an extra function that makes a differentiation between work day and holiday (might be useful for predictions)
 
 Recommended way to run the necessary functions:
 
 .. code-block:: python
     
-    import main.schaffer as schaffer
+    from main.schaffer import mainDataset, lstmInputDataset
 
-    schaffer.global_var(_NAME='', _VERSION='', _DATENSATZ_PATH ='_BIG_D/', _großer_datensatz = True, _zeitintervall = '5min')
-    
-    # If you want to check that everthing works fine, run those rather step by step:
-    schaffer.load_geglättet_df()
-    schaffer.load_only_norm_data()
-    schaffer.load_total_power()
-    schaffer.alle_inputs()
-    schaffer.alle_inputs_neu()
+    main_dataset_creator = mainDataset()
+    lstm_dataset_creator = lstmInputDataset()
+
+    # If you want to check that everything works fine, run those rather step by step:
+    main_dataset_creator.smoothed_df()
+    main_dataset_creator.load_total_power()
+    main_dataset_creator.normalized_df()
+    main_dataset_creator.norm_activation_time_df()
+    lstm_dataset_creator.rolling_mean_training_data()
+    lstm_dataset_creator.rolling_max_training_data()
+    lstm_dataset_creator.normal_training_data()
+    lstm_dataset_creator.sequence_training_data()
+
+
 
 If you want to know more about possible parameters for the ``schaffer`` functions check out the :ref:`module page <schaffer_doc>`.
 
 Making Predictions
 ******************
-Following the same princible above (time consumption, more freedom to set up) it is also recommended to make the predictions seperately, although this will also be done automaticly provided you didn't do it manually. 
+Following the same principle above (time consumption, more freedom to set up) it is also recommended to make the predictions seperately, although this will also be done automatically provided you didn't do it manually. 
 
 With the module ``wahrsager`` you can train a LSTM that aims to predict the future power consumption. It's possible to modify the ``main`` function and run ``wahrsager`` directly. You can also create your own python code following this example:
 
@@ -114,7 +120,7 @@ There are different approaches to modify the input-dataset, which can be set wit
 - ``prediction_mean_label_seq`` with ``TYPE='MEAN_LABEL_SEQ'``: Predictions where just the label data is modified with a rolling mean
 - ``prediction_seq`` with ``TYPE='SEQ'``: Sequence-Predictions of the unmodified dataset, each sequence can be transformed to the mean or max value with ``max_seq(prediction_seq)`` or ``mean_seq(prediction_seq)``
 
-All these different approaches will have similiar results, but can be used to optimize the predictions furthermore. If you want to tune the parameters, look up the ``wahrsager`` class :ref:`here <wahrsager_doc>` (change timeframe, LSTM size, ...). Note that for every new timeframe a seperate dataset will be created.
+All these different approaches will have similar results, but can be used to optimize the predictions furthermore. If you want to tune the parameters, look up the ``wahrsager`` class :ref:`here <wahrsager_doc>` (change time-frame, LSTM size, ...). Note that for every new time-frame a separate dataset will be created.
 
 Set ``PLOTTING=True`` if you want to see a graph of the predictions compared to the actual data. You also can find the saved graphs in either _BIG_D/LSTM-graphs/ or _small_d/LSTM-graphs/. An example graph is provided below:
 
@@ -148,9 +154,9 @@ Assuming you have understood the basics of RL-Learning, the first thing to expla
 
 - ``__init__()`` is all about parameter tuning. Note that in this case we have a parameter called Q_table (This will be different for each type of RL-Agent).
 - ``act()`` is the function in which the agent decides on its actions based on the state. This is also the place where the greedy function will be applied.
-- ``remember()`` is necessary to save the all the necessary information for the learning process, since we dont want to update the Q-values every single step.
+- ``remember()`` is necessary to save the all the necessary information for the learning process, since we don't want to update the Q-values every single step.
 - ``replay()`` is where the Q-function is applied and the learning process takes place, with the help of the memory from the ``remember()`` function.
-- ``save_agent()`` is used to make a backup of the agent. This should be used every x steps (x should be big, because the total steps can go into millions), since you dont want to make a backup every step. Note that each backup takes time as well as space on your device.
+- ``save_agent()`` is used to make a backup of the agent. This should be used every x steps (x should be big, because the total steps can go into millions), since you don't want to make a backup every step. Note that each backup takes time as well as space on your device.
 
 The full code of the basic RL-Agent can be checked out on `Github <https://github.com/maik97/peak-shaver/blob/main/peak-shaver/main/agent_q_table.py>`_ .
 
