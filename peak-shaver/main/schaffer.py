@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import datetime
@@ -7,7 +8,9 @@ import matplotlib.pyplot  as plt
 import seaborn as sns
 import h5py
 
-from common_func import print_progress
+import time
+
+from main.common_func import print_progress, make_dir, Timer
 
 # TO-DO:
 # statt global var lieber class
@@ -20,11 +23,12 @@ class mainDataset:
         period_string_min (string): Sets the time-period for the dataset. The string should look like this: ``xmin`` where x are the minutes of one period.
         full_dataset (bool): Set this to ``True`` if you are using the full dataset and ``false`` otherwis
     '''
-    def __init__(self, D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True):
+    def __init__(self, D_PATH='_BIG_D/', period_string_min='5min', full_dataset=False):
 
         self.D_PATH            = D_PATH
         self.period_string_min = period_string_min
         self.full_dataset      = full_dataset
+        self.timer             = Timer()
 
 
     def coulmn_to_smoothed_period_df(self, dataset_name, coulmn_name, c_num=None, c_total=None): # returns Datafram: Strombedarf (nur noch eine Spalte, Index = SensorDateTime, neuerstellt)
@@ -42,10 +46,15 @@ class mainDataset:
         '''
         # Falls möglich Daten öffnen
         try: 
-            dataframe = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/single-column-tables/'+coulmn_name+'.csv', index_col='SensorDateTime', parse_dates=True)
+            dataframe = pd.read_csv(self.D_PATH+'tables/'+self.period_string_min+'/single-column-tables/'+coulmn_name+'.csv', index_col='SensorDateTime', parse_dates=True)
         
         # Sonst erstellen
         except:
+            self.timer.start()
+            print('Could not open:', self.D_PATH+'tables/'+self.period_string_min+'/single-column-tables/'+coulmn_name+'.csv')
+            print('Creating new /single-column-tables/'+coulmn_name+'.csv...')
+
+            make_dir(self.D_PATH+'tables/'+self.period_string_min+'/single-column-tables/')
 
             dataframe = pd.read_csv('dataset/'+dataset_name+'.csv', index_col='SensorDateTime', parse_dates=True)
             dataframe = dataframe["P_kW"].to_frame()
@@ -55,13 +64,18 @@ class mainDataset:
 
             dataframe = dataframe.resample(self.period_string_min).mean().rename(columns={"P_kW": coulmn_name})
 
-            dataframe.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/single-column-tables/'+coulmn_name+'.csv')
+            dataframe.to_csv(self.D_PATH+'tables/'+self.period_string_min+'/single-column-tables/'+coulmn_name+'.csv')
+            self.timer.stop()
 
             if c_num == None and c_total == None:
                 print('Created dataset for',coulmn_name,'from',dataset_name)
+                print('Elapsed time:',self.timer.elapsed_time_string())
             else:
                 print('Created dataset for',coulmn_name,'from',dataset_name, '({}/{})'.format(c_num,c_total))
-
+                print('Elapsed time:',self.timer.elapsed_time_string())
+                print('Estimated time to create the rest of /single-column-tables/:',self.timer.rest_time_string(c_num,c_total))
+        
+        print('Table '+self.D_PATH+'tables/'+self.period_string_min+'/single-column-tables/'+coulmn_name+'.csv loaded successfully')
         return dataframe
 
 
@@ -78,7 +92,7 @@ class mainDataset:
             dataframe: The merged dataframe of ``df`` and ``column_df``
         '''
         df = pd.merge(df,column_df,left_index=True, right_index=True, how='outer')
-        if m_num != None and num_total != None:
+        if m_num != None and m_total != None:
             print_progress('Merging columns to one dataframe',m_num,m_total)
         return df
 
@@ -91,10 +105,12 @@ class mainDataset:
             dataframe: The merged and smothed dataframe that includes all machines.
         '''
         try:
-            df = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/smoothed_table.csv', index_col='SensorDateTime', parse_dates=True)
+            df = pd.read_csv(self.D_PATH+'tables/'+self.period_string_min+'/smoothed_table.csv', index_col='SensorDateTime', parse_dates=True)
 
         except:
-            print('Could not open:',self.D_PATH+'datasets/'+self.period_string_min+'/smoothed_table.csv')
+            timer_smooth = Timer()
+            timer_smooth.start()
+            print('Could not open:',self.D_PATH+'tables/'+self.period_string_min+'/smoothed_table.csv')
             print('Creating new smoothed_table.csv...')
 
             # Der Zeitraum im Namen der beiden Datensätzen ist unterschiedlich:
@@ -103,18 +119,20 @@ class mainDataset:
             else:
                 zeitraum = '2017-10-23_lt_2017-10-30' # small_d
 
+            original_path = 'hipe_cleaned_v1.0.1_geq_'+zeitraum+'/'
+
             # Lade, bzw erstelle über den vorg. Zeitraum geglättete CSVs:
-            main_terminal         = self.coulmn_to_smoothed_period_df('MainTerminal_PhaseCount_3_geq_'+zeitraum,'main_terminal',1,11)
-            chip_press            = self.coulmn_to_smoothed_period_df('ChipPress_PhaseCount_3_geq_'+zeitraum,'chip_press',2,11)
-            chip_saw              = self.coulmn_to_smoothed_period_df('ChipSaw_PhaseCount_3_geq_'+zeitraum,'chip_saw',3,11)
-            high_temperature_oven = self.coulmn_to_smoothed_period_df('HighTemperatureOven_PhaseCount_3_geq_'+zeitraum,'high_temperature_oven',4,11)
-            pick_and_place_unit   = self.coulmn_to_smoothed_period_df('PickAndPlaceUnit_PhaseCount_2_geq_'+zeitraum,'pick_and_place_unit',5,11)
-            screen_printer        = self.coulmn_to_smoothed_period_df('ScreenPrinter_PhaseCount_2_geq_'+zeitraum,'screen_printer',6,11)
-            soldering_oven        = self.coulmn_to_smoothed_period_df('SolderingOven_PhaseCount_3_geq_'+zeitraum,'soldering_oven',7,11)
-            vacuum_oven           = self.coulmn_to_smoothed_period_df('VacuumOven_PhaseCount_3_geq_'+zeitraum,'vacuum_oven',8,11)
-            vacuum_pump_1         = self.coulmn_to_smoothed_period_df('VacuumPump1_PhaseCount_3_geq_'+zeitraum,'vacuum_pump_1',9,11)
-            vacuum_pump_2         = self.coulmn_to_smoothed_period_df('VacuumPump2_PhaseCount_2_geq_'+zeitraum,'vacuum_pump_2',10,11)
-            washing_machine       = self.coulmn_to_smoothed_period_df('WashingMachine_PhaseCount_3_geq_'+zeitraum,'washing_machine',11,11)
+            main_terminal         = self.coulmn_to_smoothed_period_df(original_path+'MainTerminal_PhaseCount_3_geq_'+zeitraum,'main_terminal',1,11)
+            chip_press            = self.coulmn_to_smoothed_period_df(original_path+'ChipPress_PhaseCount_3_geq_'+zeitraum,'chip_press',2,11)
+            chip_saw              = self.coulmn_to_smoothed_period_df(original_path+'ChipSaw_PhaseCount_3_geq_'+zeitraum,'chip_saw',3,11)
+            high_temperature_oven = self.coulmn_to_smoothed_period_df(original_path+'HighTemperatureOven_PhaseCount_3_geq_'+zeitraum,'high_temperature_oven',4,11)
+            pick_and_place_unit   = self.coulmn_to_smoothed_period_df(original_path+'PickAndPlaceUnit_PhaseCount_2_geq_'+zeitraum,'pick_and_place_unit',5,11)
+            screen_printer        = self.coulmn_to_smoothed_period_df(original_path+'ScreenPrinter_PhaseCount_2_geq_'+zeitraum,'screen_printer',6,11)
+            soldering_oven        = self.coulmn_to_smoothed_period_df(original_path+'SolderingOven_PhaseCount_3_geq_'+zeitraum,'soldering_oven',7,11)
+            vacuum_oven           = self.coulmn_to_smoothed_period_df(original_path+'VacuumOven_PhaseCount_3_geq_'+zeitraum,'vacuum_oven',8,11)
+            vacuum_pump_1         = self.coulmn_to_smoothed_period_df(original_path+'VacuumPump1_PhaseCount_3_geq_'+zeitraum,'vacuum_pump_1',9,11)
+            vacuum_pump_2         = self.coulmn_to_smoothed_period_df(original_path+'VacuumPump2_PhaseCount_2_geq_'+zeitraum,'vacuum_pump_2',10,11)
+            washing_machine       = self.coulmn_to_smoothed_period_df(original_path+'WashingMachine_PhaseCount_3_geq_'+zeitraum,'washing_machine',11,11)
 
             # Erstelle eine zusammengefügte Dataframe mit allen Maschinen:
             df = self.merge_columns_to_df(main_terminal,chip_press,1,10)
@@ -132,7 +150,12 @@ class mainDataset:
             df[df<0.01] = 0
 
             # Spechere zusammengefügtes Dataframe als csv:
-            df.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/smoothed_table.csv')
+            df.to_csv(self.D_PATH+'tables/'+self.period_string_min+'/smoothed_table.csv')
+            timer_smooth.stop()
+            print('Created smoothed_table.csv, elapsed time:', timer_smooth.elapsed_time_string())
+
+
+        print('Table '+self.D_PATH+'tables/'+self.period_string_min+'/smoothed_table.csv loaded successfully')
         return df
 
 
@@ -145,9 +168,9 @@ class mainDataset:
         '''
         # TO-DO: include option to drop main_terminal !!!!!!!
         try:
-            total_power = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/total_power.csv', index_col='SensorDateTime', parse_dates=True)
+            total_power = pd.read_csv(self.D_PATH+'tables/'+self.period_string_min+'/total_power.csv', index_col='SensorDateTime', parse_dates=True)
         except:
-            print('Could not open:', self.D_PATH+'datasets/'+self.period_string_min+'/total_power.csv')
+            print('Could not open:', self.D_PATH+'tables/'+self.period_string_min+'/total_power.csv')
             print('Creating new total_power.csv...')
 
             df = self.smoothed_df()
@@ -156,10 +179,12 @@ class mainDataset:
                 'total_power' : df.sum(axis = 1)
                 }, index = df.index)
             # Speichere Summe des insgesamt benötigten Stroms als CSV:
-            total_power.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/total_power.csv')
+            total_power.to_csv(self.D_PATH+'tables/'+self.period_string_min+'/total_power.csv')
+
+        print('Table '+self.D_PATH+'tables/'+self.period_string_min+'/total_power.csv loaded successfully')
         return total_power
 
-    def normalize(column): # returns array: Normalisierter Strombededarf einer Maschine (neuerstellt)
+    def normalize(self, column): # returns array: Normalisierter Strombededarf einer Maschine (neuerstellt)
         ''' Is used by some class functions to normalize a dataframe-column.
 
         Args:
@@ -189,47 +214,52 @@ class mainDataset:
         # main terminal könnte statt gedropped zu weren auch "berichtigt" werden indam man minus des rest rechnen
         try:
             if drop_main_terminal == False:
-                norm_df = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df.csv', index_col='SensorDateTime', parse_dates=True)
+                norm_df = pd.read_csv(self.D_PATH+'tables/'+self.period_string_min+'/normalized_table.csv', index_col='SensorDateTime', parse_dates=True)
             else:
-                norm_df = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df_without_main_terminal.csv', index_col='SensorDateTime', parse_dates=True)
+                norm_df = pd.read_csv(self.D_PATH+'tables/'+self.period_string_min+'/normalized_table_without_main_terminal.csv', index_col='SensorDateTime', parse_dates=True)
 
         except:
             if drop_main_terminal == False:
-                print('Could not open:', self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df.csv')
+                print('Could not open:', self.D_PATH+'tables/'+self.period_string_min+'/normalized_table.csv')
                 print('Creating new norm_activ_df.csv...')
             else:
-                print('Could not open:', self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df_without_main_terminal.csv')
+                print('Could not open:', self.D_PATH+'tables/'+self.period_string_min+'/normalized_table_without_main_terminal.csv')
                 print('Creating new normalized_df_without_main_terminal.csv...')
 
             df          = self.smoothed_df()
             total_power = self.load_total_power()
             # Normalisiere Maschinen-Dataframe:
             norm_df = pd.DataFrame({
-                'norm_total_power'           : normalize(total_power['total_power']),
-                'norm_main_terminal'         : normalize(df['main_terminal']), 
-                'norm_chip_press'            : normalize(df['chip_press']),
-                'norm_chip_saw'              : normalize(df['chip_saw']),
-                'norm_high_temperature_oven' : normalize(df['high_temperature_oven']),
-                'norm_pick_and_place_unit'   : normalize(df['pick_and_place_unit']),
-                'norm_screen_printer'        : normalize(df['screen_printer']),
-                'norm_soldering_oven'        : normalize(df['soldering_oven']),
-                'norm_vacuum_oven'           : normalize(df['vacuum_oven']),
-                'norm_vacuum_pump_1'         : normalize(df['vacuum_pump_1']),
-                'norm_vacuum_pump_2'         : normalize(df['vacuum_pump_2']),
-                'norm_washing_machine'       : normalize(df['washing_machine'])
+                'norm_total_power'           : self.normalize(total_power['total_power']),
+                'norm_main_terminal'         : self.normalize(df['main_terminal']), 
+                'norm_chip_press'            : self.normalize(df['chip_press']),
+                'norm_chip_saw'              : self.normalize(df['chip_saw']),
+                'norm_high_temperature_oven' : self.normalize(df['high_temperature_oven']),
+                'norm_pick_and_place_unit'   : self.normalize(df['pick_and_place_unit']),
+                'norm_screen_printer'        : self.normalize(df['screen_printer']),
+                'norm_soldering_oven'        : self.normalize(df['soldering_oven']),
+                'norm_vacuum_oven'           : self.normalize(df['vacuum_oven']),
+                'norm_vacuum_pump_1'         : self.normalize(df['vacuum_pump_1']),
+                'norm_vacuum_pump_2'         : self.normalize(df['vacuum_pump_2']),
+                'norm_washing_machine'       : self.normalize(df['washing_machine'])
                 })
 
             if drop_main_terminal == False: 
-                norm_df.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df.csv')
+                norm_df.to_csv(self.D_PATH+'tables/'+self.period_string_min+'/normalized_table.csv')
             else:
                  # main terminal könnte statt gedropped zu weren auch "berichtigt" werden indam man minus des rest rechnen
                 norm_df = norm_df.drop(['norm_main_terminal'])
-                norm_df.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/normalized_df_without_main_terminal.csv')
+                norm_df.to_csv(self.D_PATH+'tables/'+self.period_string_min+'/normalized_table_without_main_terminal.csv')
+        
+        if drop_main_terminal == False: 
+            print('Table '+self.D_PATH+'tables/'+self.period_string_min+'/normalized_table.csv loaded successfully')
+        else:
+            print('Table '+self.D_PATH+'tables/'+self.period_string_min+'/normalized_table_without_main_terminal.csv loaded successfully')
 
         return norm_df
 
 
-    def aktiverungszeit_berechnen(column):
+    def aktiverungszeit_berechnen(self, column):
         ''' Is used by :meth:`schaffer.mainDataset.norm_activation_time_df` to calculate the activation time a of a given machine.
 
         Args:
@@ -262,27 +292,28 @@ class mainDataset:
             dataframe: The normalized dataset that includes the activation times for all machines, except `main_terminal` since this is always active.
         '''
         try:
-            norm_aktiv_df = pd.read_csv(self.D_PATH+'datasets/'+self.period_string_min+'/norm_activ_df.csv', index_col='SensorDateTime', parse_dates=True)
+            norm_aktiv_df = pd.read_csv(self.D_PATH+'tables/'+self.period_string_min+'/norm_activ_table.csv', index_col='SensorDateTime', parse_dates=True)
         except:
-            print('Could not open:', self.D_PATH+'datasets/'+self.period_string_min+'/norm_activ_df.csv')
+            print('Could not open:', self.D_PATH+'tables/'+self.period_string_min+'/norm_activ_table.csv')
             print('Creating new norm_activ_df.csv...')
 
             df = self.smoothed_df()
             # Normalisiere Aktivitätszeiten:
             norm_aktiv_df = pd.DataFrame({
                 #'norm_aktiv_t_main_terminal'        : 1, # weil main terminal eh immer an ist
-                'norm_aktiv_t_chip_press'            : normalize(aktiverungszeit_berechnen(df['chip_press'])),
-                'norm_aktiv_t_chip_saw'              : normalize(aktiverungszeit_berechnen(df['chip_saw'])),
-                'norm_aktiv_t_high_temperature_oven' : normalize(aktiverungszeit_berechnen(df['high_temperature_oven'])),
-                'norm_aktiv_t_pick_and_place_unit'   : normalize(aktiverungszeit_berechnen(df['pick_and_place_unit'])),
-                'norm_aktiv_t_screen_printer'        : normalize(aktiverungszeit_berechnen(df['screen_printer'])),
-                'norm_aktiv_t_soldering_oven'        : normalize(aktiverungszeit_berechnen(df['soldering_oven'])),
-                'norm_aktiv_t_vacuum_oven'           : normalize(aktiverungszeit_berechnen(df['vacuum_oven'])),
-                'norm_aktiv_t_vacuum_pump_1'         : normalize(aktiverungszeit_berechnen(df['vacuum_pump_1'])),
-                'norm_aktiv_t_vacuum_pump_2'         : normalize(aktiverungszeit_berechnen(df['vacuum_pump_2'])),
-                'norm_aktiv_t_washing_machine'       : normalize(aktiverungszeit_berechnen(df['washing_machine']))
+                'norm_aktiv_t_chip_press'            : self.normalize(self.aktiverungszeit_berechnen(df['chip_press'])),
+                'norm_aktiv_t_chip_saw'              : self.normalize(self.aktiverungszeit_berechnen(df['chip_saw'])),
+                'norm_aktiv_t_high_temperature_oven' : self.normalize(self.aktiverungszeit_berechnen(df['high_temperature_oven'])),
+                'norm_aktiv_t_pick_and_place_unit'   : self.normalize(self.aktiverungszeit_berechnen(df['pick_and_place_unit'])),
+                'norm_aktiv_t_screen_printer'        : self.normalize(self.aktiverungszeit_berechnen(df['screen_printer'])),
+                'norm_aktiv_t_soldering_oven'        : self.normalize(self.aktiverungszeit_berechnen(df['soldering_oven'])),
+                'norm_aktiv_t_vacuum_oven'           : self.normalize(self.aktiverungszeit_berechnen(df['vacuum_oven'])),
+                'norm_aktiv_t_vacuum_pump_1'         : self.normalize(self.aktiverungszeit_berechnen(df['vacuum_pump_1'])),
+                'norm_aktiv_t_vacuum_pump_2'         : self.normalize(self.aktiverungszeit_berechnen(df['vacuum_pump_2'])),
+                'norm_aktiv_t_washing_machine'       : self.normalize(self.aktiverungszeit_berechnen(df['washing_machine']))
                 }, index=df.index)
-            norm_aktiv_df.to_csv(self.D_PATH+'datasets/'+self.period_string_min+'/norm_aktiv_df.csv')
+            norm_aktiv_df.to_csv(self.D_PATH+'tables/'+self.period_string_min+'/norm_activ_table.csv')
+        print('Table '+self.D_PATH+'tables/'+self.period_string_min+'/norm_activ_table.csv loaded successfully')
         return norm_aktiv_df
 
 
@@ -296,8 +327,8 @@ class mainDataset:
             dataframe: The new dataframe with the added column
         '''
         # Tageszeit-Format in Zahl:
-        df['time'] =  df.index.time
-        df['time'] = normalisieren(df['time'].index.hour * 60 + df['time'].index.minute + df['time'].index.second/60)
+        df['time'] = df.index.time
+        df['time'] = self.normalize(df['time'].index.hour * 60 + df['time'].index.minute + df['time'].index.second/60)
         return df
 
     def add_day_difference(self, df, day_diff='holiday-weekend'):
@@ -346,15 +377,15 @@ class mainDataset:
         Returns:
             dataframe: A dataframe that can be used as inputs for ``wahrsager`` or any of the agents.
         '''
-        norm_df       = normalized_df(drop_main_terminal)
-        norm_aktiv_df = norm_activation_time_df()
+        norm_df       = self.normalized_df(drop_main_terminal)
+        norm_aktiv_df = self.norm_activation_time_df()
         input_df = pd.merge(norm_df, norm_aktiv_df, left_index=True, right_index=True, how='outer')
 
         if use_time_diff == True:
-            input_df = add_day_time_difference(input_df)
+            input_df = self.add_day_time_difference(input_df)
 
         if day_diff != None:
-            input_df = add_day_difference(input_df, day_diff)
+            input_df = self.add_day_difference(input_df, day_diff)
         return input_df
 
 
@@ -375,13 +406,18 @@ class lstmInputDataset:
     def __init__(self, D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True, num_past_periods=12, drop_main_terminal=False, use_time_diff=True, day_diff='holiday-weekend'):
 
         self.D_PATH             = D_PATH
+        self.period_string_min  = period_string_min
         self.num_past_periods   = num_past_periods
         self.drop_main_terminal = drop_main_terminal
         self.use_time_diff      = use_time_diff
         self.day_diff           = day_diff
 
         self.name               = ''
-        self.main_dataset_obj   = mainDataset(self.D_PATH, period_string_min, full_dataset)
+        self.main_dataset_obj   = mainDataset(self.D_PATH, self.period_string_min, full_dataset)
+        self.timer              = Timer()
+
+        make_dir(self.D_PATH+'tables/'+self.period_string_min+'/training-data/')
+
 
         if use_time_diff == True:
             self.name += '_time-diff'
@@ -394,7 +430,7 @@ class lstmInputDataset:
             self.name += '_no-main-t'
         
 
-    def rolling_mean_training_data():
+    def rolling_mean_training_data(self):
         ''' Trys to open an LSTM-input-dataset that was transformed with a `rolling mean` operation with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for the given paramerters.
 
@@ -403,7 +439,7 @@ class lstmInputDataset:
         '''
         try:
             
-            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_rolling-mean_{}.h5'.format(self.num_past_periods), 'r') as hf:
+            with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_rolling-mean_{}.h5'.format(self.num_past_periods), 'r') as hf:
                 training_data = hf['training_data'][:]
                 label_data = hf['label_data'][:]
 
@@ -413,10 +449,11 @@ class lstmInputDataset:
             rolling_mean_inputs_df = alle_inputs_df.rolling(self.num_past_periods).mean()
             rolling_mean_inputs = rolling_mean_inputs_df.to_numpy()
 
+            self.timer.start()
             training_data = []
             for i in range(len(rolling_mean_inputs[:-self.num_past_periods])):
                 training_data = np.append(training_data, rolling_mean_inputs[i:i+self.num_past_periods])
-                print_progress('Creating training data', len(rolling_mean_inputs[:-self.num_past_periods]), i)
+                self.timer.print_time_progess('Creating training data',i , len(rolling_mean_inputs[:-self.num_past_periods]))
 
 
             num_inputs_t = len(rolling_mean_inputs[0]) 
@@ -426,14 +463,15 @@ class lstmInputDataset:
             training_data = np.reshape(training_data, (num_t, self.num_past_periods, num_inputs_t))[self.num_past_periods:]
             label_data = rolling_mean_inputs_df['norm_total_power'].to_numpy()[self.num_past_periods:][self.num_past_periods:]
 
-            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_rolling-mean_{}.h5'.format(self.num_past_periods), 'w') as hf:
+            with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_rolling-mean_{}.h5'.format(self.num_past_periods), 'w') as hf:
                 hf.create_dataset("training_data",  data=training_data)
                 hf.create_dataset("label_data",  data=label_data)
-
+        
+        print('Dataset '+self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_rolling-mean_{}.h5 loaded successfully')       
         return training_data, label_data
 
 
-    def rolling_max_training_data():
+    def rolling_max_training_data(self):
         ''' Trys to open an LSTM-input-dataset that was transformed with a `rolling max` operation with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for the given paramerters.
 
@@ -442,7 +480,7 @@ class lstmInputDataset:
         '''
         try:
             
-            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_rolling-max_{}.h5'.format(self.num_past_periods), 'r') as hf:
+            with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_rolling-max_{}.h5'.format(self.num_past_periods), 'r') as hf:
                 training_data = hf['training_data'][:]
                 label_data = hf['label_data'][:]
 
@@ -452,10 +490,11 @@ class lstmInputDataset:
             rolling_max_inputs_df = alle_inputs_df.rolling(self.num_past_periods).max()
             rolling_max_inputs = rolling_max_inputs_df.to_numpy()
 
+            self.timer.start()
             training_data = []
             for i in range(len(rolling_max_inputs[:-self.num_past_periods])):
                 training_data = np.append(training_data, rolling_max_inputs[i:i+self.num_past_periods])
-                print_progress('Creating training data', len(rolling_max_inputs[:-self.num_past_periods]), i)
+                self.timer.print_time_progess('Creating training data', i, len(rolling_max_inputs[:-self.num_past_periods]))
 
 
             num_inputs_t = len(rolling_max_inputs[0]) 
@@ -465,14 +504,15 @@ class lstmInputDataset:
             training_data = np.reshape(training_data, (num_t, self.num_past_periods, num_inputs_t))[self.num_past_periods:]
             label_data = rolling_max_inputs_df['norm_total_power'].to_numpy()[self.num_past_periods:][self.num_past_periods:]
 
-            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_rolling-max_{}.h5'.format(self.num_past_periods), 'w') as hf:
+            with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_rolling-max_{}.h5'.format(self.num_past_periods), 'w') as hf:
                 hf.create_dataset("training_data",  data=training_data)
                 hf.create_dataset("label_data",  data=label_data)
 
+        print('Dataset '+self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_rolling-max_{}.h5 loaded successfully')       
         return training_data, label_data
 
 
-    def normal_training_data():
+    def normal_training_data(self):
         ''' Trys to open an LSTM-input-dataset that was transformed with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for the given paramerters.
 
@@ -481,7 +521,7 @@ class lstmInputDataset:
         '''
         try:
             
-            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_normal_{}.h5'.format(self.num_past_periods), 'r') as hf:
+            with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_normal_{}.h5'.format(self.num_past_periods), 'r') as hf:
                 training_data = hf['training_data'][:]
                 label_data = hf['label_data'][:]
 
@@ -490,10 +530,11 @@ class lstmInputDataset:
             
             normal_inputs = alle_inputs_df.to_numpy()
 
+            self.timer.start()
             training_data = []
             for i in range(len(normal_inputs[:-self.num_past_periods])):
                 training_data = np.append(training_data, normal_inputs[i:i+self.num_past_periods])
-                print_progress('Creating training data', len(normal_inputs[:-self.num_past_periods]), i)
+                self.timer.print_time_progess('Creating training data',i, len(normal_inputs[:-self.num_past_periods]))
 
             num_inputs_t = len(normal_inputs[0]) 
             num_t = len(normal_inputs[self.num_past_periods:])
@@ -502,14 +543,15 @@ class lstmInputDataset:
             training_data = np.reshape(training_data, (num_t, self.num_past_periods, num_inputs_t))[self.num_past_periods:]
             label_data = alle_inputs_df['norm_total_power'].to_numpy()[self.num_past_periods:][self.num_past_periods:]
 
-            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_normal_{}.h5'.format(self.num_past_periods), 'w') as hf:
+            with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_normal_{}.h5'.format(self.num_past_periods), 'w') as hf:
                 hf.create_dataset("training_data",  data=training_data)
                 hf.create_dataset("label_data",  data=label_data)
 
+        print('Dataset '+self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_normal_{}.h5 loaded successfully')       
         return training_data, label_data
 
 
-    def sequence_training_data(num_seq_periods=12):
+    def sequence_training_data(self, num_seq_periods=12):
         ''' Trys to open an LSTM-input-dataset has time-frame ``num_past_periods`` for the sequence-input and ``num_seq_periods`` for the label-sequence. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for them given paramerters.
         
@@ -518,7 +560,7 @@ class lstmInputDataset:
         '''
         try:
             
-            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_sequence_{}.h5'.format(self.num_past_periods), 'r') as hf:
+            with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_sequence_{}.h5'.format(self.num_past_periods), 'r') as hf:
                 training_data = hf['training_data'][:]
                 label_data = hf['label_data'][:]
 
@@ -528,28 +570,31 @@ class lstmInputDataset:
             sequence_inputs = alle_inputs_df.to_numpy()
             sequence_outputs = alle_inputs_df['norm_total_power'].to_numpy()
 
+            self.timer.start()
             label_data = []
             for i in range(len(sequence_outputs[:-self.num_past_periods])):
                 label_data = np.append(label_data, sequence_outputs[i:i+self.num_past_periods])
-                print_progress('Creating label data (sequence)', len(sequence_outputs[:-self.num_past_periods]), i)
+                self.timer.print_time_progess('Creating label data (sequence)', i, len(sequence_outputs[:-self.num_past_periods]))
 
             #num_inputs_t = len(sequence_outputs[0]) 
             num_t = len(sequence_outputs[self.num_past_periods:])
             label_data = np.reshape(label_data, (num_t, self.num_past_periods))[self.num_past_periods:][self.num_past_periods:]
 
+            self.timer.start()
             training_data = []
             for i in range(len(sequence_inputs[:-self.num_past_periods])):
                 training_data = np.append(training_data, sequence_inputs[i:i+self.num_past_periods])
-                print_progress('Creating training data (sequence)', len(sequence_inputs[:-self.num_past_periods]), i)
+                self.timer.print_time_progess('Creating training data (sequence)', i, len(sequence_inputs[:-self.num_past_periods]))
 
             num_inputs_t = len(sequence_inputs[0]) 
             num_t = len(sequence_inputs[num_seq_periods:])
             training_data = np.reshape(training_data, (num_t, num_seq_periods, num_inputs_t))[num_seq_periods:-num_seq_periods]
 
-            with h5py.File(self.D_PATH+'datasets/training_LSTM/'+self.name+'_sequence_{}-{}.h5'.format(self.num_past_periods,num_seq_periods), 'w') as hf:
+            with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_sequence_{}-{}.h5'.format(self.num_past_periods,num_seq_periods), 'w') as hf:
                 hf.create_dataset("training_data",  data=training_data)
                 hf.create_dataset("label_data",  data=label_data)
 
+        print('Dataset '+self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_sequence_{}-{}.h5 loaded successfully')       
         return training_data, label_data
 
 
