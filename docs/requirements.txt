@@ -5,6 +5,7 @@ stable-baselines==2.10.1
 tensorboard==1.9.0
 tensorflow==1.9.0
 gym==0.17.3
+keras==2.0.8
 sphinx
 tqdm
 h5py
