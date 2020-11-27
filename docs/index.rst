@@ -26,6 +26,8 @@ Contents
 
    intro/about_project
    intro/getting_started
+   intro/how_to
+   intro/understanding_structure
    intro/tensorboard_doc
 
 .. toctree::
