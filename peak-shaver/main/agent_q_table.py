@@ -33,7 +33,7 @@ class Q_Learner:
         tau (float): Factor for copying weights from model network to target network
         Q_table (array): Initial Q-Table, all values should be set to zero
     """
-    def __init__(self, env, memory, gamma, epsilon, epsilon_min, epsilon_decay, lr, tau, Q_table):
+    def __init__(self, env, memory, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125, Q_table=np.zeros((22,22,22,22,22))):
 
         self.env            = env
         self.memory         = memory
@@ -72,6 +72,7 @@ class Q_Learner:
         # state[0] : Power_demand
         # state[1] : SoC_SMS
         # state[2] : SoC_LiON
+        state = state.reshape(len(cur_state),1).tolist()
         return np.argmax(self.Q_table[state][0]), self.epsilon # = action, zufallsparameter
 
     def remember(self, state, action, reward, new_state, done, step_counter_episode):
@@ -86,6 +87,8 @@ class Q_Learner:
             done (bool): If True the episode ends
             step_counter_episode (integer): Episode step at which the action was performed
         '''
+        state = state.reshape(len(cur_state),1).tolist()
+        new_state = new_state.reshape(len(cur_state),1).tolist()
         self.memory.append([state, action, reward, new_state, done, step_counter_episode])
 
     def replay(self, index_len):
@@ -114,8 +117,7 @@ class Q_Learner:
             
             Q_target = self.Q_table [state_and_action]
             self.Q_table[state_and_action] += (self.lr * (reward + (Q_future * self.gamma) - Q_target))
-
-        #exit()
+                    
 
     def save_agent(self, NAME, DATENSATZ_PATH, e):
         '''For saving the agents model at specific epoch. Make sure to not use this function at each epoch, since this will take up your memory space.
