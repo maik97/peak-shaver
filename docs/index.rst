@@ -1,21 +1,15 @@
-Peak Shaving: Leveling the power consumption of a production system through reinforcement learning
-==================================================================================================
+Peak Shaving: Leveling the power consumption of a production system through reinforcement learning (artificial intelligence)
+============================================================================================================================
 
-This documentation provides an explanation for the code as part of the study project: `Nivellierung der Leistungsaufnahme eines Produktionssystems durch Reinforcement Learning <https://www.stackoverflow.com>`_. Note that the pdf is only available in german. Further details in english can be read here: :ref:`About the project <about_project>`. All abbreviations that will be used in the documentation will be explained there too.
+This documentation provides an explanation for the code in collaboration with the study project: `Nivellierung der Leistungsaufnahme eines Produktionssystems durch Reinforcement Learning <https://www.stackoverflow.com>`_. Note that the pdf is only available in german. Further details in english can be read here: :ref:`About the project <about_project>`. All abbreviations that will be used in the documentation will be explained there too.
 
 Information about the installation, first steps and a general example are found in the :ref:`Getting Started Guide <getting_started>`.
 
-We also provide detailed information of all the classes and functions used by the different modules in the section: Module Documentation. Look in the Example section if you want to see how to use the different RL-aproaches we explored within the study project.
+We also provide detailed information of all the classes and functions used by the different modules in the section: Module Documentation. Look in the Example section if you want to see how to use the different RL-aproaches.
 
-``module``
-:class:`someModule.someClass`
-:meth:`someModule.someClass.function`
-`type`
+You are free to use this code for your own research (Check this license). If you want to utilize this solution tailored to your company or need any other assisstanced in implementing artificial intelligence, contact me: maik.schuermann97@gmail.com.
 
-``common_env``
-:class:`common_env.common_env`
-:meth:`common_env.common_env.step`
-`type`
+Visit blablal.com to check out some of our other research.
 
 Contents
 ========

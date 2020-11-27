@@ -1,7 +1,7 @@
 .. _how_to:
 
-How to use the agents:
-======================
+How to use the agents
+=====================
 
 This sections aims to provide a tutorial how to set up an agent. For this purpose the ``agent_q_table`` will be used. You can look up the examples for the other agents to see the differences, but the basic structure is for all agents (except PPO2) pretty much the same. The code will be explained step by step and put together at the end.
 
@@ -21,7 +21,7 @@ Importing the dependencies:
     # Import the Q-Table agent: 
     from main.agent_q_table import Q_Learner
 
-The last line determine which agent we use. In this case we want to create an agent that uses a Q-Table, which will limit the input and action-space to discrete values. This is important for setting up the environment later.
+The last line determines the agent we want to use. In this case we want to import an agent that uses a Q-Table. This will limit the input and action-space to discrete values, which will be important for setting up the environment later.
 
 Setting up parameters and loading the dataset:
 
