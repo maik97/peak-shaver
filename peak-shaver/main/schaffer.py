@@ -453,7 +453,7 @@ class lstmInputDataset:
             training_data = []
             for i in range(len(rolling_mean_inputs[:-self.num_past_periods])):
                 training_data = np.append(training_data, rolling_mean_inputs[i:i+self.num_past_periods])
-                self.timer.print_time_progess('Creating training data',i , len(rolling_mean_inputs[:-self.num_past_periods]))
+                self.timer.print_time_progress('Creating training data',i , len(rolling_mean_inputs[:-self.num_past_periods]))
 
 
             num_inputs_t = len(rolling_mean_inputs[0]) 
@@ -494,7 +494,7 @@ class lstmInputDataset:
             training_data = []
             for i in range(len(rolling_max_inputs[:-self.num_past_periods])):
                 training_data = np.append(training_data, rolling_max_inputs[i:i+self.num_past_periods])
-                self.timer.print_time_progess('Creating training data', i, len(rolling_max_inputs[:-self.num_past_periods]))
+                self.timer.print_time_progress('Creating training data', i, len(rolling_max_inputs[:-self.num_past_periods]))
 
 
             num_inputs_t = len(rolling_max_inputs[0]) 
@@ -534,7 +534,7 @@ class lstmInputDataset:
             training_data = []
             for i in range(len(normal_inputs[:-self.num_past_periods])):
                 training_data = np.append(training_data, normal_inputs[i:i+self.num_past_periods])
-                self.timer.print_time_progess('Creating training data',i, len(normal_inputs[:-self.num_past_periods]))
+                self.timer.print_time_progress('Creating training data',i, len(normal_inputs[:-self.num_past_periods]))
 
             num_inputs_t = len(normal_inputs[0]) 
             num_t = len(normal_inputs[self.num_past_periods:])
@@ -574,7 +574,7 @@ class lstmInputDataset:
             label_data = []
             for i in range(len(sequence_outputs[:-self.num_past_periods])):
                 label_data = np.append(label_data, sequence_outputs[i:i+self.num_past_periods])
-                self.timer.print_time_progess('Creating label data (sequence)', i, len(sequence_outputs[:-self.num_past_periods]))
+                self.timer.print_time_progress('Creating label data (sequence)', i, len(sequence_outputs[:-self.num_past_periods]))
 
             #num_inputs_t = len(sequence_outputs[0]) 
             num_t = len(sequence_outputs[self.num_past_periods:])
@@ -584,7 +584,7 @@ class lstmInputDataset:
             training_data = []
             for i in range(len(sequence_inputs[:-self.num_past_periods])):
                 training_data = np.append(training_data, sequence_inputs[i:i+self.num_past_periods])
-                self.timer.print_time_progess('Creating training data (sequence)', i, len(sequence_inputs[:-self.num_past_periods]))
+                self.timer.print_time_progress('Creating training data (sequence)', i, len(sequence_inputs[:-self.num_past_periods]))
 
             num_inputs_t = len(sequence_inputs[0]) 
             num_t = len(sequence_inputs[num_seq_periods:])
@@ -598,95 +598,155 @@ class lstmInputDataset:
         return training_data, label_data
 
 
+class DatasetStatistics:
 
-def peak_len(peak_value=42):
+    def __init__(self, D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True):
 
-    sum_total_power = load_total_power().to_numpy()
+        self.sum_total_power_df    = mainDataset(D_PATH, period_string_min, full_dataset).load_total_power()
+        self.sum_total_power_array = self.sum_total_power_df.to_numpy()
 
-    len_peak_list = []
-    value_to_append = 0
-    
-    for v in sum_total_power:
-
-        if v >= peak_value:
-            value_to_append +=1
-        elif value_to_append != 0:
-            len_peak_list.append(value_to_append)
-            value_to_append = 0
-
-    #print(len_peak_list)
-    #print(len(len_peak_list))
-            
-
-    return len_peak_list
+        self.D_PATH = D_PATH+'statistics/dataset-statistics/'
+        make_dir(self.D_PATH)
 
 
-def plot_leistungs_benutzung():
+    def list_peak_len_above_1(self, peak_value=42):
+        
+        len_peak_list = []
+        value_to_append = 0
+        for v in self.sum_total_power_array:
 
-    global_var()
+            if v >= peak_value:
+                value_to_append +=1
+            elif value_to_append != 0:
+                len_peak_list.append(value_to_append)
+                value_to_append = 0
 
-    sum_total_power = load_total_power()
+        return len_peak_list
 
+    def list_peak_len_above(self, peak_value=42):
+        
+        len_peak_list = []
+        value_to_append = 0
+        for v in self.sum_total_power_array:
 
+            if v >= peak_value:
+                value_to_append +=1
+            else:
+                if value_to_append != 0:
+                    len_peak_list.append(value_to_append)
+                    value_to_append = 0
 
-
-    # Distribution KW-Bedarf
-    #sns.distplot(sum_total_power, hist=False, kde_kws={"shade": True}, color="m")
-
-    # Distribution KW-Bedarf-Steigung
-    #sns.distplot(sum_total_power.diff().dropna(), hist=False, kde_kws={"shade": True}, color="m")
-    '''
-    plt.subplot(4,3,1)
-    sns.distplot(peak_len(40), kde=False)
-
-    plt.subplot(4,3,2)
-    sns.distplot(peak_len(42), kde=False)
-
-    plt.subplot(4,3,3)
-    sns.distplot(peak_len(45), kde=False)
-
-    plt.subplot(4,3,4)
-    sns.distplot(peak_len(50), kde=False)
-
-    plt.subplot(4,3,5)
-    sns.distplot(peak_len(55), kde=False)
-
-    plt.subplot(4,3,6)
-    sns.distplot(peak_len(60), kde=False)
-
-    plt.subplot(4,3,7)
-    sns.distplot(peak_len(65), kde=False)
-
-    plt.subplot(4,3,8)
-    sns.distplot(peak_len(70), kde=False)
-
-    plt.subplot(4,3,9)
-    sns.distplot(peak_len(75), kde=False)
-
-    plt.subplot(4,3,10)
-    sns.distplot(peak_len(80), kde=False)
-
-    plt.subplot(4,3,11)
-    sns.distplot(peak_len(85), kde=False)
-
-    plt.subplot(4,3,12)
-    sns.distplot(peak_len(90), kde=False)
+        return len_peak_list
 
 
-    plt.tight_layout()
-    #plt.show()
-    '''
+    def plot_dist_power(self, save_plot_as=None, show_plot=True):
+        # Distribution KW-Bedarf
+        sns.distplot(self.sum_total_power_df, hist=False, kde_kws={"shade": True}, color="m")
 
-#plot_leistungs_benutzung()
+        if save_plot_as != None:
+            plt.savefig(self.D_PATH+save_plot_as)
+
+        if show_plot == True:
+            plt.show()
+
+        
+    def plot_dist_power_change(self, save_plot_as=None, show_plot=True):
+        # Distribution KW-Bedarf
+        sns.distplot(self.sum_total_power_df.diff().dropna(), hist=False, kde_kws={"shade": True}, color="m")
+
+        if show_plot == True:
+            plt.show()
+
+        if save_plot_as != None:
+            plt.savefig(self.D_PATH+save_plot_as)
 
 
+    def plot_compare_peak_lenghts_1(self, save_plot_as=None, show_plot=True):
+
+        plt.subplot(4,3,1)
+        sns.displot(self.list_peak_len_above(40), kde=False)
+
+        plt.subplot(4,3,2)
+        sns.displot(self.list_peak_len_above(42), kde=False)
+
+        plt.subplot(4,3,3)
+        sns.displot(self.list_peak_len_above(45), kde=False)
+
+        plt.subplot(4,3,4)
+        sns.displot(self.list_peak_len_above(50), kde=False)
+
+        plt.subplot(4,3,5)
+        sns.displot(self.list_peak_len_above(55), kde=False)
+
+        plt.subplot(4,3,6)
+        sns.displot(self.list_peak_len_above(60), kde=False)
+
+        plt.subplot(4,3,7)
+        sns.displot(self.list_peak_len_above(65), kde=False)
+
+        plt.subplot(4,3,8)
+        sns.displot(self.list_peak_len_above(70), kde=False)
+
+        plt.subplot(4,3,9)
+        sns.displot(self.list_peak_len_above(75), kde=False)
+
+        plt.subplot(4,3,10)
+        sns.displot(self.list_peak_len_above(80), kde=False)
+
+        plt.subplot(4,3,11)
+        sns.displot(self.list_peak_len_above(85), kde=False)
+
+        plt.subplot(4,3,12)
+        sns.displot(self.list_peak_len_above(90), kde=False)
+
+        plt.tight_layout()
+        
+        if show_plot == True:
+            plt.show()
+
+        if save_plot_as != None:
+            plt.savefig(self.D_PATH+save_plot_as)
 
 
+    def plot_compare_peak_lenghts(self, save_plot_as=None, show_plot=True):
 
+        fig, axes = plt.subplots(4, 3)
 
+        sns.histplot(ax=axes[0,0], data=self.list_peak_len_above(40), kde=False)
+        sns.histplot(ax=axes[0,1], data=self.list_peak_len_above(42), kde=False)
+        sns.histplot(ax=axes[0,2], data=self.list_peak_len_above(45), kde=False)
+        sns.histplot(ax=axes[1,0], data=self.list_peak_len_above(50), kde=False)
+        sns.histplot(ax=axes[1,1], data=self.list_peak_len_above(55), kde=False)
+        sns.histplot(ax=axes[1,2], data=self.list_peak_len_above(60), kde=False)
+        sns.histplot(ax=axes[2,0], data=self.list_peak_len_above(65), kde=False)
+        sns.histplot(ax=axes[2,1], data=self.list_peak_len_above(70), kde=False)
+        sns.histplot(ax=axes[2,2], data=self.list_peak_len_above(75), kde=False)
+        sns.histplot(ax=axes[3,0], data=self.list_peak_len_above(80), kde=False)
+        sns.histplot(ax=axes[3,1], data=self.list_peak_len_above(85), kde=False)
+        sns.histplot(ax=axes[3,2], data=self.list_peak_len_above(90), kde=False)
 
+        if save_plot_as != None:
+            plt.savefig(self.D_PATH+save_plot_as)
 
+        if show_plot == True:
+            plt.show()
 
+    def plot_compare_peak_lenght_3(self, save_plot_as=None, show_plot=True):
+
+        data = []
+        ranking = [40,42,45,50,55,60,65,70,75]
+        for list_data in ranking:
+            data.append(np.array(self.list_peak_len_above(list_data)))
+
+        print(data)
+
+        sns.boxenplot(palette="light:m_r",data=data)
+        
+        if save_plot_as != None:
+            plt.savefig(self.D_PATH+save_plot_as)
+
+        if show_plot == True:
+            plt.show()       
 
 
 
