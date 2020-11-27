@@ -62,6 +62,7 @@ class common_env(gym.Env):
             max_LION_SoC,#      = 54,
             PERIODEN_DAUER,#    = 5,
             ACTION_TYPE,#       = 'discrete', 'contin'
+            OBS_TYPE,
             num_discrete_obs,
             num_discrete_actions,
             #action_space,#      = spaces.Discrete(22), # A ∈ [0,1]
@@ -110,16 +111,23 @@ class common_env(gym.Env):
 
         # Init Agent:
         if self.ACTION_TYPE == 'discrete':
-            self.num_discrete_obs  = num_discrete_obs
             self.action_space      = spaces.Discrete(num_discrete_actions) # A ∈ [0,1]
-            self.observation_space = spaces.Box(low = 0, high=self.num_discrete_obs, shape=(self.input_dim ,1), dtype=np.float16)
         elif self.ACTION_TYPE == 'contin':
-            self.num_discrete_obs  = 1
             self.action_space      = spaces.Box(low=np.array([0, 0]), high=np.array([1, 1]), dtype=np.float16)
-            self.observation_space = spaces.Box(low = 0, high=1, shape=(self.input_dim ,1), dtype=np.float16)
         else:
             print("ERROR: ACTION_TYPE not understood. ACTION_TYPE must be: 'discrete', 'contin'")
             exit()
+
+        if self.OBS_TYPE == 'discrete':
+            self.num_discrete_obs  = num_discrete_obs
+            self.observation_space = spaces.Box(low = 0, high=self.num_discrete_obs, shape=(self.input_dim ,1), dtype=np.float16)
+        elif self.OBS_TYPE == 'contin':
+            self.num_discrete_obs  = 1
+            self.observation_space = spaces.Box(low = 0, high=1, shape=(self.input_dim ,1), dtype=np.float16)
+        else:
+            print("ERROR: OBS_TYPE not understood. OBS_TYPE must be: 'discrete', 'contin'")
+            exit()
+
 
         # Init fixe Parameter
         self.max_power_dem         = np.max(self.rolling_power_dem)
@@ -250,7 +258,7 @@ class common_env(gym.Env):
         for input_column in self.input_list:
             obs = np.append(obs,[self.df[input_column][self.current_step] * self.num_discrete_obs])
 
-        if self.ACTION_TYPE == 'discrete':
+        if self.num_discrete_obs > 1:
             obs = obs.astype(int)
         else:
             obs = obs.reshape(4,1)
