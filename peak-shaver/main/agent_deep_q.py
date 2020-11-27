@@ -95,6 +95,12 @@ class DQN:
         self.epsilon = max(self.epsilon_min, self.epsilon)
         if np.random.random() < self.epsilon:
             return self.env.action_space.sample(), self.epsilon
+        
+        if self.env.__dict__['num_discrete_obs'] > 1:
+            shape = self.env.__dict__['num_discrete_obs']
+            state = self.discrete_input_space(shape,state)
+        else:
+            state = state.reshape(1,len(cur_state))[0]
         return np.argmax(self.model.predict(state)[0]), self.epsilon
 
     def remember(self, state, action, reward, new_state, done, step_counter_episode):
@@ -109,6 +115,13 @@ class DQN:
             done (bool): If True the episode ends
             step_counter_episode (integer): Episode step at which the action was performed
         '''
+        if self.env.__dict__['num_discrete_obs'] > 1:
+            shape     = self.env.__dict__['num_discrete_obs']
+            state     = self.discrete_input_space(shape,state)
+            new_state = self.discrete_input_space(shape,state)
+        else:
+            state     = state.reshape(1,len(cur_state))[0]
+            new_state = new_state.reshape(1,len(cur_state))[0]
         self.memory.append([state, action, reward, new_state, done, step_counter_episode])
 
 
@@ -158,25 +171,25 @@ class DQN:
         self.model.save(DATENSATZ_PATH+'models/'+NAME+'_{}'.format(e))
 
 
-def discrete_input_space(state_dim_size, state):
-    '''
-    Transform the state to a discrete input
+    def discrete_input_space(state_dim_size, state):
+        '''
+        Transform the state to a discrete input (one-hot-encoding)
 
-    Args:
-        state_dim_size (shape): Size to which the state will be transformed
-        state (array): Takes in a state
+        Args:
+            state_dim_size (shape): Size to which the state will be transformed
+            state (array): Takes in a state
 
-    Returns:
-        discrete_state (array): Transformed state for discrete inputs
-    '''
-    discrete_state = []
-    for dim in state:
-        dim_append = np.zeros((state_dim_size))
-        dim_append[dim] = 1
-        discrete_state = np.append(discrete_state,dim_append)
-    discrete_state = discrete_state.reshape(1,len(discrete_state))
-    #print(discrete_state)
-    return discrete_state
+        Returns:
+            discrete_state (array): Transformed state for discrete inputs
+        '''
+        discrete_state = []
+        for dim in state:
+            dim_append = np.zeros((state_dim_size))
+            dim_append[dim] = 1
+            discrete_state = np.append(discrete_state,dim_append)
+        discrete_state = discrete_state.reshape(1,len(discrete_state))
+        #print(discrete_state)
+        return discrete_state
 
 
 
