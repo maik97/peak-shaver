@@ -3,7 +3,7 @@ import time
 import pandas as pd
 import numpy as np
 
-#import tensorflow as tf
+import tensorflow as tf
 #import keras
 
 
@@ -83,7 +83,7 @@ class Timer:
         else:
             return '-'
     
-    def print_time_progess(self, process_name, i, max_i):
+    def print_time_progress(self, process_name, i, max_i):
         if i < max_i:
             percentage = round(i/max_i*100)
             self.stop()
