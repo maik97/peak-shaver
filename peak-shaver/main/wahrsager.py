@@ -52,6 +52,7 @@ class wahrsager:
     '''
     def __init__(
                 self,
+                lstm_dataset,
                 # Allgemeine Parameter
                 TYPE              = 'MEAN',
                 NAME              = '_wahrsager_v5',
@@ -76,6 +77,8 @@ class wahrsager:
                 num_epochs        = 1,
                 ):
 
+        self.lstm_dataset      = lstm_dataset
+        
         # Allgemeine Parameter
         self.TYPE              = TYPE
         self.NAME              = NAME
@@ -246,18 +249,18 @@ class wahrsager:
             label_data (array):
         '''
         if self.TYPE == 'MEAN':
-                training_data, label_data = schaffer.rolling_mean_training_data(self.num_past_periods)
+                training_data, label_data = self.lstm_dataset.rolling_mean_training_data(self.num_past_periods)
         elif self.TYPE == 'MAX':
-                training_data, label_data = schaffer.rolling_max_training_data(self.num_past_periods)
+                training_data, label_data = self.lstm_dataset.rolling_max_training_data(self.num_past_periods)
         elif self.TYPE == 'NORMAL':
-                training_data, label_data = schaffer.normal_training_data(self.num_past_periods)
+                training_data, label_data = self.lstm_dataset.normal_training_data(self.num_past_periods)
         elif self.TYPE == 'SEQ':
-                training_data, label_data = schaffer.sequence_training_data(self.num_past_periods)
+                training_data, label_data = self.lstm_dataset.sequence_training_data(self.num_past_periods)
         elif self.TYPE == 'MAX_LABEL_SEQ':
-                training_data, label_data_seq = schaffer.sequence_training_data(self.num_past_periods)
+                training_data, label_data_seq = self.lstm_dataset.sequence_training_data(self.num_past_periods)
                 label_data = max_seq(label_data_seq)    
         elif self.TYPE == 'MEAN_LABEL_SEQ':
-                training_data, label_data_seq = schaffer.sequence_training_data(self.num_past_periods)
+                training_data, label_data_seq = self.lstm_dataset.sequence_training_data(self.num_past_periods)
                 label_data = mean_seq(label_data_seq)
         else:
             print("Error: Data-Import TYPE not understood! - Supported TYPES:'MEAN','MAX','NORMAL','SEQ','MAX_LABEL_SEQ','MEAN_LABEL_SEQ'")
@@ -355,6 +358,20 @@ class wahrsager:
             prediction_df.plot()
             plt.show()
 
+def add_lstm_predictions(self,df,predictions,custom_column_name=None, label_sequence='MEAN'):
+
+    if custom_column_name != None:
+        df[custom_column_name] = predictions
+        return df
+
+    elif TYPE != 'SEQ':
+        df[TYPE] = predictions
+
+    elif TYPE == 'SEQ' and label_sequence == 'MAX':
+        df[TYPE+'_'+label_sequence] = max_seq(predictions)
+
+    elif TYPE == 'SEQ' and label_sequence == 'MEAN':
+        df[TYPE+'_'+label_sequence] = mean_seq(predictions)
 
 
 def teste_ordung_training_label_data(training_data,label_data):
