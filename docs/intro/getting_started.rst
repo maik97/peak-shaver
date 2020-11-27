@@ -26,13 +26,14 @@ Make sure to have these libraries with the right versions installed:
 - tqdm
 - h5py
 
+Note that ``tensorflow 1.9.0`` is an older version and only works with ``python 3.6``. The code of ``logger`` needs to be updated in order to be compatible with of ``tensorflow 2.x.x``.
+
 If you dont know how to install those properly look up `pip <https://pip.pypa.io/en/stable/>`_ . You can also install all dependedencies at once via the requirements.txt found in the github repository.
 
 The dataset to simulate the can be downloaded here: `HIPE Dataset <https://www.energystatusdata.kit.edu/hipe.php>`_ . There are two different versions, one is the complete dataset over three months, the smaller one is just the first week.
 
 Folder Structure
 ****************
-You should set up following folder structure so you can follow the examples:
 
 | peak-shaver-master
 | ├── peak-shaver
@@ -47,52 +48,44 @@ You should set up following folder structure so you can follow the examples:
 
 - ``peak-shaver-master`` is the downloded github folder.
 - ``peak-shaver`` is where the actual package is located. When following the examples or if you want to create your own code you should be in this directory.
-- Create ``dataset`` und put in (both) unzipped HIPE-datasets.
-- Create ``_BIG_D`` (big dataset) and ``_small_d`` (small dataset): this is where datasets, models, statistics and logs will be saved.
+- ``dataset``: put in (both) unzipped HIPE-datasets.
+- ``_BIG_D`` (big dataset) and ``_small_d`` (small dataset): this is where datasets, models, statistics and logs will be saved. Note that those folders will be created by setting the parameter `D_PATH` and therfore can be named differently. More on this in the next section.
 
 Data Preparation
 ****************
 The data preparation will be executed automaticaly when you first run ``wahrsager`` or any of the agents (provided you didn't do it manually). But it is recommended to create the preparations separately with ``schaffer`` since this can take up some time and you have the freedom to set up some parameters to your liking.
 
-First all the necessary functions to transform the dataset are explained separately. You can run these step by step or just run the last one in which case all the previous steps will be run automatically.
-
-- ``smoothed_df()`` will take the dataset and smooth the data to a specific time-frame.
-- ``normalized_df()`` will take the dataset from ``smoothed_df()`` and will first add differentiation between weekday, then add the activation time of each machine and lastly normalize the data. It also has a dataset where the sum of power consumption isn't normalized (Note that this function is deprecated, thus you don't need to run it)
-- ``load_only_norm_data()`` has the same functionality as ``load_norm_data()``, except the extra dataset where the sum of power consumption isn't normalized
-- ``load_total_power()`` has the same functionality as ``load_norm_data()``, except it returns only the extra dataset where the sum of power consumption isn't normalized
-- ``alle_inputs()`` will take the datasets of ``load_only_norm_data()`` and merge those in a single one 
-- ``alle_inputs_neu()`` is an extra function that makes a differentiation between work day and holiday (might be useful for predictions)
-
 Create the basic dataset:
-
-- :meth:`schaffer.mainDataset.smoothed_df` will take the dataset and smooth the data to a specific time-frame.
-- :meth:`schaffer.mainDataset.load_total_power` will take :meth:`schaffer.mainDataset.smoothed_df` and calculates the (not normalized) sum of the power requirements.
-- :meth:`schaffer.mainDataset.normalized_df` will take :meth:`schaffer.mainDataset.smoothed_df` and normalize the data
-- :meth:`schaffer.mainDataset.norm_activation_time_df` will take :meth:`schaffer.mainDataset.smoothed_df` and calculate the normalized activation times of the machines.
-
-Create an input-dataset:
-
-- :meth:`schaffer.lstmInputDataset.rolling_mean_training_data` will take :meth:`schaffer.mainDataset.make_input_df` to create an input-dataset that was transformed with a `rolling mean` operation
-- :meth:`schaffer.lstmInputDataset.rolling_max_training_data` will take :meth:`schaffer.mainDataset.make_input_df` to create an input-dataset that was transformed with a `rolling max` operation
-- :meth:`schaffer.lstmInputDataset.normal_training_data` will take :meth:`schaffer.mainDataset.make_input_df` to create a normale input-dataset.
-- :meth:`schaffer.lstmInputDataset.normal_training_data` will take :meth:`schaffer.mainDataset.make_input_df` to create an input-dataset with sequence-labels the size of ``num_seq_periods``.
-
-
-Recommended way to run the necessary functions:
 
 .. code-block:: python
     
-    from main.schaffer import mainDataset, lstmInputDataset
+    from main.schaffer import mainDataset
 
     main_dataset_creator = mainDataset(D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True)
 
-    # If you want to check that everything works fine, run those rather step by step:
+    # Run this first, since this can take up a lot of time:
     main_dataset_creator.smoothed_df()
+    
+    # These don't take up a lot of time to run, 
+    # but you can run those beforhand to check if everything is setup properly:
     main_dataset_creator.load_total_power()
     main_dataset_creator.normalized_df()
     main_dataset_creator.norm_activation_time_df()
 
-    lstm_dataset_creator = lstmInputDataset(D_PATH='_BIG_D/', period_string_min='5min',full_dataset=True,
+- :meth:`schaffer.mainDataset.smoothed_df` will take the dataset and smooth the data to a specific time-frame.
+- :meth:`schaffer.mainDataset.load_total_power` will take the table from ``smoothed_df`` and calculates the (not normalized) sum of the power requirements.
+- :meth:`schaffer.mainDataset.normalized_df` will take the table from ``smoothed_df`` and normalize the data
+- :meth:`schaffer.mainDataset.norm_activation_time_df` will take the table from ``smoothed_df`` and calculate the normalized activation times of the machines.
+
+In this tutorial we seperate the big and small datasets, by setting ``D_PATH=_BIG_D`` for the big one and ``D_PATH=_BIG_D`` for the small one. Dont forget to set ``full_dataset=False`` if you want to use the small dataset. ``period_string_min`` can be set to `xmin` where x are the minutes one period should be.
+
+Create an input-dataset:
+
+.. code-block:: python
+    
+    from main.schaffer import lstmInputDataset
+
+    lstm_dataset_creator = lstmInputDataset(D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True,
                                             num_past_periods=12, drop_main_terminal=False, use_time_diff=True,
                                             day_diff='holiday-weekend')
 
@@ -102,9 +95,13 @@ Recommended way to run the necessary functions:
     lstm_dataset_creator.normal_training_data()
     lstm_dataset_creator.sequence_training_data(num_seq_periods=12)
 
+- :meth:`schaffer.lstmInputDataset.rolling_mean_training_data`creates an input-dataset that was transformed with a `rolling mean` operation
+- :meth:`schaffer.lstmInputDataset.rolling_max_training_data` creates an input-dataset that was transformed with a `rolling max` operation
+- :meth:`schaffer.lstmInputDataset.normal_training_data` creates a normale input-dataset.
+- :meth:`schaffer.lstmInputDataset.normal_training_data` creates an input-dataset with sequence-labels the size of ``num_seq_periods``.
 
+Make sure to use the same parameters in ``lstmInputDataset`` that you used in ``mainDataset``
 
-If you want to know more about possible parameters for the ``schaffer`` functions check out the :ref:`module page <schaffer_doc>`.
 
 Making Predictions
 ******************
