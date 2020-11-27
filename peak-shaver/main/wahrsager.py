@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import time
-import tqdm
+import glob
 
 import matplotlib as mpl
 import matplotlib.pyplot  as plt
@@ -18,7 +18,7 @@ from keras.layers import Dense, InputLayer, LSTM, Dropout
 from keras.callbacks import TensorBoard
 
 import schaffer
-from common_func import try_training_on_gpu, max_seq, mean_seq
+from common_func import try_training_on_gpu, max_seq, mean_seq, wait_to_continue
 
 # TO-DO:
 # dataset path als parameter
@@ -181,24 +181,33 @@ class wahrsager:
         return prediction
 
     
-    def pred(self,use_model):
+    def pred(self,use_model=None):
         ''' Uses a saved LSTM-model to make predictions.
 
         Args:
-            use_model (string): Name of the model you want to use
+            use_model (string): Name of the model you want to use `(name_of_model.h5)`
 
         Returns:
-            prediction (array): Future energy requirements
+            array: Predicted future energy requirements
         '''
         training_data, label_data = self.import_data()
 
-        try:
-            model = load_model(self.DATENSATZ_PATH+'LSTM-models/'+self.TYPE+'_MODEL.h5')
-        except:
-            print('Please name a model: '+self.TYPE+'_MODEL.h5! (Path: '+self.DATENSATZ_PATH+'LSTM-models/)')
-            exit()
+        if use_model != None:
+            try:
+                model = load_model(self.DATENSATZ_PATH+'LSTM-models/'+use_model)
+            except:
+                print('Model not found:', self.DATENSATZ_PATH+'LSTM-models/'+use_model)
+                exit()
+            prediction = model.predict(training_data).reshape(np.shape(label_data))
 
-        prediction = model.predict(training_data).reshape(np.shape(label_data))
+        else:
+            try:
+                model = load_model(glob.glob(self.DATENSATZ_PATH+'LSTM-models/*'+self.TYPE+'*')[-1])
+                print('Using last model created for TYPE='+self.TYPE)
+                prediction = model.predict(training_data).reshape(np.shape(label_data))
+            except:
+                wait_to_continue('No valid model found for TYPE='+self.TYPE+'. Press enter to train a new model.')
+                prediction = self.train()
 
         if self.PLOT_MODE == True:
             if self.num_outputs > 1:
