@@ -30,6 +30,8 @@ class mainDataset:
         self.full_dataset      = full_dataset
         self.timer             = Timer()
 
+    def return_parameter(self):
+        return self.D_PATH
 
     def coulmn_to_smoothed_period_df(self, dataset_name, coulmn_name, c_num=None, c_total=None): # returns Datafram: Strombedarf (nur noch eine Spalte, Index = SensorDateTime, neuerstellt)
         ''' Trys to open the dataset for a specific machine that is already smoothed to the time-period. Creates a new dataset if a dataset for the given time-period can not be opened.
@@ -403,18 +405,13 @@ class lstmInputDataset:
         day_diff (string): Parameter will be used for :meth:`schaffer.mainDataset.make_input_df`: Uses :meth:`schaffer.mainDataset.add_day_difference` when set to `'weekday-normal'`. `'weekend-binary'` or `'weekend-binary`. Does not use this function if set to `None`.
     '''
 
-    def __init__(self, D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True, num_past_periods=12, drop_main_terminal=False, use_time_diff=True, day_diff='holiday-weekend'):
+    def __init__(self, main_dataset, df):
 
-        self.D_PATH             = D_PATH
-        self.period_string_min  = period_string_min
-        self.num_past_periods   = num_past_periods
-        self.drop_main_terminal = drop_main_terminal
-        self.use_time_diff      = use_time_diff
-        self.day_diff           = day_diff
 
-        self.name               = ''
-        self.main_dataset_obj   = mainDataset(self.D_PATH, self.period_string_min, full_dataset)
-        self.timer              = Timer()
+        self.D_PATH         = main_dataset.return_parameter()
+        self.alle_inputs_df = df
+        self.name           = ''
+        self.timer          = Timer()
 
         make_dir(self.D_PATH+'tables/'+self.period_string_min+'/training-data/')
 
@@ -443,10 +440,8 @@ class lstmInputDataset:
                 training_data = hf['training_data'][:]
                 label_data = hf['label_data'][:]
 
-        except:
-            alle_inputs_df = self.main_dataset_obj.make_input_df(self.drop_main_terminal, self.use_time_diff, self.day_diff)
-            
-            rolling_mean_inputs_df = alle_inputs_df.rolling(self.num_past_periods).mean()
+        except:            
+            rolling_mean_inputs_df = self.self.alle_inputs_df.rolling(self.num_past_periods).mean()
             rolling_mean_inputs = rolling_mean_inputs_df.to_numpy()
 
             self.timer.start()
@@ -484,10 +479,8 @@ class lstmInputDataset:
                 training_data = hf['training_data'][:]
                 label_data = hf['label_data'][:]
 
-        except:
-            alle_inputs_df = self.main_dataset_obj.make_input_df(self.drop_main_terminal, self.use_time_diff, self.day_diff)
-            
-            rolling_max_inputs_df = alle_inputs_df.rolling(self.num_past_periods).max()
+        except:            
+            rolling_max_inputs_df = self.alle_inputs_df.rolling(self.num_past_periods).max()
             rolling_max_inputs = rolling_max_inputs_df.to_numpy()
 
             self.timer.start()
@@ -526,9 +519,7 @@ class lstmInputDataset:
                 label_data = hf['label_data'][:]
 
         except:
-            alle_inputs_df = self.main_dataset_obj.make_input_df(self.drop_main_terminal, self.use_time_diff, self.day_diff)
-            
-            normal_inputs = alle_inputs_df.to_numpy()
+            normal_inputs = self.alle_inputs_df.to_numpy()
 
             self.timer.start()
             training_data = []
@@ -541,7 +532,7 @@ class lstmInputDataset:
 
 
             training_data = np.reshape(training_data, (num_t, self.num_past_periods, num_inputs_t))[self.num_past_periods:]
-            label_data = alle_inputs_df['norm_total_power'].to_numpy()[self.num_past_periods:][self.num_past_periods:]
+            label_data = self.alle_inputs_df['norm_total_power'].to_numpy()[self.num_past_periods:][self.num_past_periods:]
 
             with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_normal_{}.h5'.format(self.num_past_periods), 'w') as hf:
                 hf.create_dataset("training_data",  data=training_data)
@@ -564,11 +555,9 @@ class lstmInputDataset:
                 training_data = hf['training_data'][:]
                 label_data = hf['label_data'][:]
 
-        except:
-            alle_inputs_df = self.main_dataset_obj.make_input_df(self.drop_main_terminal, self.use_time_diff, self.day_diff)
-            
-            sequence_inputs = alle_inputs_df.to_numpy()
-            sequence_outputs = alle_inputs_df['norm_total_power'].to_numpy()
+        except:            
+            sequence_inputs = self.alle_inputs_df.to_numpy()
+            sequence_outputs = self.alle_inputs_df['norm_total_power'].to_numpy()
 
             self.timer.start()
             label_data = []
