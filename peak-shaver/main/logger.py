@@ -2,25 +2,55 @@
 
 License: BSD License 2.0
 """
-__author__ = "Michael Gygli"
+__author__ = "Michael Gygli" # Modified version!
+
+# Original code: https://gist.github.com/gyglim/1f8dfb1b5c82627ae3efcfbbadb9f514
 
 import tensorflow as tf
 from io import StringIO
 import matplotlib.pyplot as plt
 import numpy as np
 
+class EpochMean:
+
+    def __init__(self):
+
+        self.dict_scalars = {}
+
 class Logger(object):
     """Logging in tensorboard without tensorflow ops."""
 
-    def __init__(self, log_dir):
+    def __init__(self, NAME, D_PATH, only_per_episode=False):
         """Creates a summary writer logging to log_dir."""
+
+        self.NAME             = NAME
+        self.D_PATH           = D_PATH
+        self.only_per_episode = only_per_episode
+        log_dir               = D_PATH+'agent-logs/'+NAME
+        
+        self.dict_scalars = {}
+
         try:
             self.writer = tf.summary.FileWriter(log_dir)
-        except:
+        except Exception as e:
+            print(e)
             self.writer = tf.summary.create_file_writer(log_dir)
 
+    def add_to_dict(self, tag, value):
 
-    def log_scalar(self, tag, value, step):
+        if tag in self.dict_scalars:
+            self.dict_scalars[tag] = np.append(self.dict_scalars[tag], value)
+        else:
+            self.dict_scalars[tag] = [value]
+
+
+    def get_from_dict(self, tag):
+        value = np.mean(self.dict_scalars[tag])
+        self.dict_scalars[tag] = []
+        return value
+
+
+    def log_scalar(self, tag, value, step, done):
         """Log a scalar variable.
 
         Parameter
@@ -31,12 +61,18 @@ class Logger(object):
         step : int
             training iteration
         """
-        try:
-            summary = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=value)])
-            self.writer.add_summary(summary, step)
-        except:
-            summary = tf.summary.scalar(value=[tf.Summary.Value(tag=tag, simple_value=value)])
-            self.writer.add_summary(summary, step)
+        if self.only_per_episode == True:
+            self.add_to_dict(tag, value)
+            if done == True:
+                value = self.get_from_dict(tag)
+
+        if self.only_per_episode == False or done == True:
+            try:
+                summary = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=value)])
+                self.writer.add_summary(summary, step)
+            except:
+                summary = tf.summary.scalar(value=[tf.Summary.Value(tag=tag, simple_value=value)])
+                self.writer.add_summary(summary, step)
 
     def log_images(self, tag, images, step):
         """Logs a list of images."""
