@@ -1,26 +1,14 @@
-import sys
-
+'''DQN implementation'''
 import numpy as np
-import pandas as pd
 import random
-import h5py
 
-import gym
-from gym import spaces
-
-from datetime import datetime
 from collections import deque
-from tqdm import tqdm
 
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
+from keras.models import Sequential, clone_model, load_model
+from keras.layers import Dense, LSTM, Dropout
 from keras.optimizers import Adam
 
-import schaffer
-from wahrsager import wahrsager
-from common_env import common_env
-from reward_maker import reward_maker
-from common_func import try_training_on_gpu, max_seq, mean_seq
+from main.common_func import try_training_on_gpu, AgentStatus
 
 class DQN:
     """
@@ -35,49 +23,113 @@ class DQN:
         epsilon_decay (float): Factor by which ``epsilon`` decays, value between 0 and 1
         lr (float): Sets the learning rate of the RL-Agent
         tau (float): Factor for copying weights from model network to target network
-        model_lr (float): Sets the learning rate for the Neural Network
         activation (string): Defines Keras activation function for each Dense layer (except the ouput layer) for the DQN
         loss (string): Defines Keras loss function to comile the DQN model
     """
-    def __init__(self, env, memory=deque(maxlen=500), gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125, model_lr=0.5, activation='relu', loss='mean_squared_error'):
+    def __init__(self, env, memory_len, input_sequence=1, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125,
+                 activation='relu', loss='mean_squared_error', model_type='dense', use_model=None, pre_trained_model=None):
 
         self.env            = env
-        self.memory         = memory
         
+        self.D_PATH         = self.env.__dict__['D_PATH']
+        self.NAME           = self.env.__dict__['NAME']
+        self.model_type     = model_type
+
+        self.input_sequence = input_sequence
         self.gamma          = gamma
         self.epsilon        = epsilon
         self.epsilon_min    = epsilon_min
-        self.epsilon_decay  = epsilon_decay
-        self.lr             = lr
+        self.epsilon_decay  = epsilon_decay # string:'linear' oder float
+        self.epsilon_og     = epsilon
         self.tau            = tau
 
-        #  Q-Network and Target Network are created seperetly
-        self.model        = self.create_model(model_lr, activation, loss)
-        self.target_model = self.create_model(model_lr, activation, loss)
+        self.horizon = self.env.__dict__['reward_maker'].__dict__['R_HORIZON']
+        if isinstance(self.horizon, int) == True:
+            memory_len += self.horizon
+        else:
+            self.horizon = 0
+        self.memory = deque(maxlen=memory_len+self.input_sequence-1)
+        
+        if pre_trained_model == None:
+            if model_type == 'dense' and use_model == None:
+                self.model        = self.create_normal_model(lr, activation, loss)
+                self.target_model = self.create_normal_model(lr, activation, loss)
 
-    def create_model(self,model_lr, activation, loss):
+            elif model_type == 'lstm' and use_model == None:
+                if self.input_sequence <= 1:
+                    raise Exception("input_sequence was set to {} but must be > 1, when model_type='lstm'".format(self.input_sequence))
+                self.model        = self.create_lstm_model(lr, activation, loss)
+                self.target_model = self.create_lstm_model(lr, activation, loss)
+
+            elif use_model != None:
+                self.model        = use_model
+                self.target_model = clone_model(self.model)
+                self.model_type   = 'costum'
+            else:
+                raise Exception("model_type='"+model_type+"' not understood. Use 'dense', 'lstm' or pass your own compiled keras model with own_model.")
+        else:
+            self.model = load_model(self.D_PATH+'agent-models/'+pre_trained_model)
+
+        self.LOGGER = self.env.__dict__['LOGGER']
+
+        try_training_on_gpu()
+
+        if self.env.__dict__['ACTION_TYPE'] != 'discrete':
+            raise Exception("DQN-Agent can not use continious values for the actions. Change 'ACTION_TYPE' to 'discrete'!")
+
+        if self.input_sequence == 0:
+            print("Attention: input_sequence can not be set to 0, changing now to input_sequence=1")
+            self.input_sequence = 1 
+
+
+    def init_agent_status(self, epochs, epoch_len):
+        self.agent_status = AgentStatus(epochs*epoch_len)
+
+
+    def create_normal_model(self, lr, activation, loss):
         '''Creates a Deep Neural Network which predicts Q-Values, when the class is initilized.
 
         Args:
             activation (string): Previously defined Keras activation
             loss (string): Previously defined Keras loss
         '''
-        model   = Sequential()
-        state_shape  = self.env.observation_space.shape
-        model.add(Dense(518, input_dim=88, activation=activation))
-        #model.add(Dense(48, input_dim=state_shape[0], activation="relu"))
-        #model.add(Dense(1000, activation="relu"))
-        #model.add(Dense(1000, activation="relu"))
+        input_dim = self.env.observation_space.shape[0]*self.input_sequence
+        model = Sequential()
+        model.add(Dense(518, input_dim=input_dim, activation=activation))
         model.add(Dense(518, activation=activation))
-        #model.add(Dense(128, activation="relu"))
-        #model.add(Dense(128, activation="relu"))
-        #model.add(Dense(64, activation="relu"))
         model.add(Dense(self.env.action_space.n))
-        model.compile(loss=loss,
-            optimizer=Adam(lr=model_lr))
+        model.compile(loss=loss, optimizer=Adam(lr=lr))
         return model
 
-    def act(self, state):
+    def create_lstm_model(self, lr, activation, loss):
+        '''Creates an LSTM which predicts Q-Values, when the class is initilized.
+
+        Args:
+            activation (string): Previously defined Keras activation
+            loss (string): Previously defined Keras loss
+        '''
+        input_dim = (self.input_sequence, self.env.observation_space.shape[0])
+        model = Sequential()
+        model.add(LSTM(518, input_dim=input_dim, activation=activation))
+        model.add(Dense(518, activation=activation))
+        model.add(Dense(self.env.action_space.n))
+        model.compile(loss=loss, optimizer=Adam(lr=model_lr))
+        return model
+
+    def sequence_states_to_act(self, cur_state):
+
+        state_array = []
+        for mem in memory[-self.input_sequence+1:]:
+            state, action, reward, new_state, done, step_counter_episode = mem
+            state_array = np.append(state_array, state)
+        state_array = np.append(state_array, cur_state)
+
+        if self.model_type == 'lstm':
+            state_array = state_array.reshape(-1,self.input_sequence,len(cur_state[0]))
+
+        return state_array
+
+    def act(self, state, random_mode=False):
         '''
         Function, in which the agent decides an action, either from greedy-policy or from prediction. Use this function when iterating through each step.
         
@@ -91,17 +143,24 @@ class DQN:
             
             epsilon (float): Current (decayed) epsilon
         '''
-        self.epsilon *= self.epsilon_decay
+        if self.epsilon_decay == 'linear':
+            self.epsilon = self.epsilon_og*(self.env.__dict__['sum_steps']/self.agent_status.__dict__['max_steps'])
+        else:
+            self.epsilon *= self.epsilon_decay
         self.epsilon = max(self.epsilon_min, self.epsilon)
-        if np.random.random() < self.epsilon:
-            return self.env.action_space.sample(), self.epsilon
+        
+        if np.random.random() < self.epsilon or random_mode == True:
+            return self.env.action_space.sample()
         
         if self.env.__dict__['num_discrete_obs'] > 1:
             shape = self.env.__dict__['num_discrete_obs']
             state = self.discrete_input_space(shape,state)
         else:
-            state = state.reshape(1,len(cur_state))[0]
-        return np.argmax(self.model.predict(state)[0]), self.epsilon
+            state = state.reshape(1,len(state))
+
+        if self.input_sequence > 1:
+            state = self.sequence_states_to_act(state)
+        return np.argmax(self.model.predict(state)[0])
 
     def remember(self, state, action, reward, new_state, done, step_counter_episode):
         '''
@@ -120,21 +179,42 @@ class DQN:
             state     = self.discrete_input_space(shape,state)
             new_state = self.discrete_input_space(shape,state)
         else:
-            state     = state.reshape(1,len(cur_state))[0]
-            new_state = new_state.reshape(1,len(cur_state))[0]
+            state     = state.reshape(1,len(state))
+            new_state = new_state.reshape(1,len(new_state))
         self.memory.append([state, action, reward, new_state, done, step_counter_episode])
 
+    def sequence_states_for_replay(self,i):
 
-    def replay(self, index_len):
+        state_array     = []
+        new_state_array = []
+        for mem in memory[i:i+self.input_sequence]:
+            state, action, reward, new_state, done, step_counter_episode = mem
+            state_array     = np.append(state_array, state)
+            new_state_array = np.append(new_state_array, new_state)
+
+        if self.model_type == 'lstm':
+            state_array     = state_array.reshape(-1,self.input_sequence,len(cur_state[0]))
+            new_state_array = new_state_array.reshape(-1,self.input_sequence,len(cur_state[0]))
+        
+        return state_array, action, reward, new_state_array, done, step_counter_episode
+
+
+    def replay(self, batch_size):
         '''
         Training-Process for the DQN from past steps. Use this function after a few iteration-steps (best use is the number of index_len). Alternatively use this function at each step.
 
         Args:
             index_len (integer): Number of past states to learn from
         '''
-        for i in range(index_len):
+        state_batch  = []
+        target_batch = []
+        for i in range(batch_size):
             # Lade Step von Simulation
-            state, action, reward, new_state, done, step_counter_episode = self.memory[i] 
+            if self.input_sequence == 1:
+                state, action, reward, new_state, done, step_counter_episode = self.memory[i]
+            else:
+                state, action, reward, new_state, done, step_counter_episode = self.sequence_states_for_replay(i)
+
             
             target = self.target_model.predict(state)
             #print(target[0][action])
@@ -148,9 +228,20 @@ class DQN:
                 Q_future = max(self.target_model.predict(new_state)[0])
                 target[0][action] = reward + Q_future * self.gamma
 
-            #print(target[0][action])
-            self.model.fit(state, target, epochs=1, verbose=0)
-            
+            state_batch = np.append(state_batch, state)
+            target_batch = np.append(target_batch, target)
+
+        state_batch  = state_batch.reshape(-1,len(state[0]))
+        target_batch = target_batch.reshape(-1,len(target[0]))
+
+        name         = self.env.__dict__['NAME']
+        loss         = self.model.train_on_batch(state_batch,target_batch)
+        epoch        = self.env.__dict__['episode_counter']
+        total_steps  = self.env.__dict__['sum_steps']
+        self.agent_status.print_agent_status(name, epoch, total_steps, batch_size, self.epsilon, loss) 
+        self.LOGGER.log_scalar('Loss:', loss, total_steps, done)
+        self.LOGGER.log_scalar('Epsilon:', self.epsilon, total_steps, done)
+
 
     def target_train(self):
         '''Updates the Target-Weights. Use this function after replay(index_len)'''
@@ -160,15 +251,15 @@ class DQN:
             target_weights[i] = weights[i] * self.tau + target_weights[i] * (1 - self.tau)
         self.target_model.set_weights(target_weights)
 
-    def save_agent(self, NAME, DATENSATZ_PATH, e):
+    def save_agent(self, e):
         '''For saving the agents model at specific epoch. Make sure to not use this function at each epoch, since this will take up your memory space.
 
         Args:
             NAME (string): Name of the model
-            DATENSATZ_PATH (string): Path to save the model
+            D_PATH (string): Path to save the model
             e (integer): Takes the epoch-number in which the model is saved
         '''
-        self.model.save(DATENSATZ_PATH+'models/'+NAME+'_{}'.format(e))
+        self.model.save(self.D_PATH+'agent-models/'+self.model_type+self.NAME+'_{}'.format(e))
 
 
     def discrete_input_space(state_dim_size, state):
@@ -190,148 +281,3 @@ class DQN:
         discrete_state = discrete_state.reshape(1,len(discrete_state))
         #print(discrete_state)
         return discrete_state
-
-
-
-
-def main():
-    '''
-    Example of an RL-Agent that uses Dualing Deep Q-Networks.
-    '''
-    # Logging-Namen:
-    now            = datetime.now()
-    NAME           = 'Deep-Q'+now.strftime("_%d-%m-%Y_%H:%M:%S")
-    DATENSATZ_PATH = '_BIG_D/'
-
-    # Lade Dataframe:
-    df = schaffer.alle_inputs_neu()[24:-12]
-    
-    #df['pred_mean']       = wahrsager(TYPE='MEAN').pred()[:-12]
-    #df['pred_max']        = wahrsager(TYPE='MAX').pred()[:-12]
-    #df['pred_normal']     = wahrsager(TYPE='NORMAL').pred()[:-12]
-    #df['pred_max_labe']   = wahrsager(TYPE='MAX_LABEL_SEQ').pred()
-    #df['pred_mean_label'] = wahrsager(TYPE='MEAN_LABEL_SEQ').pred()
-    
-    prediction_seq        = wahrsager(TYPE='SEQ', num_outputs=12).pred()
-    df['max_pred_seq']    = max_seq(prediction_seq)
-    #df['mean_pred_seq']   = mean_seq(prediction_seq)
-
-    power_dem_arr  = schaffer.load_total_power()[24:-12]
-
-    # Lade Reward-Maker:
-    R_HORIZON = 0
-    r_maker        = reward_maker(
-                        COST_TYPE               = 'exact_costs',     # 'yearly_costs', 'max_peak_focus'
-                        R_TYPE                  = 'savings_focus',   #'costs_focus', 'savings_focus'
-                        M_STRATEGY              = None,              # None, 'sum_to_terminal', 'average_to_neighbour', 'recurrent_to_Terminal'
-                        R_HORIZON               = 'single_step',     # 'episode', 'single_step', integer for multi-step
-                        cost_per_kwh            = 0.2255,  # in €
-                        LION_Anschaffungs_Preis = 34100,   # in €
-                        LION_max_Ladezyklen     = 1000,
-                        SMS_Anschaffungs_Preis  = 115000/3,# in €
-                        SMS_max_Nutzungsjahre   = 20,      # in Jahre
-                        Leistungspreis          = 102,     # in €
-                        focus_peak_multiplier   = 4        # multiplier for max_peak costs
-                        )
-
-    # Lade Environment:
-    env            = common_env(
-                        df                   = df,
-                        power_dem_arr        = power_dem_arr,
-                        input_list           = ['norm_total_power','max_pred_seq'],
-                        DATENSATZ_PATH       = DATENSATZ_PATH,
-                        NAME                 = NAME,
-                        max_SMS_SoC          = 12,
-                        max_LION_SoC         = 54,
-                        PERIODEN_DAUER       = 5,
-                        ACTION_TYPE          = 'discrete',
-                        num_discrete_obs     = 21,
-                        num_discrete_actions = 22,
-                        reward_maker         = r_maker
-                        )
-
-    # Initilisiere Parameter für Target-Network
-    update_num       = 500
-    update_counter   = 0
-
-    # Inititialsiere Epoch-Parameter:
-    epochs           = 1000
-    epochs_len       = len(df)
-    
-    num_warmup_steps = 100
-    warmup_counter   = 0
-
-    # Init Agent Parameter
-
-    
-    # Init Agent:
-    Agent          = DQN(
-                        env            = env,
-                        memory         = deque(maxlen=(R_HORIZON+update_num)),
-
-                        gamma          = 0.85,
-                        epsilon        = 0.8,
-                        epsilon_min    = 0.1,
-                        epsilon_decay  = 0.999996,
-                        lr             = 0.5,
-                        tau            = 0.125,
-                        model_lr       = 0.5,
-                        )
-
-    print('Warmup-Steps per Episode:', num_warmup_steps)
-    print('Training for',epochs,'Epochs')
-    state_placeholder = np.zeros((22,22,22,22))
-
-    for e in range(epochs):
-        #print('Epoch:', e)
-        #tqdm.write('Starting Epoch: {}'.format(e))
-        cur_state = env.reset()
-        #cur_state = cur_state.reshape(1,len(cur_state))[0]
-        cur_state = discrete_input_space(22, cur_state)
-
-        #tqdm.write('Warm-Up for {} Steps...'.format(num_warmup_steps))
-        while warmup_counter < num_warmup_steps:
-            action, epsilon            = Agent.act(cur_state)
-            new_state, reward, done, step_counter_episode, _ = env.step(action, epsilon)
-            new_state                  = discrete_input_space(22, new_state)
-            Agent.remember(cur_state, action, reward, new_state, done, step_counter_episode)
-
-            cur_state                  = new_state
-            warmup_counter            += 1
-
-        bar = tqdm(range(epochs_len))#, leave=True, file=sys.stdout)
-        bar.set_description("Training - Epoch {}".format(e))
-        for step in bar:
-
-            action, epsilon            = Agent.act(cur_state)
-            new_state, reward, done, step_counter_episode, _ = env.step(action, epsilon)
-            new_state                  = discrete_input_space(22, new_state)         
-            Agent.remember(cur_state, action, reward, new_state, done, step_counter_episode)
-            
-            cur_state                  = new_state
-            
-            if done == False:
-                index_len = update_num
-            else:
-                index_len = update_num + R_HORIZON
-
-            update_counter += 1
-            if update_counter == update_num or done == True:
-                Agent.replay(index_len)
-                Agent.target_train()                 # iterates target model
-                update_counter = 0
-
-            if done:
-                break
-        #bar.clear()
-
-        if e % 10 == 0:
-            Agent.save_agent(NAME, DATENSATZ_PATH, e)
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-
