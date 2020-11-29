@@ -17,8 +17,8 @@ from keras.models import Sequential
 from keras.layers import Dense, InputLayer, LSTM, Dropout
 from keras.callbacks import TensorBoard
 
-import schaffer
-from common_func import try_training_on_gpu, max_seq, mean_seq, wait_to_continue
+import main.schaffer
+from main.common_func import try_training_on_gpu, max_seq, mean_seq, wait_to_continue, make_dir
 
 # TO-DO:
 # dataset path als parameter
@@ -35,8 +35,6 @@ class wahrsager:
         M_NAME (string):
         D_PATH (string)
         PLOTTING (bool):
-        num_past_periods (int):
-        num_inputs (int):
         num_outputs (int):
         dropout (float):
         recurrent_dropout (float):
@@ -53,14 +51,13 @@ class wahrsager:
     def __init__(
                 self,
                 lstm_dataset,
+                total_power,
                 # Allgemeine Parameter
                 TYPE              = 'MEAN',
                 NAME              = '_wahrsager_v5',
-                PLOT_MODE         = False,
+                PLOTTING          = False,
                 
                 # Model-Parameter
-                num_past_periods  = 12,
-                num_inputs        = 24,
                 num_outputs       = 1,
                 dropout           = 0.2,
                 recurrent_dropout = 0.2,
@@ -72,22 +69,19 @@ class wahrsager:
                 activation_end    = 'sigmoid',
                 
                 # Trainings-Parameter
-                großer_datensatz  = True,
                 val_data_size     = 2000,
-                num_epochs        = 1,
+                num_epochs        = 10,
                 ):
 
         self.lstm_dataset      = lstm_dataset
+        self.total_power       = total_power
         
         # Allgemeine Parameter
         self.TYPE              = TYPE
         self.NAME              = NAME
-        self.PLOT_MODE         = PLOT_MODE   
-        self.großer_datensatz  = großer_datensatz
+        self.PLOTTING          = PLOTTING   
         
         # Model-Parameter
-        self.num_past_periods  = num_past_periods
-        self.num_inputs        = num_inputs
         self.num_outputs       = num_outputs
         self.dropout           = dropout
         self.recurrent_dropout = recurrent_dropout
@@ -108,29 +102,20 @@ class wahrsager:
             print('Setzte num_outputs standartmäßig auf 12\n')
             self.num_outputs = 12
 
-        # Entscheidung für Wahl des Datensatzes
-        if self.großer_datensatz == False:
-            self.DATENSATZ_PATH = '_small_d/'
-            self.VERSION        = 'small-{}'.format(int(time.time()))
-        else:
-            self.DATENSATZ_PATH = '_BIG_D/'
-            self.VERSION        = 'big-{}'.format(int(time.time()))
+        self.D_PATH  = self.lstm_dataset.__dict__['D_PATH']
+        self.VERSION = '{}'.format(int(time.time()))
 
         # Einstellungen Pandas:
         pd.set_option('min_rows', 50)
 
-        # Einstellungen Schaffer
-        schaffer.global_var(self.NAME, self.VERSION, self.DATENSATZ_PATH, self.großer_datensatz)
-
         # Init GPU Training
         try_training_on_gpu()
-
-        # Importiere Power Demand
-        self.total_power = schaffer.load_total_power()
 
         # Maximum, um später normalisierte Daten wieder zu ent-normalisieren:
         self.max_total_power = np.max(self.total_power.to_numpy())
         #print('MAXIMUM:',self.max_total_power)
+
+        self.training_data, self.label_data = self.import_data()
 
 
     ''' External Class Functions:'''
@@ -146,29 +131,27 @@ class wahrsager:
         '''
         if use_model != None:
             model_name = use_model
-            model = load_model(self.DATENSATZ_PATH+'LSTM-models/'+model_name+'.h5')
+            model = load_model(self.D_PATH+'lstm-models/'+model_name+'.h5')
         else:
             model_name = self.TYPE+self.NAME
             model = self.lstm_model()
-        
-        training_data, label_data = self.import_data()
 
-        tensorboard = TensorBoard(log_dir=self.DATENSATZ_PATH+'logs/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION)
+        tensorboard = TensorBoard(log_dir=self.D_PATH+'lstm-logs/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION)
 
-        model.fit(training_data[:-self.val_data_size], label_data[:-self.val_data_size],
+        model.fit(self.training_data[:-self.val_data_size], self.label_data[:-self.val_data_size],
                   epochs          = self.num_epochs,
                   verbose         = 1,
-                  validation_data = (training_data[-self.val_data_size:], label_data[-self.val_data_size:]),
+                  validation_data = (self.training_data[-self.val_data_size:], self.label_data[-self.val_data_size:]),
                   callbacks       = [tensorboard]
                   )
         
         # Speichern:
-        model.save(self.DATENSATZ_PATH+'LSTM-models/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION+'.h5')
+        model.save(self.D_PATH+'lstm-models/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION+'.h5')
         if use_model == None:
-            self.save_parameter(self.DATENSATZ_PATH+'LSTM-models/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION+'.txt')
+            self.save_parameter(self.D_PATH+'lstm-models/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION+'.txt')
 
         # Vorhersehen:
-        prediction = model.predict(training_data).reshape(np.shape(label_data))
+        prediction = model.predict(self.training_data).reshape(np.shape(self.label_data))
 
         if self.PLOTTING == True:
             if self.num_outputs > 1:
@@ -190,26 +173,23 @@ class wahrsager:
         Returns:
             array: Predicted future energy requirements
         '''
-        training_data, label_data = self.import_data()
-
         if use_model != None:
             try:
-                model = load_model(self.DATENSATZ_PATH+'LSTM-models/'+use_model)
+                model = load_model(self.D_PATH+'lstm-models/'+use_model)
             except:
-                print('Model not found:', self.DATENSATZ_PATH+'LSTM-models/'+use_model)
-                exit()
-            prediction = model.predict(training_data).reshape(np.shape(label_data))
+                raise Exception('Model not found:', self.D_PATH+'lstm-models/'+use_model)
+            prediction = model.predict(self.training_data).reshape(np.shape(self.label_data))
 
         else:
             try:
-                model = load_model(glob.glob(self.DATENSATZ_PATH+'LSTM-models/*'+self.TYPE+'*')[-1])
-                print('Using last model created for TYPE='+self.TYPE)
-                prediction = model.predict(training_data).reshape(np.shape(label_data))
+                model = load_model(glob.glob(self.D_PATH+'LSTM-models/*'+self.TYPE+'*.h5')[-1])
+                print('Using last model created for TYPE='+self.TYPE+':',glob.glob(self.D_PATH+'LSTM-models/*'+self.TYPE+'*.h5')[-1])
+                prediction = model.predict(self.training_data).reshape(np.shape(self.label_data))
             except:
                 wait_to_continue('No valid model found for TYPE='+self.TYPE+'. Press enter to train a new model.')
                 prediction = self.train()
 
-        if self.PLOT_MODE == True:
+        if self.PLOTTING == True:
             if self.num_outputs > 1:
                 self.plot_pred_multiple(prediction,label_data)
             else:
@@ -230,7 +210,7 @@ class wahrsager:
     
         model = Sequential()
         model.add(LSTM(self.lstm_size, 
-                       input_shape       = (self.num_past_periods,self.num_inputs),
+                       input_shape       = np.shape(self.training_data[0]),
                        dropout           = self.dropout,
                        recurrent_dropout = self.recurrent_dropout))
         
@@ -248,7 +228,7 @@ class wahrsager:
 
 
     def import_data(self):
-        ''' Trys to import the training data based on ``TYPE`` and ``num_past_periods``. Will create a new dataset if the import fails.
+        ''' Trys to import the training data based on ``TYPE``. Will create a new dataset if the import fails.
         
         Returns:
             training_data, label_data (tuple):
@@ -258,22 +238,21 @@ class wahrsager:
             label_data (array):
         '''
         if self.TYPE == 'MEAN':
-                training_data, label_data = self.lstm_dataset.rolling_mean_training_data(self.num_past_periods)
+                training_data, label_data = self.lstm_dataset.rolling_mean_training_data()
         elif self.TYPE == 'MAX':
-                training_data, label_data = self.lstm_dataset.rolling_max_training_data(self.num_past_periods)
+                training_data, label_data = self.lstm_dataset.rolling_max_training_data()
         elif self.TYPE == 'NORMAL':
-                training_data, label_data = self.lstm_dataset.normal_training_data(self.num_past_periods)
+                training_data, label_data = self.lstm_dataset.normal_training_data()
         elif self.TYPE == 'SEQ':
-                training_data, label_data = self.lstm_dataset.sequence_training_data(self.num_past_periods)
+                training_data, label_data = self.lstm_dataset.sequence_training_data(self.num_outputs)
         elif self.TYPE == 'MAX_LABEL_SEQ':
-                training_data, label_data_seq = self.lstm_dataset.sequence_training_data(self.num_past_periods)
+                training_data, label_data_seq = self.lstm_dataset.sequence_training_data(self.num_outputs)
                 label_data = max_seq(label_data_seq)    
         elif self.TYPE == 'MEAN_LABEL_SEQ':
-                training_data, label_data_seq = self.lstm_dataset.sequence_training_data(self.num_past_periods)
+                training_data, label_data_seq = self.lstm_dataset.sequence_training_data(self.num_outputs)
                 label_data = mean_seq(label_data_seq)
         else:
-            print("Error: Data-Import TYPE not understood! - Supported TYPES:'MEAN','MAX','NORMAL','SEQ','MAX_LABEL_SEQ','MEAN_LABEL_SEQ'")
-            exit()
+            raise Exception("Data-Import TYPE not understood! - Supported TYPES:'MEAN','MAX','NORMAL','SEQ','MAX_LABEL_SEQ','MEAN_LABEL_SEQ'")
 
         training_data = np.nan_to_num(training_data)
         label_data    = np.nan_to_num(label_data)
@@ -292,12 +271,9 @@ class wahrsager:
         f.write('Allgemeine Parameter\n')
         f.write('TYPE:              %s\n' % self.TYPE)
         f.write('NAME:              %s\n' % self.NAME)
-        f.write('PLOT_MODE:         %s\n' % self.PLOT_MODE)
-        f.write('großer_datensatz:  %s\n' % self.großer_datensatz)
+        f.write('PLOTTING:         %s\n' % self.PLOTTING)
         
         f.write('\nModel-Parameter\n')
-        f.write('num_past_periods:  %s\n' % self.num_past_periods)
-        f.write('num_inputs:        %s\n' % self.num_inputs)
         f.write('num_outputs:       %s\n' % self.num_outputs)
         f.write('dropout:           %s\n' % self.dropout)
         f.write('recurrent_dropout: %s\n' % self.recurrent_dropout)
@@ -417,13 +393,13 @@ def main():
 
     print('Teste alle Trainings-Möglichkeiten mit den Standart-Einstellungen:')
 
-    prediction_mean           = wahrsager(PLOT_MODE=True, TYPE='MEAN').train()
-    prediction_max            = wahrsager(PLOT_MODE=True, TYPE='MAX').train()
-    prediction_normal         = wahrsager(PLOT_MODE=True, TYPE='NORMAL').train()
-    prediction_max_label_seq  = wahrsager(PLOT_MODE=True, TYPE='MAX_LABEL_SEQ').train()
-    prediction_mean_label_seq = wahrsager(PLOT_MODE=True, TYPE='MEAN_LABEL_SEQ').train()
+    prediction_mean           = wahrsager(PLOTTING=True, TYPE='MEAN').train()
+    prediction_max            = wahrsager(PLOTTING=True, TYPE='MAX').train()
+    prediction_normal         = wahrsager(PLOTTING=True, TYPE='NORMAL').train()
+    prediction_max_label_seq  = wahrsager(PLOTTING=True, TYPE='MAX_LABEL_SEQ').train()
+    prediction_mean_label_seq = wahrsager(PLOTTING=True, TYPE='MEAN_LABEL_SEQ').train()
 
-    prediction_seq      = wahrsager(PLOT_MODE=True, TYPE='SEQ', num_outputs=12).train()
+    prediction_seq      = wahrsager(PLOTTING=True, TYPE='SEQ', num_outputs=12).train()
     max_prediction_seq  = max_seq(prediction_seq)
     mean_prediction_seq = mean_seq(prediction_seq)
 
