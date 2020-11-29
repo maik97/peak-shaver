@@ -20,13 +20,17 @@ class EpochMean:
 class Logger(object):
     """Logging in tensorboard without tensorflow ops."""
 
-    def __init__(self, NAME, D_PATH, only_per_episode=False):
+    def __init__(self, NAME, D_PATH, only_per_episode=False, temp_mode=True):
         """Creates a summary writer logging to log_dir."""
 
         self.NAME             = NAME
         self.D_PATH           = D_PATH
         self.only_per_episode = only_per_episode
-        log_dir               = D_PATH+'agent-logs/'+NAME
+
+        if temp_mode == False:
+            log_dir = D_PATH+'agent-logs/'+NAME
+        else:
+            log_dir = 'tmp/logs/'+NAME
         
         self.dict_scalars = {}
 
