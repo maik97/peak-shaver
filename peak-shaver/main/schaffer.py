@@ -30,6 +30,13 @@ class mainDataset:
         self.full_dataset      = full_dataset
         self.timer             = Timer()
 
+        make_dir(self.D_PATH+'lstm-models/')
+        make_dir(self.D_PATH+'lstm-logs/')
+        make_dir(self.D_PATH+'lstm-outputs/')
+        make_dir(self.D_PATH+'agent-models/')
+        make_dir(self.D_PATH+'agent-logs/')
+        make_dir(self.D_PATH+'agent-outputs/')
+
     def return_parameter(self):
         return self.D_PATH
 
@@ -363,8 +370,7 @@ class mainDataset:
             df['day-type'][df.index.weekday > 4] = 0 # Wochenende
             df['day-type-tomorrow'] = df['day-type'].shift(periods=-len(df['day-type'][df.index.normalize().isin(['2017-10-02'])]), fill_value=df['day-type'][-1])
         else:
-            Print("Error: day_diff was set to {}, use 'weekday-normal',  'weekend-binary', 'holiday-weekend' or None!" )
-            exit()
+            raise Exception("day_diff was set to {}, use 'weekday-normal',  'weekend-binary', 'holiday-weekend' or None!" )
         return df
 
     def make_input_df(self, drop_main_terminal=False, use_time_diff=True, day_diff='holiday-weekend'):
@@ -388,6 +394,16 @@ class mainDataset:
 
         if day_diff != None:
             input_df = self.add_day_difference(input_df, day_diff)
+
+        self.lstm_name = ''
+        if use_time_diff == True:
+            self.lstm_name += '_time-diff'
+        if day_diff != None:
+            self.lstm_name += '_'+day_diff
+            # day_diff = 'holiday-weekend', 'weekend-normal', 'weekend-binary', None
+        if drop_main_terminal == True:
+            self.lstm_name += '_no-main-t'
+
         return input_df
 
 
@@ -405,27 +421,18 @@ class lstmInputDataset:
         day_diff (string): Parameter will be used for :meth:`schaffer.mainDataset.make_input_df`: Uses :meth:`schaffer.mainDataset.add_day_difference` when set to `'weekday-normal'`. `'weekend-binary'` or `'weekend-binary`. Does not use this function if set to `None`.
     '''
 
-    def __init__(self, main_dataset, df):
+    def __init__(self, main_dataset, df, num_past_periods=12):
 
 
-        self.D_PATH         = main_dataset.return_parameter()
-        self.alle_inputs_df = df
-        self.name           = ''
-        self.timer          = Timer()
+        self.D_PATH            = main_dataset.__dict__['D_PATH']
+        self.period_string_min = main_dataset.__dict__['period_string_min']
+        self.name              = main_dataset.__dict__['lstm_name']
+        self.alle_inputs_df    = df
+        self.num_past_periods  = num_past_periods
+        self.timer             = Timer()
 
         make_dir(self.D_PATH+'tables/'+self.period_string_min+'/training-data/')
 
-
-        if use_time_diff == True:
-            self.name += '_time-diff'
-
-        if day_diff != None:
-            self.name += '_'+day_diff
-            # day_diff = 'holiday-weekend', 'weekend-normal', 'weekend-binary', None
-
-        if drop_main_terminal == True:
-            self.name += '_no-main-t'
-        
 
     def rolling_mean_training_data(self):
         ''' Trys to open an LSTM-input-dataset that was transformed with a `rolling mean` operation with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
@@ -551,7 +558,7 @@ class lstmInputDataset:
         '''
         try:
             
-            with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_sequence_{}.h5'.format(self.num_past_periods), 'r') as hf:
+            with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_sequence_{}-{}.h5'.format(self.num_past_periods,num_seq_periods), 'r') as hf:
                 training_data = hf['training_data'][:]
                 label_data = hf['label_data'][:]
 
