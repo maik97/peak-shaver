@@ -45,7 +45,7 @@ seq_predictions    = wahrsager(lstm_dataset, power_dem_df, TYPE='SEQ', num_outpu
 # Adding the predictions to the dataset:
 df            = df[24:-12]
 df['normal']  = normal_predictions
-df['seq-max'] = max_seq(seq_predictions)
+df['seq_max'] = max_seq(seq_predictions)
 
 
 # Number of warm-up steps:
@@ -59,6 +59,7 @@ max_steps        = epochs*epochs_len
 # Horizon for Multi-Step-Rewards and/or LSTM-Implementation:
 horizon = 0
 
+# Set up tensorboard logging:
 logger = Logger(NAME,D_PATH)
 
 # Setup reward_maker
@@ -79,7 +80,7 @@ env = common_env(
     reward_maker   = r_maker,
     df             = df,
     power_dem_df   = power_dem_df,
-    input_list     = ['norm_total_power','normal','seq-max'],
+    input_list     = ['norm_total_power','normal','seq_max'],
     max_SMS_SoC    = 12,
     max_LION_SoC   = 54,
     PERIODEN_DAUER = 5,
