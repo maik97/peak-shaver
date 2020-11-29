@@ -15,6 +15,7 @@ from main.logger import Logger
 - sum-cost-saving-per-episode
 - Tabelle rendern lassen
 - heursitik verbessern
+- temp logs!
 '''
 
 class common_env(gym.Env):
