@@ -1,32 +1,20 @@
 import random
-import json
 import pandas as pd
 import numpy as np
 
 import gym
 from gym import spaces
 
-import matplotlib as mpl
-import matplotlib.pyplot  as plt
-
 from collections import deque
 
-import schaffer
-import logger
+from main.logger import Logger
 '''
 ############   TO-DO  ############
 
-- epsilon in agents loggen
-- OBS_TYPE = 'discrete-obs', 'conti-obs'
 - extra Reward-Modes-List = ['episode-sum','discounted-reward','soll-ist-diff']
 - sum-cost-saving-per-episode
-- flexible Labels für seq-data im schaffer
-- numpy index als variable liste?
 - Tabelle rendern lassen
-- Heuristiken
-- heuristik-reward: +1000000 damit immer im positiven für globale single value
-- Q_LSTM
-
+- heursitik verbessern
 '''
 
 class common_env(gym.Env):
@@ -34,10 +22,8 @@ class common_env(gym.Env):
 
     Args:
         df (dataframe): Pandas dataframe of the normalized HIPE-Dataset
-        power_dem_arr (array): Array of the local power demand, not normalized 
+        power_dem_df (array): Array of the local power demand, not normalized 
         input_list (list): List of strings, represents the columns of the dataframe that will be used as inputs. Possible column-names are: 'norm_total_power' and 'max_pred_seq'
-        DATENSATZ_PATH (string): Path of the dataset.
-        NAME (string): Name of the RL-Agent
         max_SMS_SoC (float): Maximum Capacity of the flying wheel in kwh
         max_LION_SoC (float): Maximum Capacity of the lithium-ion battery in kwh
         PERIODEN_DAUER (integer): Period-lenght of one step in minutes
@@ -51,41 +37,29 @@ class common_env(gym.Env):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(
-            self,
-            df,
-            power_dem_arr,
-            input_list,
-            DATENSATZ_PATH, 
-            NAME,
-            max_SMS_SoC,#       = 12,
-            max_LION_SoC,#      = 54,
-            PERIODEN_DAUER,#    = 5,
-            ACTION_TYPE,#       = 'discrete', 'contin'
-            OBS_TYPE,
-            num_discrete_obs,
-            num_discrete_actions,
-            #action_space,#      = spaces.Discrete(22), # A ∈ [0,1]
-            #observation_space,# = spaces.Box(low=0, high=21, shape=(3,1), dtype=np.float16),
-            reward_maker,#      = reward_maker(irgendwelche_initililsierungn)
-            AGENT_TYPE = 'normal', # 'heuristic'
+    def __init__(self, reward_maker, df, power_dem_df, input_list,
+            max_SMS_SoC          = 12,
+            max_LION_SoC         = 54,
+            PERIODEN_DAUER       = 5,
+            ACTION_TYPE          = 'discrete', #'contin'
+            OBS_TYPE             = 'discrete', 
+            AGENT_TYPE           = 'normal', # 'heuristic'
+            discrete_space       = 22,
             # set max_ziel = 1 and min_ziel = 0, if you want to pass zielnetzverbrauch as value
-            max_ziel = 50,
-            min_ziel = 25,
-            ):
+            max_ziel             = 50,
+            min_ziel             = 25,
+            measure_intervall    = 15):
         
         super(common_env, self).__init__()
 
+
         # Parameter Datensatz und Logging:
-        self.NAME                  = NAME
-        self.DATENSATZ_PATH        = DATENSATZ_PATH
         self.df                    = df
-        self.power_dem_arr         = power_dem_arr.to_numpy()
-        self.rolling_power_dem     = power_dem_arr.rolling(3).mean().fillna(0).to_numpy()
+        self.power_dem_arr         = power_dem_df.to_numpy()
+        self.rolling_power_dem     = power_dem_df.rolling(int(measure_intervall/PERIODEN_DAUER)).mean().fillna(0).to_numpy()
         self.input_list            = input_list
-        self.LOGGER                = logger.Logger(DATENSATZ_PATH+'LOGS/env_logging/env_'+NAME)
         self.AGENT_TYPE            = AGENT_TYPE
-        self.netzverbrauch_deque   = deque(maxlen=3)
+        self.netzverbrauch_deque   = deque(maxlen=int(measure_intervall/PERIODEN_DAUER))
 
         # Parameter Environment:
         self.max_SMS_SoC           = max_SMS_SoC  * 60 # umrechnung von kwh in kwmin
@@ -95,8 +69,10 @@ class common_env(gym.Env):
         self.PERIODEN_DAUER        = PERIODEN_DAUER    # in min
 
         # Parameter Agent:
+        self.OBS_TYPE              = OBS_TYPE
         self.ACTION_TYPE           = ACTION_TYPE
         self.input_dim             = len(self.input_list) + 2 # jeweils plus SoC für beide Akkus
+        self.discrete_space        = discrete_space
 
         if AGENT_TYPE == 'normal':
             self.max_ziel          = max_ziel
@@ -105,45 +81,46 @@ class common_env(gym.Env):
             self.max_ziel          = 1
             self.min_ziel          = 0
         else:
-            print("ERROR: AGENT_TYPE not understood. AGENT_TYPE must be: 'normal', 'heuristic'")
-            exit()
-
+            raise Exception("AGENT_TYPE not understood. AGENT_TYPE must be: 'normal', 'heuristic'")
 
         # Init Agent:
         if self.ACTION_TYPE == 'discrete':
-            self.action_space      = spaces.Discrete(num_discrete_actions) # A ∈ [0,1]
+            self.action_space      = spaces.Discrete(discrete_space) # A ∈ [0,1]
         elif self.ACTION_TYPE == 'contin':
             self.action_space      = spaces.Box(low=np.array([0, 0]), high=np.array([1, 1]), dtype=np.float16)
         else:
-            print("ERROR: ACTION_TYPE not understood. ACTION_TYPE must be: 'discrete', 'contin'")
-            exit()
+            raise Exception("ACTION_TYPE not understood. ACTION_TYPE must be: 'discrete', 'contin'")
 
         if self.OBS_TYPE == 'discrete':
-            self.num_discrete_obs  = num_discrete_obs
+            self.num_discrete_obs  = discrete_space
             self.observation_space = spaces.Box(low = 0, high=self.num_discrete_obs, shape=(self.input_dim ,1), dtype=np.float16)
         elif self.OBS_TYPE == 'contin':
             self.num_discrete_obs  = 1
             self.observation_space = spaces.Box(low = 0, high=1, shape=(self.input_dim ,1), dtype=np.float16)
         else:
-            print("ERROR: OBS_TYPE not understood. OBS_TYPE must be: 'discrete', 'contin'")
-            exit()
-
+            raise Exception("OBS_TYPE not understood. OBS_TYPE must be: 'discrete', 'contin'")
 
         # Init fixe Parameter
         self.max_power_dem         = np.max(self.rolling_power_dem)
         self.mean_power_dem        = np.mean(self.power_dem_arr)
         self.sum_power_dem         = np.sum(self.power_dem_arr)
         self.steps_per_episode     = len(self.df['norm_total_power'])
-        print('\nMaximum Power-Demand:', self.max_power_dem)
-        print('Mean Power-Demand:',      self.mean_power_dem)
-        print('Steps pro Episode:',      self.steps_per_episode)
+        print('\nMaximum Power-Demand:', round(self.max_power_dem,2))
+        print('Mean Power-Demand:',      round(self.mean_power_dem,2))
+        print('Steps pro Episode:',      round(self.steps_per_episode,2))
 
 
         # Init Rewards
         self.reward_maker          = reward_maker
         self.reward_range          = self.reward_maker.get_reward_range() #als (MIN_REWARD, MAX_REWARD)
-        self.reward_maker.pass_env(self.df, self.NAME, self.DATENSATZ_PATH, self.PERIODEN_DAUER, self.steps_per_episode, self.max_power_dem, self.mean_power_dem, self.sum_power_dem)
-
+        self.reward_maker.pass_env(self.PERIODEN_DAUER, self.steps_per_episode, self.max_power_dem, self.mean_power_dem, self.sum_power_dem)
+        
+        self.deactivate_SMS        = self.reward_maker.__dict__['deactivate_SMS']
+        self.deactivate_LION       = self.reward_maker.__dict__['deactivate_LION']
+        
+        self.LOGGER                = self.reward_maker.__dict__['LOGGER']
+        self.NAME                  = self.LOGGER.__dict__['NAME']
+        self.D_PATH                = self.LOGGER.__dict__['D_PATH']
 
         # Init Step-Counter:
         self.sum_steps             = 0
@@ -215,7 +192,7 @@ class common_env(gym.Env):
 
         # Überprüfe, ob Ende der Episode erreicht wurde:
         if self.step_counter_episode >= self.steps_per_episode:
-            self.LOGGER.log_scalar('5.3 Maximaler Peak (Episode):', self.episode_max_peak, self.episode_counter)
+            self.LOGGER.log_scalar('5.3 Maximaler Peak (Episode):', self.episode_max_peak, self.episode_counter, True)
             self.episode_counter     += 1
             self.step_counter_episode = 0
             self.episode_max_peak     = 0
@@ -225,14 +202,14 @@ class common_env(gym.Env):
 
         # Neue Woche
         if self.step_counter_week >= self.steps_per_week or done == True:
-            self.LOGGER.log_scalar('5.2 Maximaler Peak (Woche):', self.week_max_peak, self.week_counter)
+            self.LOGGER.log_scalar('5.2 Maximaler Peak (Woche):', self.week_max_peak, self.week_counter, done)
             self.week_counter     += 1
             self.step_counter_week = 0
             self.week_max_peak     = 0
 
         # Neuer Tag
         if self.step_counter_day >= self.steps_per_day or done == True:
-            self.LOGGER.log_scalar('5.1 Maximaler Peak (Tag):', self.day_max_peak, self.day_counter)
+            self.LOGGER.log_scalar('5.1 Maximaler Peak (Tag):', self.day_max_peak, self.day_counter, done)
             self.day_counter     += 1
             self.step_counter_day = 0
             self.day_max_peak     = 0
@@ -259,9 +236,9 @@ class common_env(gym.Env):
             obs = np.append(obs,[self.df[input_column][self.current_step] * self.num_discrete_obs])
 
         if self.num_discrete_obs > 1:
-            obs = obs.astype(int)
+            obs = obs.astype(int)-1
         else:
-            obs = obs.reshape(4,1)
+            obs = obs.reshape(self.input_dim,1)
         
         #print(obs)
         return obs
@@ -280,13 +257,22 @@ class common_env(gym.Env):
 
         '''
         # Einteilung Aktionen in SMS Laden und Nicht-Laden
-        if action <= 10:
-            SMS_priority = True
+        if self.deactivate_SMS == False and self.deactivate_LION == False:
+            act_multplier = 1/(int(self.discrete_space/2) - 1) # should be 0.1 for discrete_space=22
+            if action <= int(self.discrete_space/2) - 1:
+                SMS_priority = True
+            else:
+                SMS_priority = False
+                action -= int(self.discrete_space/2)
         else:
-            SMS_priority = False
-            action -= 11
+            act_multplier = 1/(int(self.discrete_space - 1))
+            if self.deactivate_SMS == False:
+                SMS_priority = True
+            else:
+                SMS_priority = False
+
         # Berechnung Ziel-Netzverbrauch
-        return (self.max_ziel-self.min_ziel) * action * 0.1 + self.min_ziel, SMS_priority
+        return (self.max_ziel-self.min_ziel) * action * act_multplier + self.min_ziel, SMS_priority
 
     
     def get_contin_outputs(self, action):
@@ -301,20 +287,25 @@ class common_env(gym.Env):
             SMS_priority (bool): determines if the flywheel should be charged first
 
         '''
-        if action[1] < 0.5:
-            SMS_priority = True
+        if self.deactivate_SMS == False and self.deactivate_LION == False:
+            if action[1] < 0.5:
+                SMS_priority = True
+            else:
+                SMS_priority = False
         else:
-            SMS_priority = False
+            if self.deactivate_SMS == False:
+                SMS_priority = True
+            else:
+                SMS_priority = False
         return (self.max_ziel-self.min_ziel) * action[0] + self.min_ziel, SMS_priority
     
     
-    def take_action(self, action, LION_activation):
+    def take_action(self, action):
         '''
         Agent takes action based on ACTION_TYPE and updates the simulation of the batteries.
 
         Args:
             action (integer or array): integer when action space is discrete and array when action space is continious
-            LION_activation (bool): turns off the lithium-ion battery when set to False, can be defined in the step() function
         '''
         
         # Diskrete oder Stetige Outputs?
@@ -322,10 +313,7 @@ class common_env(gym.Env):
             self.ziel_netzverbrauch, SMS_priority = self.get_discrete_outputs(action)
         elif self.ACTION_TYPE == 'contin':
             self.ziel_netzverbrauch, SMS_priority = self.get_contin_outputs(action)
-        else:
-            print("ERROR: ACTION_TYPE not understood. ACTION_TYPE must be: 'discrete', 'contin'")
-            exit()
-       
+
         # Aktueller Energie-Bedarf der Maschinen:
         power_dem = self.df['norm_total_power'][self.current_step] * self.max_power_dem
 
@@ -335,7 +323,7 @@ class common_env(gym.Env):
                 lademenge_SMS = self.SMS_laden(self.ziel_netzverbrauch - power_dem)
             else:
                 lademenge_SMS = 0
-            if LION_activation == True:
+            if self.deactivate_LION == False:
                 lademenge_LION = self.LION_laden(self.ziel_netzverbrauch - lademenge_SMS - power_dem)
             else:
                 lademenge_LION = self.LION_laden(0)
@@ -356,14 +344,13 @@ class common_env(gym.Env):
         self.p_loss = self.SMS_verlust()
 
 
-    def step(self, action, LION_activation=True):
+    def step(self, action):
         '''
         Run one timestep of the environment's dynamics. When end of episode is reached, you are responsible for calling reset() to reset this environment's state.
         Accepts an action and returns a tuple (observation, reward, done, info).
 
         Args:
             action (object): an action provided by the agent
-            LION_activation (bool): can be used to turn of the lithium-ion battery when set to False
 
         Returns:
             obs, reward, done, info (tuple):
@@ -382,7 +369,7 @@ class common_env(gym.Env):
         '''
         
         # Führe einen Step in der Environment aus:
-        self.take_action(action,LION_activation)
+        self.take_action(action)
 
         # Checke ob neuer Peak existiert und behalte die zusätzlich Daten lokal(für rewards):
         day_max_peak, week_max_peak, episode_max_peak = self.check_all_max_peak()
@@ -394,30 +381,11 @@ class common_env(gym.Env):
         obs    = self.next_observation()
 
         # Gebe Varibeln an reward_maker
-        self.reward_maker.pass_state(
-            new_obs            = obs,
-            action             = action,
-            done               = done,
-
-            day_max_peak       = day_max_peak,
-            week_max_peak      = week_max_peak,
-            episode_max_peak   = episode_max_peak,
-
-            power_dem          = self.netzverbrauch,
-            ziel_netzverbrauch = self.ziel_netzverbrauch,
-
-            SMS_loss           = self.p_loss,
-            LION_nutzung       = self.LION_nutzung,
-            SMS_SoC            = self.SMS_SoC,
-            LION_SoC           = self.LION_SoC,
-
-            day_counter        = self.day_counter,
-            week_counter       = self.week_counter,
-            episode_counter    = self.episode_counter,
-
-            sum_steps          = self.sum_steps,
-            step_counter_episode = self.step_counter_episode
-            )
+        self.reward_maker.pass_state(done, day_max_peak, week_max_peak, episode_max_peak,
+            power_dem            = self.netzverbrauch,
+            LION_nutzung         = self.LION_nutzung,
+            sum_steps            = self.sum_steps,
+            step_counter_episode = self.step_counter_episode)
         
         # Hole Reward: (eventuell gleich None, falls z.B. Multi-Step-Reward)
         reward = self.reward_maker.get_reward()
@@ -432,19 +400,6 @@ class common_env(gym.Env):
                 return obs, reward, done, {}
         elif self.AGENT_TYPE == 'heuristic':
             return obs, reward, done, episode_max_peak, {}
-
-    
-    def set_soc_and_current_state(self,SoC_full=True):
-        '''
-        Used by heuristic agents, sets the current step of the dataset to 0 and can set the battery charges to full.
-
-        Args:
-            SoC_full (bool): Sets the charge of both batteries to full when set to True
-        '''
-        self.current_step = 0
-        if SoC_full == True:
-            self.SMS_SoC  = self.max_SMS_SoC
-            self.LION_SoC = self.max_LION_SoC
 
 
     def get_multi_step_reward(self, step_counter_episode):
@@ -471,7 +426,28 @@ class common_env(gym.Env):
         self.LION_SoC = random.randint(0.5*self.max_LION_SoC, self.max_LION_SoC)
 
         # Reset Reward-Maker
-        self.reward_maker._reset()
+        self.reward_maker.reset()
+
+        return self.next_observation()
+
+
+    def set_soc_and_current_state(self,SoC_full=True):
+        '''
+        Used by heuristic agents, sets the current step of the dataset to 0 and can set the battery charges to full.
+
+        Args:
+            SoC_full (bool): Sets the charge of both batteries to full when set to True
+        '''
+        self.current_step = 0
+        if SoC_full == True:
+            self.SMS_SoC  = self.max_SMS_SoC
+            self.LION_SoC = self.max_LION_SoC
+        else:
+            self.SMS_SoC  = random.randint(0.5*self.max_SMS_SoC,  self.max_SMS_SoC)
+            self.LION_SoC = random.randint(0.5*self.max_LION_SoC, self.max_LION_SoC)
+
+        # Reset Reward-Maker
+        self.reward_maker.reset()
 
         return self.next_observation()
 
@@ -607,7 +583,7 @@ class common_env(gym.Env):
             return 0
    
     
-    def step_LOGGER(self, action):
+    def step_LOGGER(self, action, done):
         '''
         Logs data for tensorboard
 
@@ -615,15 +591,16 @@ class common_env(gym.Env):
             action (integer or array): integer when action space is discrete and array when action space is continious
         '''
         if self.ACTION_TYPE == 'discrete':
-            self.LOGGER.log_scalar('1.1 Discrete Action:', action, self.sum_steps)
+            self.LOGGER.log_scalar('1.1 Discrete Action:', action, self.sum_steps, done)
         elif self.ACTION_TYPE == 'contin':
-            self.LOGGER.log_scalar('1.2 Continuous Action:', action[0], self.sum_steps)
-            self.LOGGER.log_scalar('1.3 Prio-SMS:', action[1], self.sum_steps)
+            self.LOGGER.log_scalar('1.2 Continuous Action:', action[0], self.sum_steps, done)
+            self.LOGGER.log_scalar('1.3 Prio-SMS:', action[1], self.sum_steps, done)
 
-        self.LOGGER.log_scalar('2.1 Netzverbrauch (Ist):', self.netzverbrauch, self.sum_steps)
-        self.LOGGER.log_scalar('2.2 Netzverbrauch (Ziel):', self.ziel_netzverbrauch, self.sum_steps)
-        self.LOGGER.log_scalar('3.1 SoC SMS:', self.SMS_SoC/60, self.sum_steps)
-        self.LOGGER.log_scalar('3.2 SoC LION:', self.LION_SoC/60, self.sum_steps)
+        self.LOGGER.log_scalar('2.1 Grid-energy-consumption (real):', self.netzverbrauch, self.sum_steps, done)
+        self.LOGGER.log_scalar('2.2 Grid-energy-consumption (target):', self.ziel_netzverbrauch, self.sum_steps, done)
+        self.LOGGER.log_scalar('3.1 SoC SMS:', self.SMS_SoC/60, self.sum_steps, done)
+        self.LOGGER.log_scalar('3.2 SoC LION:', self.LION_SoC/60, self.sum_steps, done)
+
         '''
         try:
             sum_cost_saving, sum_step_reward, step_reward, sum_steps = self.reward_maker.get_log()
@@ -635,8 +612,8 @@ class common_env(gym.Env):
         '''
         if done == True:
             sum_cost_saving, sum_step_reward, step_reward, sum_steps = self.reward_maker.get_log()
-            self.LOGGER.log_scalar('4.1 Summe Ersparnis - Episode:',  sum_cost_saving, self.episode_counter)
-            self.LOGGER.log_scalar('4.2 Summe Rewards - Episode:',  sum_step_reward, self.episode_counter)
+            self.LOGGER.log_scalar('4.1 Summe Ersparnis - Episode:',  sum_cost_saving, self.episode_counter, done)
+            self.LOGGER.log_scalar('4.2 Summe Rewards - Episode:',  sum_step_reward, self.episode_counter, done)
 
 
 
