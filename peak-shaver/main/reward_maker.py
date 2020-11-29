@@ -1,13 +1,9 @@
-import random
 import pandas as pd
 import numpy as np
 
-import matplotlib as mpl
-import matplotlib.pyplot  as plt
-
 from collections import deque
 
-import logger
+from main.logger import Logger
 
 class reward_maker():
     '''
@@ -54,11 +50,11 @@ class reward_maker():
         'exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step'
     '''
     def __init__(
-            self,
-            COST_TYPE               = 'exact_costs', # 'yearly_costs', 'max_peak_focus'
-            R_TYPE                  = 'costs_focus', # 'positive','savings_focus' -> für 'saving_focus' müsste 'yearly_costs' benutzt werden
-            R_HORIZON               = 'single_step', # 'episode', '...', integer for multi-step
-            M_STRATEGY              = None,          # 'sum_to_terminal', 'average_to_neighbour', 'recurrent_to_Terminal'
+            self, LOGGER,
+            COST_TYPE               = 'exact_costs',     # 'yearly_costs', 'max_peak_focus'
+            R_TYPE                  = 'costs_focus',     # 'positive','savings_focus' -> für 'saving_focus' müsste 'yearly_costs' benutzt werden
+            R_HORIZON               = 'single_step',     # 'episode', 'single_step', integer for multi-step
+            M_STRATEGY              = 'sum_to_terminal', # 'sum_to_terminal', 'average_to_neighbour', 'recurrent_to_Terminal'
             cost_per_kwh            = 0.07,  # in €
             LION_Anschaffungs_Preis = 32000, # in €
             LION_max_Ladezyklen     = 1000,
@@ -66,9 +62,12 @@ class reward_maker():
             SMS_max_Nutzungsjahre   = 20,    # in Jahre
             Leistungspreis          = 90,    # in €
             focus_peak_multiplier   = 4,     # multiplier for max_peak costs
-            logging_list            = ['exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step']
+            logging_list            = [None], #['exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step','step_reward']
+            deactivate_SMS          = False,
+            deactivate_LION         = False,
             ):
 
+        self.LOGGER                  = LOGGER
         self.COST_TYPE               = COST_TYPE
         self.R_TYPE                  = R_TYPE
         self.R_HORIZON               = R_HORIZON
@@ -81,22 +80,22 @@ class reward_maker():
         self.Leistungspreis          = Leistungspreis
         self.focus_peak_multiplier   = focus_peak_multiplier
         self.logging_list            = logging_list
+        self.deactivate_SMS          = deactivate_SMS
+        self.deactivate_LION         = deactivate_LION
 
         if self.R_TYPE == 'savings_focus' and self.COST_TYPE != 'yearly_costs':
             print('COST_TYPE is', self.COST_TYPE, "but should be 'yearly_costs', when R_TYPE is 'savings_focus'")
             print("Changing: COST_TYPE is now 'yearly_costs' for accurate results")
             self.COST_TYPE = 'yearly_costs'
 
+        # Init Logging
+        
 
-    def pass_env(self, df, NAME, DATENSATZ_PATH, PERIODEN_DAUER, steps_per_episode, max_power_dem, mean_power_dem, sum_power_dem):
+
+    def pass_env(self, PERIODEN_DAUER, steps_per_episode, max_power_dem, mean_power_dem, sum_power_dem):
         '''
         Takes Init Parameter from GYM environment for the HIPE dataset, initiates all other necessary parameters and calculates the costs without peak shaving.
         '''
-        
-        # Init Parameter aus Env:
-        self.df                = df
-        self.NAME              = NAME
-        self.DATENSATZ_PATH    = DATENSATZ_PATH
         self.PERIODEN_DAUER    = PERIODEN_DAUER
         self.steps_per_episode = steps_per_episode
         self.max_power_dem     = max_power_dem
@@ -119,12 +118,9 @@ class reward_maker():
         cost_power, cost_peak  = self.get_sum_of_usual_costs()
         self.sum_usual_costs   = cost_power + cost_peak
         print('\nJahres-Kosten ohne Peak-Shaving:')
-        print('Stromkosten:',  cost_power)
-        print('Peak-Kosten:',  cost_peak)
-        print('Gesamtkosten:', self.sum_usual_costs,'\n')
-
-        # Init Logging
-        self.LOGGER            = logger.Logger(DATENSATZ_PATH+'LOGS/reward_logging/rewards_'+NAME)
+        print('Stromkosten:',  round(cost_power,2))
+        print('Peak-Kosten:',  round(cost_peak,2))
+        print('Gesamtkosten:', round(self.sum_usual_costs,2),'\n')
 
     def get_sum_of_usual_costs(self):
         '''
@@ -152,31 +148,8 @@ class reward_maker():
         return (MIN_REWARD, MAX_REWARD)
 
 
-    def pass_state(
-                self,
-                new_obs,
-                action,
-                done,
-
-                day_max_peak,
-                week_max_peak,
-                episode_max_peak,
-
-                power_dem,
-                ziel_netzverbrauch,
-
-                SMS_loss,
-                LION_nutzung,
-                SMS_SoC,
-                LION_SoC,
-
-                day_counter,
-                week_counter,
-                episode_counter,
-
-                sum_steps,
-                step_counter_episode,
-                ):
+    def pass_state(self, done, day_max_peak, week_max_peak, episode_max_peak,
+                   power_dem, LION_nutzung, sum_steps, step_counter_episode):
         '''
         Passes necessary variables of a state
         '''
@@ -193,7 +166,8 @@ class reward_maker():
         self.sum_steps = sum_steps
         self.step_counter_episode = step_counter_episode
 
-    def _reset(self):
+
+    def reset(self):
         '''
         Resets initiation, used when GYM environment is reset.
         '''
@@ -216,11 +190,10 @@ class reward_maker():
                 #return self.R_HORIZON
             
             except:
-                print('Failed to initialized memory for Multi-Step-Horizon: R_HORIZON must be an integer')
-                print('R_HORIZON was set to:', self.R_HORIZON)
-                print("Alternatively use 'single_step' or 'episode', instead of an integer")
-                exit()
-            
+                raise Exception("Failed to initialized memory for Multi-Step-Horizon: R_HORIZON must be an integer.",
+                                "R_HORIZON was set to:", self.R_HORIZON,
+                                "Alternatively use 'single_step' or 'episode', instead of an integer")
+
 
 
     def cost_function(self, sum_power_dem, sum_LION_nutzung, max_peak, observed_period):
@@ -230,11 +203,13 @@ class reward_maker():
         cost_power = sum_power_dem * self.PERIODEN_DAUER * (self.cost_per_kwh/60)
         #c * steps   #kw * steps     #min pro step            #c / (kw * min)
 
-        cost_LION  = sum_LION_nutzung * (self.LION_Anschaffungs_Preis / self.LION_max_Ladezyklen)       # -> Abschreibung über Nutzung
-        #c * steps   #nutzung * steps   #c                              #max_nutzung
+        if self.deactivate_LION == False:
+            cost_LION  = sum_LION_nutzung * (self.LION_Anschaffungs_Preis / self.LION_max_Ladezyklen)       # -> Abschreibung über Nutzung
+            #c * steps   #nutzung * steps   #c                              #max_nutzung
 
-        cost_SMS   = (self.SMS_Anschaffungs_Preis / self.SMS_max_Nutzungsjahre) * observed_period       # -> Abschreibung über Zeit
-        #c * steps   #c                             #max_nutzung in jahre         #steps / (steps*jahr)
+        if self.deactivate_SMS == False:
+            cost_SMS   = (self.SMS_Anschaffungs_Preis / self.SMS_max_Nutzungsjahre) * observed_period       # -> Abschreibung über Zeit
+            #c * steps   #c                             #max_nutzung in jahre         #steps / (steps*jahr)
 
         cost_peak  = max_peak * self.Leistungspreis * observed_period
         #c * steps   #kw        # c / kw * jahr       #steps / (steps*jahr)
@@ -254,8 +229,7 @@ class reward_maker():
         elif isinstance(self.R_HORIZON,int) == True:
             return self.multi_step_rewards()
         else:
-            print("Error: R_HORIZON not understood. Please use: 'single-step', 'episode-step' or an integer for multi-step.")
-            exit()
+            raise Exception("R_HORIZON not understood. Please use: 'single-step', 'episode-step' or an integer for multi-step.")
 
     def get_step_reward(self):
         '''
@@ -281,8 +255,8 @@ class reward_maker():
         elif self.COST_TYPE == 'max_peak_focus':
             costs = (cost_power + cost_LION + cost_SMS + (self.focus_peak_multiplier * cost_peak) ) * self.auf_jahr_rechnen
         else:
-            print("Error: COST_TYPE not understood. Please use: 'exact_costs', 'yearly_costs', 'max_peak_focus'")
-            exit()
+            raise Exception("COST_TYPE not understood. Please use: 'exact_costs', 'yearly_costs', 'max_peak_focus'")
+
 
         cost_saving = (self.sum_usual_costs / self.steps_per_episode) - yearly_costs
         
@@ -293,8 +267,8 @@ class reward_maker():
         elif self.R_TYPE == 'positive':
             step_reward = 100 - costs  
         else:
-            print("Error: R_TYPE not understood. Please use: 'costs_focus', 'savings_focus'")
-            exit()
+            raise Exception("R_TYPE not understood. Please use: 'costs_focus', 'savings_focus'")
+
 
         self.cost_LOGGER(exact_costs, yearly_costs, cost_saving)
 
@@ -317,9 +291,7 @@ class reward_maker():
         elif self.M_STRATEGY == 'recurrent_to_Terminal':
             self.recurrent_to_Terminal()
         else:
-            print("Error: M_STRATEGY not understood. Please use: 'sum_to_terminal-step', 'average_to_neighbour', 'recurrent_to_Terminal'.")
-            exit()
-        
+            raise Exception("M_STRATEGY not understood. Please use: 'sum_to_terminal-step', 'average_to_neighbour', 'recurrent_to_Terminal'.")
 
         return None
 
@@ -359,50 +331,48 @@ class reward_maker():
         Calculates a multi-step reward based on the average-to-neighbour strategy from the paper...
         Not implemented yet!
         '''
-        print('average_to_neighbour is not implemented yet')
-        exit()
+        raise Exception('average_to_neighbour is not implemented yet')
+
 
     def recurrent_to_Terminal(self):
         '''
         Calculates a multi-step reward based on the recurrent-to-Terminal strategy from the paper...
         Not implemented yet!
         '''
-        print('recurrent_to_Terminal is not implemented yet')
-        exit()
+        raise Exception('recurrent_to_Terminal is not implemented yet')
+
 
     def cost_LOGGER(self, exact_costs, yearly_costs, cost_saving):
         self.sum_exact_costs  += exact_costs
         self.sum_yearly_costs += yearly_costs
         self.sum_cost_saving  += cost_saving
 
-        #if 'exact_costs' == any(self.logging_list):
-        #self.LOGGER.log_scalar('Reward-Maker - exact_costs:',  exact_costs,  self.sum_steps)
-        #if 'yearly_costs' == any(self.logging_list):
-        #self.LOGGER.log_scalar('Reward-Maker - yearly_costs:', yearly_costs, self.sum_steps)
-        #if 'cost_saving' == any(self.logging_list):
-        #self.LOGGER.log_scalar('Reward-Maker - cost_saving:',  cost_saving,  self.sum_steps)
+        if any(string in ['exact_costs'] for string in self.logging_list):
+            self.LOGGER.log_scalar('Reward-Maker - exact_costs:',  exact_costs,  self.sum_steps, self.done)
+        if any(string in ['yearly_costs'] for string in self.logging_list):
+            self.LOGGER.log_scalar('Reward-Maker - yearly_costs:', yearly_costs, self.sum_steps, self.done)
+        if any(string in ['cost_saving'] for string in self.logging_list):
+            self.LOGGER.log_scalar('Reward-Maker - cost_saving:',  cost_saving,  self.sum_steps, self.done)
 
-        #if 'sum_exact_costs' == any(self.logging_list):
-        #self.LOGGER.log_scalar('Sum_Episode - exact_costs:',  self.sum_exact_costs,  self.sum_steps)
-        #if 'sum_yearly_costs' == any(self.logging_list):
-        #self.LOGGER.log_scalar('Sum_Episode - yearly_costs:', self.sum_yearly_costs, self.sum_steps)
-        #if 'sum_cost_saving' == any(self.logging_list):
-        
-        ###self.LOGGER.log_scalar('Sum_Episode - cost_saving:',  self.sum_cost_saving,  self.sum_steps)
+        if any(string in ['sum_exact_costs'] for string in self.logging_list):
+            self.LOGGER.log_scalar('Sum_Episode - exact_costs:',  self.sum_exact_costs,  self.sum_steps, self.done)
+        if any(string in ['sum_yearly_costs'] for string in self.logging_list):
+            self.LOGGER.log_scalar('Sum_Episode - yearly_costs:', self.sum_yearly_costs, self.sum_steps, self.done)
+        if any(string in ['sum_cost_saving'] for string in self.logging_list):
+            self.LOGGER.log_scalar('Sum_Episode - cost_saving:',  self.sum_cost_saving,  self.sum_steps, self.done)
 
 
     def reward_LOGGER(self, step_reward, sum_steps):
         self.sum_step_reward  += step_reward
         self.step_reward       = step_reward
-        #self.LOGGER.log_scalar('Reward-Maker - step_reward:',  step_reward,  sum_steps)
-        #self.LOGGER.log_scalar('Sum_Episode - step_reward:',  self.sum_step_reward, sum_steps)
 
-    def get_sum_reward(self):
-        return self.sum_step_reward
+        if any(string in ['step_reward'] for string in self.logging_list):
+            self.LOGGER.log_scalar('Reward-Maker - step_reward:',  step_reward,  sum_steps, self.done)
+            self.LOGGER.log_scalar('Sum_Episode - step_reward:',  self.sum_step_reward, sum_steps, self.done)
+
 
     def get_log(self):
         return self.sum_cost_saving, self.sum_step_reward, self.step_reward, self.sum_steps
-
 
 
 
