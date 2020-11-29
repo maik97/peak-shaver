@@ -1,34 +1,4 @@
-import sys
-
 import numpy as np
-import pandas as pd
-import random
-import h5py
-
-import gym
-from gym import spaces
-
-from datetime import datetime
-from collections import deque
-from tqdm import tqdm
-
-import schaffer
-from wahrsager import wahrsager
-from common_env import common_env
-from reward_maker import reward_maker
-from common_func import try_training_on_gpu, max_seq, mean_seq
-'''
-### 'Single-Value-Heuristic' ###
-Bestimmt einen einzelnen Zielnetzetzverbrauch, der für alle Steps benutzt wird.
--> selbe nochmal aber mit Reward-Focus!
-
-### 'Perfekt-Pred-Heuristic' ###
-Alle zukünfitigen Werte sind bekannt.
-
-### 'LSTM-Pred-Heuristic' ###
-Heuristik mit realistischen Inputs, sprich höchstens Vorhersehungen mit LSTM möglich. 
-'''
-
 
 class heurisitc_agents:
     '''
@@ -56,19 +26,15 @@ class heurisitc_agents:
         global_zielverbrauch
             Used to initilize the start value to approximate a global should energy consumption from the grid, relevant for 'Single-Value-Heuristic'
     '''
-    def __init__(self, NAME, DATENSATZ_PATH, HEURISTIC_TYPE, df, env, global_zielverbrauch=50):
+    def __init__(self, env, HEURISTIC_TYPE, global_zielverbrauch=50):
 
-        self.HEURISTIC_TYPE              = HEURISTIC_TYPE
-        self.df                          = df
         self.env                         = env
-        #self.memory                      = memory
+        self.HEURISTIC_TYPE              = HEURISTIC_TYPE
+        self.df                          = self.env.__dict__['df']
         self.vorher_global_zielverbrauch = 0
         self.prev_sum_reward             = 0
         self.global_zielverbrauch        = global_zielverbrauch
 
-        # Init Logging
-        # self.LOGGER                    = logger.Logger(DATENSATZ_PATH+'LOGS/agent_logging/'+NAME)
-    
     def global_single_value_for_max_peak(self, max_peak):
         '''
         Uses the mean-value theorem to calculate at the end of each episode a new global SECG (should energy-consumption from the grid)
@@ -148,8 +114,7 @@ class heurisitc_agents:
             self.current_step += 1
             return action
         else:
-            print("ERROR: HEURISTIC_TYPE not understood. HEURISTIC_TYPE must be: 'Single-Value-Heuristic', 'Single-Value-Heuristic-Reward', 'Perfekt-Pred-Heuristic', 'LSTM-Pred-Heuristic'")
-            exit()
+            raise Exception("HEURISTIC_TYPE not understood. HEURISTIC_TYPE must be: 'Single-Value-Heuristic', 'Single-Value-Heuristic-Reward', 'Perfekt-Pred-Heuristic', 'LSTM-Pred-Heuristic'")
 
     def bar_printer(self):
         '''Helper function to print helpful information about the mean-value process at the process bar'''
@@ -165,7 +130,6 @@ class heurisitc_agents:
         Args:
             power_dem_arr (array): Array that represents the local power consumption at each step
             global_value (float): Minimal peak, that the battery arrangement is able to shave
-
         '''
         print('Calculating optimal actions for perfect predictions...')
         power_to_shave = 0
@@ -185,6 +149,31 @@ class heurisitc_agents:
         			power_to_shave = 0
         self.heuristic_zielnetzverbrauch = zielnetzverbrauch[::-1]
         self.current_step = 0
+
+
+    def test(self, epochs=20, neu_global_zielverbrauch=30):
+
+        if self.HEURISTIC_TYPE == 'Perfekt-Pred-Heuristic':
+            self.find_optimum_for_perfect_pred(power_dem_arr)
+
+        print('Testing the Heuristic for',epochs,'Epochs')
+        for e in range(epochs):
+
+            cur_state = env.reset()
+            env.set_soc_and_current_state()
+
+            for step in range(len(self.df)):
+
+                action                               = self.act(SMS_PRIO=0)# 0 heißt Prio ist aktiv
+                new_state, reward, done, max_peak, _ = env.step(action)         
+
+                if done:
+                    break
+            
+            if HEURISTIC_TYPE == 'Single-Value-Heuristic':
+                neu_global_zielverbrauch = self.global_single_value_for_max_peak(max_peak)
+            elif HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
+                neu_global_zielverbrauch = self.global_single_value_for_reward(r_maker.get_sum_reward())
 
 
 def main():
