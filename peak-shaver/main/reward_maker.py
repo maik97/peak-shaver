@@ -158,7 +158,11 @@ class reward_maker():
 
         if self.episode_max_peak < episode_max_peak:
             self.max_peak_diff    = episode_max_peak - self.episode_max_peak
-            self.episode_max_peak = episode_max_peak        
+            #print(self.max_peak_diff, self.episode_max_peak, episode_max_peak)   
+            self.episode_max_peak = episode_max_peak
+        else:
+            self.max_peak_diff = 0
+
 
         self.power_dem        = power_dem
         self.LION_nutzung     = LION_nutzung
@@ -206,15 +210,19 @@ class reward_maker():
         if self.deactivate_LION == False:
             cost_LION  = sum_LION_nutzung * (self.LION_Anschaffungs_Preis / self.LION_max_Ladezyklen)       # -> Abschreibung über Nutzung
             #c * steps   #nutzung * steps   #c                              #max_nutzung
-
+        else:
+            cost_LION = 0
+        
         if self.deactivate_SMS == False:
-            cost_SMS   = (self.SMS_Anschaffungs_Preis / self.SMS_max_Nutzungsjahre) * observed_period       # -> Abschreibung über Zeit
+            cost_SMS   = (self.SMS_Anschaffungs_Preis / (self.SMS_max_Nutzungsjahre*self.steps_per_year)) #* observed_period       # -> Abschreibung über Zeit
             #c * steps   #c                             #max_nutzung in jahre         #steps / (steps*jahr)
-
-        cost_peak  = max_peak * self.Leistungspreis * observed_period
+        else:
+            cost_SMS = 0
+        
+        cost_peak = max_peak * self.Leistungspreis #* (self.steps_per_episode /self.steps_per_year)
         #c * steps   #kw        # c / kw * jahr       #steps / (steps*jahr)
 
-        return cost_power, cost_LION, cost_SMS, cost_peak  
+        return cost_power, cost_LION, cost_SMS, cost_peak
 
     def get_reward(self):
         '''
@@ -241,12 +249,12 @@ class reward_maker():
                                                                     sum_power_dem    = self.power_dem,
                                                                     sum_LION_nutzung = self.LION_nutzung,
                                                                     max_peak         = self.max_peak_diff,
-                                                                    observed_period  = 1 / self.steps_per_episode
+                                                                    observed_period  = 1 # step
                                                                     )
 
 
         exact_costs = (cost_power + cost_LION + cost_SMS + cost_peak)
-        yearly_costs = exact_costs * self.auf_jahr_rechnen
+        yearly_costs = (cost_power + cost_LION + cost_SMS) * self.auf_jahr_rechnen + cost_peak
 
         if self.COST_TYPE == 'exact_costs':
             costs = exact_costs
