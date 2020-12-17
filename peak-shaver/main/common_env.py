@@ -151,9 +151,11 @@ class common_env(gym.Env):
         Returns
             new_max_peak (float): Returns either the previous maximum peak or a new maximum peak
         '''
-        self.netzverbrauch_deque.append(self.netzverbrauch)
         möglicher_peak = np.mean(self.netzverbrauch_deque)
+
         if möglicher_peak > past_max_peak:
+            #print(möglicher_peak)
+            #print(self.netzverbrauch_deque)
             return möglicher_peak
         else:
             return past_max_peak
@@ -171,6 +173,7 @@ class common_env(gym.Env):
 
             episode_max_peak (float): Maximum peak of the episode that was recorded so far.
         '''
+        self.netzverbrauch_deque.append(self.netzverbrauch)
         self.day_max_peak     = self.check_max_peak(self.day_max_peak)
         self.week_max_peak    = self.check_max_peak(self.week_max_peak)
         self.episode_max_peak = self.check_max_peak(self.episode_max_peak)
@@ -432,7 +435,7 @@ class common_env(gym.Env):
         return self.next_observation()
 
 
-    def set_soc_and_current_state(self,SoC_full=True):
+    def set_soc_and_current_state(self,SoC_full=True,SoC=None):
         '''
         Used by heuristic agents, sets the current step of the dataset to 0 and can set the battery charges to full.
 
@@ -446,6 +449,10 @@ class common_env(gym.Env):
         else:
             self.SMS_SoC  = random.randint(0.5*self.max_SMS_SoC,  self.max_SMS_SoC)
             self.LION_SoC = random.randint(0.5*self.max_LION_SoC, self.max_LION_SoC)
+
+        if SoC != None:
+            self.LION_SoC = min(SoC,self.max_LION_SoC)
+            self.SMS_SoC = min(SoC-self.LION_SoC,self.max_SMS_SoC)
 
         # Reset Reward-Maker
         self.reward_maker.reset()
@@ -545,7 +552,7 @@ class common_env(gym.Env):
         '''
         # Berechne Akku Entladung in kwmin
         akku_entladung *= self.PERIODEN_DAUER # kw in kwt
-
+        #print(akku_entladung)
         # wenn ladestand groß genug und erforderliche Leistung nicht über 250
         if self.LION_SoC > akku_entladung and akku_entladung < self.LION_max_entladung: #max kw, bzw 250kwt
             self.LION_SoC -= akku_entladung
@@ -561,7 +568,7 @@ class common_env(gym.Env):
             tatsächliche_akku_entladung = self.LION_SoC / self.PERIODEN_DAUER
             self.LION_SoC = 0
         
-        elif akku_entladung == 0:
+        else: # akku_entladung == 0:
             tatsächliche_akku_entladung = 0
 
         # Berechen Abnutzung (in Zyklen):
