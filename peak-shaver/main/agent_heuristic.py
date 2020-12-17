@@ -1,6 +1,7 @@
 import numpy as np
+import main.common_func as cm
 
-class heurisitc_agents:
+class heurisitc:
     '''
     There are three main heuristic approaches, with the goal to minimize the maximum energy peak:
     
@@ -26,14 +27,16 @@ class heurisitc_agents:
         global_zielverbrauch
             Used to initilize the start value to approximate a global should energy consumption from the grid, relevant for 'Single-Value-Heuristic'
     '''
-    def __init__(self, env, HEURISTIC_TYPE, global_zielverbrauch=50):
+    def __init__(self, env, HEURISTIC_TYPE, threshold_dem=50, use_SMS=True, use_LION=True):
 
         self.env                         = env
         self.HEURISTIC_TYPE              = HEURISTIC_TYPE
         self.df                          = self.env.__dict__['df']
         self.vorher_global_zielverbrauch = 0
         self.prev_sum_reward             = 0
-        self.global_zielverbrauch        = global_zielverbrauch
+        self.global_zielverbrauch        = threshold_dem
+        self.use_SMS                     = use_SMS
+        self.use_LION                    = use_LION
 
     def global_single_value_for_max_peak(self, max_peak):
         '''
@@ -46,7 +49,8 @@ class heurisitc_agents:
         Returns:
             neu_global_zielverbrauch (float): New global SECG, after calculation with the mean-value theorem
         '''
-        print(max_peak)
+        print('')
+        print('Max-Peak:', max_peak)
         # wenn max_peak größer ist als benchmark, muss aktueller benchmark größer werden:
         if max_peak > self.global_zielverbrauch:
             neu_global_zielverbrauch = self.global_zielverbrauch + (abs(self.global_zielverbrauch - self.vorher_global_zielverbrauch) / 2)
@@ -89,6 +93,89 @@ class heurisitc_agents:
         self.prev_sum_reward = sum_reward
         return neu_global_zielverbrauch
 
+    def find_optimum_for_perfect_pred(self):
+        '''Funtion to prepare the SECG for each step, used when HEURISTIC_TYPE is set to 'Perfekt-Pred-Heuristic'. Used before iterating through each step.
+
+        Args:
+            power_dem_arr (array): Array that represents the local power consumption at each step
+            global_value (float): Minimal peak, that the battery arrangement is able to shave
+        '''
+        print('Calculating optimal actions for perfect predictions...')
+        power_to_shave = 0
+        zielnetzverbrauch = []
+        power_dem_arr = self.env.__dict__['power_dem_arr']
+        #print(power_dem_arr)
+        global_value = self.global_zielverbrauch
+        for power_dem_step in power_dem_arr[::-1]:
+            
+            if power_dem_step > global_value:
+                power_to_shave += power_dem_step - global_value
+                zielnetzverbrauch.append(global_value)
+            
+            else:# power_dem_step <= global_value:
+                if (power_to_shave + power_dem_step) > global_value:
+                    power_to_shave -= (global_value - power_dem_step)
+                    zielnetzverbrauch.append(global_value)
+                else:
+                    zielnetzverbrauch.append(power_to_shave + power_dem_step)
+                    power_to_shave = 0
+        self.heuristic_zielnetzverbrauch = zielnetzverbrauch[::-1]
+        self.current_step = 0
+        return power_to_shave
+
+    def find_solution_for_imperfect_pred(self,LSTM_column):
+        '''Funtion to prepare the SECG for each step, used when HEURISTIC_TYPE is set to 'Perfekt-Pred-Heuristic'. Used before iterating through each step.
+
+        Args:
+            power_dem_arr (array): Array that represents the local power consumption at each step
+            global_value (float): Minimal peak, that the battery arrangement is able to shave
+        '''
+        power_to_shave = 0
+        zielnetzverbrauch = []
+        power_dem_arr = self.env.__dict__['df'][LSTM_column].to_numpy()
+        power_dem_arr *= self.env.__dict__['max_power_dem']
+        print(power_dem_arr)
+        global_value = self.global_zielverbrauch
+        for power_dem_step in power_dem_arr[::-1]:
+            
+            if power_dem_step > global_value:
+                power_to_shave += power_dem_step - global_value
+                zielnetzverbrauch.append(global_value)
+            
+            else:# power_dem_step <= global_value:
+                if (power_to_shave + power_dem_step) > global_value:
+                    power_to_shave -= (global_value - power_dem_step)
+                    zielnetzverbrauch.append(global_value)
+                else:
+                    zielnetzverbrauch.append(power_to_shave + power_dem_step)
+                    power_to_shave = 0
+        self.heuristic_zielnetzverbrauch = zielnetzverbrauch[::-1]
+        self.current_step = 0
+        return power_to_shave
+
+    def find_practical_solution(self, LSTM_column='seq_max'):
+        power_to_shave = 0
+        zielnetzverbrauch = []
+        power_dem_arr = self.env.__dict__['power_dem_arr']
+        sequence_pred = self.env.__dict__['df'][LSTM_column].to_numpy()
+        sequence_pred *= self.env.__dict__['max_power_dem']
+        global_value = self.global_zielverbrauch
+
+        for i in range(len(power_dem_arr)):
+            power_dem_step     = power_dem_arr[i]
+            sequence_pred_step = sequence_pred[i]
+
+            if power_dem_step > global_value:
+                zielnetzverbrauch.append(global_value)
+            else:
+                if sequence_pred_step > global_value:
+                    zielnetzverbrauch.append(global_value)
+                else:
+                    zielnetzverbrauch.append(power_dem_step)
+        
+        self.heuristic_zielnetzverbrauch = zielnetzverbrauch[::-1]
+        self.current_step = 0
+
     def act(self, SMS_PRIO = 0):
         '''Function, in which the heuristic decides an action, based on HEURISTIC_TYPE previously set.
         
@@ -109,77 +196,65 @@ class heurisitc_agents:
         if self.HEURISTIC_TYPE == 'Single-Value-Heuristic' or self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
             return [self.global_zielverbrauch, SMS_PRIO] # 0 bedeutet dass SMS-Priority aktiviert wird.
         
-        elif self.HEURISTIC_TYPE == 'Perfekt-Pred-Heuristic' or self.HEURISTIC_TYPE =='LSTM-Pred-Heuristic':
+        elif any(self.HEURISTIC_TYPE in s for s in ['Perfekt-Pred-Heuristic','LSTM-Pred-Heuristic','Practical-Heuristic']):
+            #self.HEURISTIC_TYPE == 'Perfekt-Pred-Heuristic' or self.HEURISTIC_TYPE =='LSTM-Pred-Heuristic':
             action = [self.heuristic_zielnetzverbrauch[self.current_step], SMS_PRIO]
             self.current_step += 1
             return action
         else:
             raise Exception("HEURISTIC_TYPE not understood. HEURISTIC_TYPE must be: 'Single-Value-Heuristic', 'Single-Value-Heuristic-Reward', 'Perfekt-Pred-Heuristic', 'LSTM-Pred-Heuristic'")
 
-    def bar_printer(self):
+
+
+    def printer(self, i, max_i):
         '''Helper function to print helpful information about the mean-value process at the process bar'''
         if self.HEURISTIC_TYPE == 'Single-Value-Heuristic':
-            return "Global Value - {}".format(self.global_zielverbrauch)
+            cm.print_progress("Target Demand - {}, Progress".format(self.global_zielverbrauch), i, max_i)
         elif self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
-            return "Global Value - {}, Sum Reward - {}".format(self.global_zielverbrauch, self.prev_sum_reward )
+            cm.print_progress("Target Demand - {}, Sum Reward - {}, Progress".format(self.global_zielverbrauch, self.prev_sum_reward), i, max_i)
+        else:
+            cm.print_progress('Progress',i , max_i)
 
 
-    def find_optimum_for_perfect_pred(self,power_dem_arr,global_value=50):
-        '''Funtion to prepare the SECG for each step, used when HEURISTIC_TYPE is set to 'Perfekt-Pred-Heuristic'. Used before iterating through each step.
+    def calculate(self, epochs=1, LSTM_column='normal'):
 
-        Args:
-            power_dem_arr (array): Array that represents the local power consumption at each step
-            global_value (float): Minimal peak, that the battery arrangement is able to shave
-        '''
-        print('Calculating optimal actions for perfect predictions...')
-        power_to_shave = 0
-        zielnetzverbrauch = []
-        for power_dem_step in power_dem_arr[::-1]:
-        	
-        	if power_dem_step > global_value:
-        		power_to_shave += power_dem_step - global_value
-        		zielnetzverbrauch.append(global_value)
-        	
-        	else:# power_dem_step <= global_value:
-        		if (power_to_shave + power_dem_step) > global_value:
-        			power_to_shave -= (global_value - global_value)
-        			zielnetzverbrauch.append(global_value)
-        		else:
-        			zielnetzverbrauch.append(power_to_shave + power_dem_step)
-        			power_to_shave = 0
-        self.heuristic_zielnetzverbrauch = zielnetzverbrauch[::-1]
-        self.current_step = 0
-
-
-    def test(self, epochs=20, neu_global_zielverbrauch=30):
-
+        power_to_shave = None
         if self.HEURISTIC_TYPE == 'Perfekt-Pred-Heuristic':
-            self.find_optimum_for_perfect_pred(power_dem_arr)
+            power_to_shave = self.find_optimum_for_perfect_pred()
+        elif self.HEURISTIC_TYPE == 'LSTM-Pred-Heuristic':
+            power_to_shave = self.find_solution_for_imperfect_pred(LSTM_column)
+        elif self.HEURISTIC_TYPE == 'Practical-Heuristic':
+            self.find_practical_solution(LSTM_column)
 
         print('Testing the Heuristic for',epochs,'Epochs')
+        print('Sum of initial battery charge:',power_to_shave)
         for e in range(epochs):
 
-            cur_state = env.reset()
-            env.set_soc_and_current_state()
+            cur_state = self.env.reset()
+            self.env.set_soc_and_current_state(SoC=power_to_shave)
 
-            for step in range(len(self.df)):
+            epoch_len = len(self.df)
+            for step in range(epoch_len):
 
                 action                               = self.act(SMS_PRIO=0)# 0 heißt Prio ist aktiv
-                new_state, reward, done, max_peak, _ = env.step(action)         
-
+                new_state, reward, done, max_peak, _ = self.env.step(action)         
+                self.printer(step, epoch_len)
                 if done:
                     break
             
-            if HEURISTIC_TYPE == 'Single-Value-Heuristic':
+            if self.HEURISTIC_TYPE == 'Single-Value-Heuristic':
                 neu_global_zielverbrauch = self.global_single_value_for_max_peak(max_peak)
-            elif HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
-                neu_global_zielverbrauch = self.global_single_value_for_reward(r_maker.get_sum_reward())
+            elif self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
+                neu_global_zielverbrauch = self.global_single_value_for_reward(self.env.__dict__[reward_maker].get_sum_reward())
 
+        if self.HEURISTIC_TYPE == 'Single-Value-Heuristic' or self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
+            return neu_global_zielverbrauch
 
 def main():
     '''
     Example of an Agent that uses heuristics.
     '''
+    from datetime import datetime
     # Logging-Namen:
     HEURISTIC_TYPE = 'Perfekt-Pred-Heuristic'
 
