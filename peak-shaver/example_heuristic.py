@@ -1,24 +1,17 @@
 '''
 Example of an Agent that uses heuristics.
 '''
-import sys
-import numpy as np
-import pandas as pd
-import random
-import h5py
-
-import gym
-from gym import spaces
-
 from datetime import datetime
-from collections import deque
-from tqdm import tqdm
 
-import main.schaffer as schaffer
-from main.wahrsager import wahrsager, max_seq, mean_seq
-from main.common_env import common_env
+from main.common_func import max_seq, mean_seq, training, testing
+from main.schaffer import mainDataset, lstmInputDataset
+from main.wahrsager import wahrsager
+from main.logger import Logger
 from main.reward_maker import reward_maker
-from main.agent_heuristic import heurisitc_agents
+from main.common_env import common_env
+
+#Import the heuristics:
+from main.agent_heuristic import heurisitc
 
 '''
 ### 'Single-Value-Heuristic' ###
@@ -32,101 +25,108 @@ Alle zukünfitigen Werte sind bekannt.
 Heuristik mit realistischen Inputs, sprich höchstens Vorhersehungen mit LSTM möglich. 
 '''
 
-# Logging-Namen:
-HEURISTIC_TYPE = 'Perfekt-Pred-Heuristic'
+def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', epochs=1,
+                 threshold_dem=50, deactivate_SMS=False, deactivate_LION=False):
 
-now            = datetime.now()
-NAME           = HEURISTIC_TYPE+now.strftime("_%d-%m-%Y_%H:%M:%S")
-DATENSATZ_PATH = '_BIG_D/'
+    # Naming the agent and setting up the directory path:
+    now            = datetime.now()
+    NAME           = str(round(threshold_dem))+'_TARGET_VALUE_'+HEURISTIC_TYPE+now.strftime("_%d-%m-%Y_%H-%M-%S")
+    D_PATH         = '_small_d/'
 
+    # Load the dataset:
+    main_dataset = mainDataset(
+        D_PATH=D_PATH,
+        period_string_min='15min',
+        full_dataset=True)
 
-# Lade Dataframe:
-df = schaffer.alle_inputs_neu()[24:-12]
+    # Normalized dataframe:
+    df = main_dataset.make_input_df(
+        drop_main_terminal=False,
+        use_time_diff=True,
+        day_diff='holiday-weekend')
 
-#df['pred_mean']       = wahrsager(TYPE='MEAN').pred()[:-12]
-#df['pred_max']        = wahrsager(TYPE='MAX').pred()[:-12]
-#df['pred_normal']     = wahrsager(TYPE='NORMAL').pred()[:-12]
-#df['pred_max_labe']   = wahrsager(TYPE='MAX_LABEL_SEQ').pred()
-#df['pred_mean_label'] = wahrsager(TYPE='MEAN_LABEL_SEQ').pred()
+    # Sum of the power demand dataframe (nor normalized):
+    power_dem_df = main_dataset.load_total_power()[24:-12]
 
-prediction_seq        = wahrsager(TYPE='SEQ', num_outputs=12).pred()
-df['max_pred_seq']    = max_seq(prediction_seq)
-#df['mean_pred_seq']   = mean_seq(prediction_seq)
+    # Load the LSTM input dataset:
+    lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
 
-power_dem_arr  = schaffer.load_total_power().to_numpy()[24:-12]
+    # Making predictions:
+    normal_predictions = wahrsager(lstm_dataset, power_dem_df, TYPE='NORMAL').pred()[:-12]
+    seq_predictions    = wahrsager(lstm_dataset, power_dem_df, TYPE='SEQ', num_outputs=12).pred()
 
-# Lade Reward-Maker:
-R_HORIZON = 0
-r_maker        = reward_maker(
-                    COST_TYPE               = 'exact_costs',     # 'yearly_costs', 'max_peak_focus'
-                    R_TYPE                  = 'costs_focus',     # 'savings_focus'
-                    M_STRATEGY              = None, # None, 'sum_to_terminal', 'average_to_neighbour', 'recurrent_to_Terminal'
-                    R_HORIZON               = 'single_step',         # 'episode', '...', integer for multi-step
-                    cost_per_kwh            = 0.07,  # in €
-                    LION_Anschaffungs_Preis = 32000, # in €
-                    LION_max_Ladezyklen     = 1000,
-                    SMS_Anschaffungs_Preis  = 10000, # in €
-                    SMS_max_Nutzungsjahre   = 15,    # in Jahre
-                    Leistungspreis          = 90,    # in €
-                    focus_peak_multiplier   = 4      # multiplier for max_peak costs
-                    )
+    # Adding the predictions to the dataset:
+    df            = df[24:-12]
+    df['normal']  = normal_predictions
+    df['seq_max'] = max_seq(seq_predictions)
 
-# Lade Environment:
-env            = common_env(
-                    df                   = df,
-                    power_dem_arr        = power_dem_arr,
-                    input_list           = ['norm_total_power','max_pred_seq'],
-                    DATENSATZ_PATH       = DATENSATZ_PATH,
-                    NAME                 = NAME,
-                    max_SMS_SoC          = 12,
-                    max_LION_SoC         = 54,
-                    PERIODEN_DAUER       = 5,
-                    ACTION_TYPE          = 'contin',
-                    num_discrete_obs     = 21,
-                    num_discrete_actions = 22,
-                    #action_space         = spaces.Discrete(22), # A ∈ [0,1]
-                    #observation_space    = spaces.Box(low=0, high=21, shape=(4,1), dtype=np.float16),
-                    reward_maker         = r_maker,
-                    AGENT_TYPE           = 'heuristic'
-                    )
+    logger = Logger(NAME,D_PATH)
+
+    # Setup reward_maker
+    r_maker = reward_maker(
+        LOGGER                  = logger,
+        COST_TYPE               = 'exact_costs',
+        R_TYPE                  = 'savings_focus',
+        R_HORIZON               = 'single_step',
+        cost_per_kwh            = 0.2255,
+        LION_Anschaffungs_Preis = 34100,
+        LION_max_Ladezyklen     = 1000,
+        SMS_Anschaffungs_Preis  = 115000/3,
+        SMS_max_Nutzungsjahre   = 20,
+        Leistungspreis          = 102,
+        logging_list            = ['cost_saving','exact_costs','sum_exact_costs','sum_cost_saving'],
+        deactivate_SMS          = deactivate_SMS,
+        deactivate_LION         = deactivate_LION)
 
 
-# Inititialsiere Epoch-Parameter:
-epochs           = 20
-epochs_len       = len(df)
+    # Lade Environment:
+    env = common_env(
+        reward_maker   = r_maker,
+        df             = df,
+        power_dem_df   = power_dem_df,
+        input_list     = ['norm_total_power','normal','seq_max'],
+        max_SMS_SoC    = 12/3,
+        max_LION_SoC   = 54,
+        PERIODEN_DAUER = 15,
+        ACTION_TYPE    = 'contin',
+        OBS_TYPE       = 'contin',
+        AGENT_TYPE     = 'heuristic')
 
-neu_global_zielverbrauch = 30
-# Init Agent:
-Agent          = heurisitc_agents(
-                    NAME, DATENSATZ_PATH, HEURISTIC_TYPE, df,
-                    env = env)
-
-if HEURISTIC_TYPE == 'Perfekt-Pred-Heuristic':
-	Agent.find_optimum_for_perfect_pred(power_dem_arr)
-
-print('Testing the Heuristic for',epochs,'Epochs')
-for e in range(epochs):
-
-    cur_state = env.reset()
-    env.set_soc_and_current_state()
-
-    bar = tqdm(range(epochs_len))
-    bar.set_description(Agent.bar_printer())
-
-    for step in bar:
-
-        action                               = Agent.act(SMS_PRIO=0)# 0 heißt Prio ist aktiv
-        new_state, reward, done, max_peak, _ = env.step(action)         
-
-        if done:
-            break
-    
-    if HEURISTIC_TYPE == 'Single-Value-Heuristic':
-        neu_global_zielverbrauch = Agent.global_single_value_for_max_peak(max_peak)
-    elif HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
-        neu_global_zielverbrauch = Agent.global_single_value_for_reward(r_maker.get_sum_reward())
+    agent = heurisitc(
+        env = env,
+        HEURISTIC_TYPE = HEURISTIC_TYPE,
+        threshold_dem  = threshold_dem)
 
 
+    return agent.calculate(epochs=epochs)
 
 
+def test_threshold_for_all_heuristics():
 
+    threshold_dem = use_heuristic('Single-Value-Heuristic', epochs=15, threshold_dem=50)
+    #use_heuristic('Perfekt-Pred-Heuristic', threshold_dem=threshold_dem)
+    #use_heuristic('LSTM-Pred-Heuristic', threshold_dem=threshold_dem)
+    #use_heuristic('Practical-Heuristic', threshold_dem=threshold_dem)
+
+def test_for_different_thresholds(HEURISTIC_TYPE,threshold_list=[10,20,30,40,50,60,70,80,90]):
+    for threshold in threshold_list:
+        use_heuristic(HEURISTIC_TYPE, threshold_dem=threshold)
+
+def test_battery_activations(HEURISTIC_TYPE,threshold_dem=60):
+
+    use_heuristic(HEURISTIC_TYPE, threshold_dem=threshold_dem)
+    use_heuristic(HEURISTIC_TYPE, threshold_dem=threshold_dem, deactivate_SMS=True,)
+    use_heuristic(HEURISTIC_TYPE, threshold_dem=threshold_dem, deactivate_LION=True)
+    use_heuristic(HEURISTIC_TYPE, threshold_dem=threshold_dem, deactivate_SMS=True, deactivate_LION=True)
+
+def main():
+
+    test_threshold_for_all_heuristics()
+    #test_for_different_thresholds('Perfekt-Pred-Heuristic')
+    #test_battery_activations('Perfekt-Pred-Heuristic')
+
+    #use_heuristic('Perfekt-Pred-Heuristic', threshold_dem=47.7)
+    #use_heuristic('Perfekt-Pred-Heuristic', threshold_dem=threshold_dem)
+
+if __name__ == "__main__":
+    main()
