@@ -1,89 +1,110 @@
 '''
-Example of an RL-Agent that uses Dualing Deep Q-Networks with LSTM implementation
+Example of an RL-Agent that uses Dualing Deep Q-Networks.
 '''
-import sys
-import numpy as np
-import pandas as pd
-import random
-import h5py
-
-import gym
-from gym import spaces
-
 from datetime import datetime
-from collections import deque
-from tqdm import tqdm
 
-import main.schaffer as schaffer
-from main.wahrsager import wahrsager, max_seq, mean_seq
-from main.common_env import common_env
+from main.common_func import max_seq, mean_seq, training, testing
+from main.schaffer import mainDataset, lstmInputDataset
+from main.wahrsager import wahrsager
+from main.logger import Logger
 from main.reward_maker import reward_maker
-from main.agent_lstm_q import DQN_LSTM
+from main.common_env import common_env
 
-# Variablen:
-gamma   = 0.9
-epsilon = .95
+# Import the DQN agent: 
+from main.agent_deep_q import DQN
 
-# Logging-Namen:
-now            = datetime.now()
-NAME           = 'GDQN'+now.strftime("_%d-%m-%Y_%H:%M:%S")
-DATENSATZ_PATH = '_BIG_D/'
 
-# Lade Dataframe:
-df        = wahrsager.predictions_and_inputs()
-MAX_STEPS = len(df)
+# Naming the agent and setting up the directory path:
+now    = datetime.now()
+NAME   = 'DQN+LSTM'+now.strftime("_%d-%m-%Y_%H-%M-%S")
+D_PATH = '_BIG_D/'
 
-# Lade Environment
-env       = LSTM_DQN_env(df, DATENSATZ_PATH, NAME)
+# Load the dataset:
+main_dataset = mainDataset(
+    D_PATH=D_PATH,
+    period_string_min='5min',
+    full_dataset=True)
 
-# Initilisiere Varaiblen für Target-Network
-update_TN = 1000
-u         = 0
+# Normalized dataframe:
+df = main_dataset.make_input_df(
+    drop_main_terminal=False,
+    use_time_diff=True,
+    day_diff='holiday-weekend')
 
-# Inititialsiere Epoch-Variablen:
-epochs     = 1000
-epochs_len = len(df)
-min_steps  = 100
+# Sum of the power demand dataframe (nor normalized):
+power_dem_df = main_dataset.load_total_power()
 
-dqn_agent = DQN_LSTM(env=env)
-steps = []
-for e in range(epochs):
-    print('Epoch:', e)
-    cur_state = env.reset().reshape(1,9)
-    
-    for step in tqdm(range(epochs_len)):
-        u += 1
+# Load the LSTM input dataset:
+lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
 
-        if step > min_steps:
-            action, state_inputs = dqn_agent.act(cur_state)
-        else:
-            action, state_inputs = dqn_agent.act(cur_state, random_mode = True)
-            u = 0
+# Making predictions:
+normal_predictions = wahrsager(lstm_dataset, power_dem_df, TYPE='NORMAL').pred()[:-12]
+seq_predictions    = wahrsager(lstm_dataset, power_dem_df, TYPE='SEQ', num_outputs=12).pred()
 
-        new_state, reward, done, new_peak, _ = env.step(action)
+# Adding the predictions to the dataset:
+df            = df[24:-12]
+df['normal']  = normal_predictions
+df['seq_max'] = max_seq(seq_predictions)
 
-        # reward = reward if not done else -20
-        new_state = new_state.reshape(1,9)
-        dqn_agent.remember(cur_state, action, reward, new_state, done, new_peak, state_inputs)
-        #print(cur_state)
-        
-        if u == update_TN:
-            
-            dqn_agent.replay()     					 # internally iterates default (prediction) model,  heurisitc_replay=False
-            dqn_agent.target_train() 				 # iterates target model
-            
-            #dqn_agent.heuristic_rewards()
-            #dqn_agent.replay()     					 # internally iterates default (prediction) model,  heurisitc_replay=False
-            #dqn_agent.replay(heurisitc_replay=True)    
-            #dqn_agent.target_train() 				 # iterates target model
 
-            u = 0
+# Number of warm-up steps:
+num_warmup_steps = 100
+# Train every x number of steps:
+update_num       = 50
+# Number of epochs and steps:
+epochs           = 1000
+# Horizon for Multi-Step-Rewards and/or LSTM-Implementation:
+# horizon = 0
+# input_sequence = 1
 
-        cur_state = new_state
-        if done:
-            break
+logger = Logger(NAME,D_PATH)
 
-    if e % 10 == 0:
-        Agent.save_agent(NAME, DATENSATZ_PATH, e)
+# Setup reward_maker
+r_maker = reward_maker(
+    LOGGER                  = logger,
+    COST_TYPE               = 'exact_costs',
+    R_TYPE                  = 'savings_focus',
+    R_HORIZON               = 'single_step',
+    cost_per_kwh            = 0.2255,
+    LION_Anschaffungs_Preis = 34100,
+    LION_max_Ladezyklen     = 1000,
+    SMS_Anschaffungs_Preis  = 115000/3,
+    SMS_max_Nutzungsjahre   = 20,
+    Leistungspreis          = 102)
+
+# Setup common_env
+env = common_env(
+    reward_maker   = r_maker,
+    df             = df,
+    power_dem_df   = power_dem_df,
+    input_list     = ['norm_total_power','normal','seq_max'],
+    max_SMS_SoC    = 12/3,
+    max_LION_SoC   = 54,
+    PERIODEN_DAUER = 15,
+    ACTION_TYPE    = 'discrete',
+    OBS_TYPE       = 'contin',
+    discrete_space = 22)
+
+
+# Setup Agent:
+agent = DQN(
+    env            = env,
+    memory_len     = update_num,
+    input_sequence = 12,
+    gamma          = 0.85,
+    epsilon        = 0.8,
+    epsilon_min    = 0.1,
+    epsilon_decay  = 0.999996,
+    lr             = 0.5,
+    tau            = 0.125,
+    activation     = 'relu',
+    loss           = 'mean_squared_error',
+    model_type     = 'lstm')
+
+
+training(agent, epochs, update_num, num_warmup_steps)
+testing(agent)
+
+
 
 

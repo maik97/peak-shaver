@@ -17,12 +17,12 @@ from main.agent_deep_q import DQN
 # Naming the agent and setting up the directory path:
 now    = datetime.now()
 NAME   = 'DQN'+now.strftime("_%d-%m-%Y_%H-%M-%S")
-D_PATH = '_small_d/'
+D_PATH = '_BIG_D/'
 
 # Load the dataset:
 main_dataset = mainDataset(
     D_PATH=D_PATH,
-    period_string_min='15min',
+    period_string_min='5min',
     full_dataset=True)
 
 # Normalized dataframe:
@@ -78,7 +78,7 @@ env = common_env(
     df             = df,
     power_dem_df   = power_dem_df,
     input_list     = ['norm_total_power','normal','seq_max'],
-    max_SMS_SoC    = 12,
+    max_SMS_SoC    = 12/3,
     max_LION_SoC   = 54,
     PERIODEN_DAUER = 15,
     ACTION_TYPE    = 'discrete',

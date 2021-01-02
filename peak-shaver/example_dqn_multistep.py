@@ -1,9 +1,7 @@
 '''
-Example of an RL-Agent that uses the basic Q-Table.
+Example of an RL-Agent that uses Dualing Deep Q-Networks.
 '''
-import numpy as np
 from datetime import datetime
-from collections import deque
 
 from main.common_func import max_seq, mean_seq, training, testing
 from main.schaffer import mainDataset, lstmInputDataset
@@ -12,12 +10,13 @@ from main.logger import Logger
 from main.reward_maker import reward_maker
 from main.common_env import common_env
 
-# Import the Q-Table agent: 
-from main.agent_q_table import Q_Learner
+# Import the DQN agent: 
+from main.agent_deep_q import DQN
+
 
 # Naming the agent and setting up the directory path:
 now    = datetime.now()
-NAME   = 'Q_Table'+now.strftime("_%d-%m-%Y_%H-%M-%S")
+NAME   = 'DQN+MULITSTEP'+now.strftime("_%d-%m-%Y_%H-%M-%S")
 D_PATH = '_BIG_D/'
 
 # Load the dataset:
@@ -51,15 +50,13 @@ df['seq_max'] = max_seq(seq_predictions)
 # Number of warm-up steps:
 num_warmup_steps = 100
 # Train every x number of steps:
-update_num       = 1000
+update_num       = 50
 # Number of epochs and steps:
 epochs           = 1000
-epochs_len       = len(df)
-max_steps        = epochs*epochs_len
 # Horizon for Multi-Step-Rewards and/or LSTM-Implementation:
-horizon = 0
+horizon = 12
+# input_sequence = 1
 
-# Set up tensorboard logging:
 logger = Logger(NAME,D_PATH)
 
 # Setup reward_maker
@@ -67,7 +64,8 @@ r_maker = reward_maker(
     LOGGER                  = logger,
     COST_TYPE               = 'exact_costs',
     R_TYPE                  = 'savings_focus',
-    R_HORIZON               = 'single_step',
+    R_HORIZON               = horizon,
+    M_STRATEGY              = 'sum_to_terminal', 
     cost_per_kwh            = 0.2255,
     LION_Anschaffungs_Preis = 34100,
     LION_max_Ladezyklen     = 1000,
@@ -83,26 +81,30 @@ env = common_env(
     input_list     = ['norm_total_power','normal','seq_max'],
     max_SMS_SoC    = 12/3,
     max_LION_SoC   = 54,
-    PERIODEN_DAUER = 5,
+    PERIODEN_DAUER = 15,
     ACTION_TYPE    = 'discrete',
-    OBS_TYPE       = 'discrete',
+    OBS_TYPE       = 'contin',
     discrete_space = 22)
 
-# Setup agent:
-agent = Q_Learner(
+
+# Setup Agent:
+agent = DQN(
     env            = env,
-    memory_len     = update_num,
-    # Training-Parameter:
+    memory_len     = update_num+horizon,
     gamma          = 0.85,
     epsilon        = 0.8,
     epsilon_min    = 0.1,
     epsilon_decay  = 0.999996,
     lr             = 0.5,
     tau            = 0.125,
-    # jede Dimension jeweils ∈ [0,0.05,...,1]
-    Q_table        = np.zeros((22,22,22,22,22,22)))
+    activation     = 'relu',
+    loss           = 'mean_squared_error',
+    model_type     = 'dense')
 
 
 training(agent, epochs, update_num, num_warmup_steps)
 testing(agent)
+
+
+
 
