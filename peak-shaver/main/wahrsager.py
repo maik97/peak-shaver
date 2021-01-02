@@ -12,7 +12,7 @@ from matplotlib.pyplot import *
 import keras
 from keras import backend as K
 from keras.models import load_model
-from keras.optimizers import RMSprop, adam
+from keras.optimizers import RMSprop, Adam
 from keras.models import Sequential
 from keras.layers import Dense, InputLayer, LSTM, Dropout
 from keras.callbacks import TensorBoard
@@ -65,8 +65,9 @@ class wahrsager:
                 lstm_size         = 128,
                 first_hidden_size = 128,
                 neuron_num_change = 0.5,
-                activation_hidden = 'sigmoid',
-                activation_end    = 'sigmoid',
+                activation_hidden = 'relu',
+                activation_end    = 'relu',
+                lr                = 0.5,
                 
                 # Trainings-Parameter
                 val_data_size     = 2000,
@@ -91,6 +92,7 @@ class wahrsager:
         self.lstm_size         = lstm_size
         self.first_hidden_size = first_hidden_size
         self.neuron_num_change = neuron_num_change
+        self.lr                = lr
 
         # Trainings-Parameter:
         self.val_data_size     = val_data_size
@@ -155,9 +157,9 @@ class wahrsager:
 
         if self.PLOTTING == True:
             if self.num_outputs > 1:
-                self.plot_pred_multiple(prediction,label_data)
+                self.plot_pred_multiple(prediction,self.label_data)
             else:
-                self.plot_pred_single(prediction,label_data)
+                self.plot_pred_single(prediction,self.label_data)
         else:
             print('\nWahrsager: Plotting is disabled.')
 
@@ -182,18 +184,20 @@ class wahrsager:
 
         else:
             try:
-                model = load_model(glob.glob(self.D_PATH+'LSTM-models/*'+self.TYPE+'*.h5')[-1])
-                print('Using last model created for TYPE='+self.TYPE+':',glob.glob(self.D_PATH+'LSTM-models/*'+self.TYPE+'*.h5')[-1])
+                print()
+                model = load_model(glob.glob(self.D_PATH+'lstm-models/*'+self.TYPE+'*.h5')[-1])
+                print('Using last model created for TYPE='+self.TYPE+':',glob.glob(self.D_PATH+'lstm-models/*'+self.TYPE+'*.h5')[-1])
                 prediction = model.predict(self.training_data).reshape(np.shape(self.label_data))
-            except:
+            except Exception as e:
+                print(e)
                 wait_to_continue('No valid model found for TYPE='+self.TYPE+'. Press enter to train a new model.')
                 prediction = self.train()
 
         if self.PLOTTING == True:
             if self.num_outputs > 1:
-                self.plot_pred_multiple(prediction,label_data)
+                self.plot_pred_multiple(prediction,self.label_data)
             else:
-                self.plot_pred_single(prediction,label_data)
+                self.plot_pred_single(prediction,self.label_data)
         else:
             print('\nWahrsager: Plotting is disabled.')
         return prediction
@@ -221,7 +225,7 @@ class wahrsager:
             neuron_size *= self.neuron_num_change
 
         model.add(Dense(self.num_outputs, activation = self.activation_end))  
-        model.compile(loss='mse', optimizer='adam', metrics=['mae'])
+        model.compile(loss='mse', optimizer=Adam(lr=self.lr), metrics=['mae'])
 
         #model.compile(loss='mse', optimizer=adam(lr=0.0001, decay=1e-6), metrics=['mse'])
         return model
