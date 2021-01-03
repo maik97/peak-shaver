@@ -1,6 +1,7 @@
 '''Various tests for parameter tuningof the wahrsager LSTM-Network'''
 from common_settings import basic_dataset
 from main.wahrsager import wahrsager
+from main.schaffer import lstmInputDataset
 
 # Load the dataset:
 df, power_dem_df, main_dataset = basic_dataset()
@@ -43,7 +44,7 @@ def test_learning_rate():
             NAME       = '_test_learning_rate_{}'.format(learning_rate),
             lr         = learning_rate,
             num_epochs = 200,
-            #PLOTTING   = True,
+            PLOTTING   = True,
            
         ).train()
 
@@ -63,7 +64,7 @@ def test_overfitting():
             dropout           = dropout,
             recurrent_dropout = dropout,
             num_epochs        = 200,
-            #PLOTTING          = True,
+            PLOTTING          = True,
             ).train()
 
 
@@ -77,7 +78,7 @@ def test_sigmoid():
         NAME ='_test_sigmoid',
         activation_hidden = 'sigmoid',
         activation_end    = 'sigmoid',
-        #PLOTTING = True,
+        PLOTTING = True,
         ).train()
 
 
@@ -96,7 +97,7 @@ def test_lstm_layers():
             # Model-Parameter:
             lstm_size         = lstm_layers,
             first_hidden_size = lstm_layers,
-            #PLOTTING = True,
+            PLOTTING = True,
             ).train()
 
 
@@ -113,25 +114,7 @@ def test_hidden_layers():
             TYPE = 'NORMAL', 
             NAME ='_test_hidden_layers_{}'.format(hidden_layers),
             num_hidden = hidden_layers,
-            #PLOTTING = True,
-            ).train()
-
-
-def test_dropout():
-    '''Tests difference between different numbers of hidden layers'''
-
-    dropout_list = [0.1,0.4,0.6]
-
-    lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
-    
-    for dropout in dropout_list:
-        
-        normal_predictions = wahrsager(lstm_dataset, power_dem_df,
-            TYPE = 'NORMAL', 
-            NAME ='_test_dropout_{}'.format(dropout),
-            dropout           = dropout,
-            recurrent_dropout = dropout,
-            #PLOTTING = True,
+            PLOTTING = True,
             ).train()
 
 
@@ -146,7 +129,7 @@ def test_past_periods():
         normal_predictions = wahrsager(lstm_dataset, power_dem_df,
             TYPE = 'NORMAL', 
             NAME ='_test_past_periods_{}'.format(past_periods),
-            #PLOTTING = True,
+            PLOTTING = True,
             ).train()
 
 
@@ -228,8 +211,8 @@ def test_seq():
             ).train()
 
 
-test_learning_rate()()
-#test_overfitting()
+#test_learning_rate()
+test_overfitting()
 #standart_settings()
 #test_sigmoid()
 #test_lstm_layers()
