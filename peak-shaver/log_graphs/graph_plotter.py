@@ -11,7 +11,7 @@ from glob import iglob
 
 #Version 1
 
-def merge_runs(path,tag,column_name_first_split='test_',column_name_second_split='_val-size',index_name='epochs'):
+def merge_runs(path,tag,column_name_first_split,column_name_second_split,index_name='step'):
 	init_df = True
 	for filename in iglob(path+'*'+tag+'.csv'):
 		if init_df == True:
@@ -49,7 +49,7 @@ def simple_plot(df, path, graph_name=None, ylabel='loss'):
 
 def wahrsager_graphs():
 
-	df = merge_runs('lstm/overfitting/','loss','test_','_val-size','epochs')
+	df = merge_runs('lstm/overfitting/','loss','test_','_val-size','epoch')
 	simple_plot(df,'lstm/overfitting/')
 
 wahrsager_graphs()
