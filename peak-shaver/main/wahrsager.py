@@ -319,7 +319,7 @@ class wahrsager:
 
         # Plotte Dataframe
         prediction_df.plot()
-        plt.show()
+        #plt.show()
 
     
     def plot_pred_multiple(self,prediction,label_data):
