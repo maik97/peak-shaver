@@ -1,81 +1,9 @@
 '''Various tests for parameter tuningof the wahrsager LSTM-Network'''
-from main.schaffer import mainDataset, lstmInputDataset
+from common_settings import basic_dataset
 from main.wahrsager import wahrsager
 
-# ----------- test für dropout?
-
 # Load the dataset:
-main_dataset = mainDataset(
-    D_PATH='_BIG_D/',
-    period_string_min='5min',
-    full_dataset=True)
-
-# Normalized dataframe:
-df = main_dataset.make_input_df(
-    drop_main_terminal=False,
-    use_time_diff=True,
-    day_diff='holiday-weekend')
-
-# Sum of the power demand dataframe (not normalized):
-power_dem_df = main_dataset.load_total_power()
-
-
-def test_learning_rate():
-    '''Tests overfitting by comparing training loss to validation loss'''
-
-    learning_rate_list = [0.00001,0.0001,0.001,0.01,0.1,0.5]
-
-    lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
-    
-    for learning_rate in learning_rate_list:
-        normal_predictions = wahrsager(lstm_dataset, power_dem_df,
-            TYPE = 'NORMAL', 
-            NAME ='_test_num_epochs',
-            #PLOTTING = True,
-            # Model-Parameter:
-            num_outputs       = 1,
-            dropout           = 0.2,
-            recurrent_dropout = 0.2,
-            num_hidden        = 3,
-            lstm_size         = 128,
-            first_hidden_size = 128,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 200,
-            lr                = learning_rate,
-        ).train()
-
-def test_overfitting():
-    '''Tests overfitting by comparing training loss to validation loss'''
-
-    dropout_list = [0.1,0.2,0.4,0.6]
-
-    lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
-    
-    for dropout in dropout_list:
-        
-        normal_predictions = wahrsager(lstm_dataset, power_dem_df,
-            TYPE = 'NORMAL', 
-            NAME ='_test_dropout_{}'.format(dropout),
-            #PLOTTING = True,
-            # Model-Parameter:
-            num_outputs       = 1,
-            dropout           = dropout,
-            recurrent_dropout = dropout,
-            num_hidden        = 3,
-            lstm_size         = 128,
-            first_hidden_size = 128,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 150,
-            ).train()
-
+df, power_dem_df, main_dataset = basic_dataset()
 
 def standart_settings():
     '''Creates standart results to compare the tests'''
@@ -87,18 +15,57 @@ def standart_settings():
         #PLOTTING = True,
         # Model-Parameter:
         num_outputs       = 1,
-        dropout           = 0.2,
-        recurrent_dropout = 0.2,
+        dropout           = 0.1,
+        recurrent_dropout = 0.1,
         num_hidden        = 3,
         lstm_size         = 128,
         first_hidden_size = 128,
         neuron_num_change = 0.5,
         activation_hidden = 'relu',
         activation_end    = 'relu',
+        lr                = 0.001,
         # Trainings-Parameter
         val_data_size     = 2000,
-        num_epochs        = 15,
+        num_epochs        = 20,
         ).train()
+
+
+def test_learning_rate():
+    '''Tests different learning rates'''
+
+    learning_rate_list = [0.00001,0.0001,0.001,0.01,0.1,0.5]
+
+    lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
+    
+    for learning_rate in learning_rate_list:
+        normal_predictions = wahrsager(lstm_dataset, power_dem_df,
+            TYPE       = 'NORMAL', 
+            NAME       = '_test_learning_rate_{}'.format(learning_rate),
+            lr         = learning_rate,
+            num_epochs = 200,
+            #PLOTTING   = True,
+           
+        ).train()
+
+
+def test_overfitting():
+    '''Tests overfitting by comparing training loss to validation loss'''
+
+    dropout_list = [0.1,0.2,0.4,0.6]
+
+    lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
+    
+    for dropout in dropout_list:
+        
+        normal_predictions = wahrsager(lstm_dataset, power_dem_df,
+            TYPE              = 'NORMAL', 
+            NAME              ='_test_dropout_{}'.format(dropout),
+            dropout           = dropout,
+            recurrent_dropout = dropout,
+            num_epochs        = 200,
+            #PLOTTING          = True,
+            ).train()
+
 
 
 def test_sigmoid():
@@ -108,21 +75,11 @@ def test_sigmoid():
     normal_predictions = wahrsager(lstm_dataset, power_dem_df,
         TYPE = 'NORMAL', 
         NAME ='_test_sigmoid',
-        #PLOTTING = True,
-        # Model-Parameter:
-        num_outputs       = 1,
-        dropout           = 0.2,
-        recurrent_dropout = 0.2,
-        num_hidden        = 3,
-        lstm_size         = 128,
-        first_hidden_size = 128,
-        neuron_num_change = 0.5,
         activation_hidden = 'sigmoid',
         activation_end    = 'sigmoid',
-        # Trainings-Parameter
-        val_data_size     = 2000,
-        num_epochs        = 15,
+        #PLOTTING = True,
         ).train()
+
 
 def test_lstm_layers():
     '''Tests difference between different numbers of lstm layers'''
@@ -136,21 +93,12 @@ def test_lstm_layers():
         normal_predictions = wahrsager(lstm_dataset, power_dem_df,
             TYPE = 'NORMAL_', 
             NAME ='_test_lstm_layers_{}'.format(lstm_layers),
-            #PLOTTING = True,
             # Model-Parameter:
-            num_outputs       = 1,
-            dropout           = 0.2,
-            recurrent_dropout = 0.2,
-            num_hidden        = 3,
             lstm_size         = lstm_layers,
             first_hidden_size = lstm_layers,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 15,
+            #PLOTTING = True,
             ).train()
+
 
 def test_hidden_layers():
     '''Tests difference between different numbers of hidden layers'''
@@ -164,21 +112,10 @@ def test_hidden_layers():
         normal_predictions = wahrsager(lstm_dataset, power_dem_df,
             TYPE = 'NORMAL', 
             NAME ='_test_hidden_layers_{}'.format(hidden_layers),
+            num_hidden = hidden_layers,
             #PLOTTING = True,
-            # Model-Parameter:
-            num_outputs       = 1,
-            dropout           = 0.2,
-            recurrent_dropout = 0.2,
-            num_hidden        = hidden_layers,
-            lstm_size         = 128,
-            first_hidden_size = 128,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 15,
             ).train()
+
 
 def test_dropout():
     '''Tests difference between different numbers of hidden layers'''
@@ -192,21 +129,11 @@ def test_dropout():
         normal_predictions = wahrsager(lstm_dataset, power_dem_df,
             TYPE = 'NORMAL', 
             NAME ='_test_dropout_{}'.format(dropout),
-            #PLOTTING = True,
-            # Model-Parameter:
-            num_outputs       = 1,
             dropout           = dropout,
             recurrent_dropout = dropout,
-            num_hidden        = 3,
-            lstm_size         = 128,
-            first_hidden_size = 128,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 15,
+            #PLOTTING = True,
             ).train()
+
 
 def test_past_periods():
     ''' Tests difference between different numbers of past periods'''
@@ -220,20 +147,8 @@ def test_past_periods():
             TYPE = 'NORMAL', 
             NAME ='_test_past_periods_{}'.format(past_periods),
             #PLOTTING = True,
-            # Model-Parameter:
-            num_outputs       = 1,
-            dropout           = 0.2,
-            recurrent_dropout = 0.2,
-            num_hidden        = 3,
-            lstm_size         = 128,
-            first_hidden_size = 128,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 15,
             ).train()
+
 
 def test_mean():
     ''' Tests difference between different numbers of past periods'''
@@ -247,20 +162,8 @@ def test_mean():
             TYPE = 'MEAN', 
             NAME ='_test_mean_{}'.format(past_periods),
             #PLOTTING = True,
-            # Model-Parameter:
-            num_outputs       = 1,
-            dropout           = 0.2,
-            recurrent_dropout = 0.2,
-            num_hidden        = 3,
-            lstm_size         = 128,
-            first_hidden_size = 128,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 15,
             ).train()
+
 
 def test_max():
     ''' Tests difference between different numbers of past periods'''
@@ -274,20 +177,8 @@ def test_max():
             TYPE = 'MAX', 
             NAME ='_test_max_{}'.format(past_periods),
             #PLOTTING = True,
-            # Model-Parameter:
-            num_outputs       = 1,
-            dropout           = 0.2,
-            recurrent_dropout = 0.2,
-            num_hidden        = 3,
-            lstm_size         = 128,
-            first_hidden_size = 128,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 15,
             ).train()
+
 
 def test_max_label_seq():
     ''' Tests difference between different numbers of past periods'''
@@ -300,21 +191,10 @@ def test_max_label_seq():
         normal_predictions = wahrsager(lstm_dataset, power_dem_df,
             TYPE = 'MAX_LABEL_SEQ', 
             NAME ='_test_max_label_seq_{}'.format(output_periods),
+            num_outputs = output_periods,
             #PLOTTING = True,
-            # Model-Parameter:
-            num_outputs       = output_periods,
-            dropout           = 0.2,
-            recurrent_dropout = 0.2,
-            num_hidden        = 3,
-            lstm_size         = 128,
-            first_hidden_size = 128,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 15,
             ).train()
+
 
 def test_mean_label_seq():
     ''' Tests difference between different numbers of past periods'''
@@ -327,21 +207,10 @@ def test_mean_label_seq():
         normal_predictions = wahrsager(lstm_dataset, power_dem_df,
             TYPE = 'MEAN_LABEL_SEQ', 
             NAME ='_test_mean_label_seq_{}'.format(output_periods),
+            num_outputs = output_periods,
             #PLOTTING = True,
-            # Model-Parameter:
-            num_outputs       = output_periods,
-            dropout           = 0.2,
-            recurrent_dropout = 0.2,
-            num_hidden        = 3,
-            lstm_size         = 128,
-            first_hidden_size = 128,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 15,
             ).train()
+
 
 def test_seq():
     ''' Tests difference between different numbers of past periods'''
@@ -354,21 +223,10 @@ def test_seq():
         normal_predictions = wahrsager(lstm_dataset, power_dem_df,
             TYPE = 'SEQ', 
             NAME ='_test_seq_{}'.format(output_periods),
+            num_outputs = output_periods,
             #PLOTTING = True,
-            # Model-Parameter:
-            num_outputs       = output_periods,
-            dropout           = 0.2,
-            recurrent_dropout = 0.2,
-            num_hidden        = 3,
-            lstm_size         = 128,
-            first_hidden_size = 128,
-            neuron_num_change = 0.5,
-            activation_hidden = 'relu',
-            activation_end    = 'relu',
-            # Trainings-Parameter
-            val_data_size     = 2000,
-            num_epochs        = 15,
             ).train()
+
 
 test_learning_rate()()
 #test_overfitting()

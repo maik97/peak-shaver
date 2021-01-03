@@ -54,13 +54,13 @@ class wahrsager:
                 total_power,
                 # Allgemeine Parameter
                 TYPE              = 'MEAN',
-                NAME              = '_wahrsager_v5',
+                NAME              = '_wahrsager',
                 PLOTTING          = False,
                 
                 # Model-Parameter
                 num_outputs       = 1,
-                dropout           = 0.2,
-                recurrent_dropout = 0.2,
+                dropout           = 0.1,
+                recurrent_dropout = 0.1,
                 num_hidden        = 3,
                 lstm_size         = 128,
                 first_hidden_size = 128,
@@ -71,7 +71,7 @@ class wahrsager:
                 
                 # Trainings-Parameter
                 val_data_size     = 2000,
-                num_epochs        = 10,
+                num_epochs        = 20,
                 ):
 
         self.lstm_dataset      = lstm_dataset
@@ -275,7 +275,7 @@ class wahrsager:
         f.write('Allgemeine Parameter\n')
         f.write('TYPE:              %s\n' % self.TYPE)
         f.write('NAME:              %s\n' % self.NAME)
-        f.write('PLOTTING:         %s\n' % self.PLOTTING)
+        f.write('PLOTTING:          %s\n' % self.PLOTTING)
         
         f.write('\nModel-Parameter\n')
         f.write('num_outputs:       %s\n' % self.num_outputs)
@@ -311,6 +311,8 @@ class wahrsager:
                 })
 
         print(prediction_df)
+        prediction_df.to_csv(self.D_PATH+'/lstm-outputs/'+self.TYPE+self.NAME+self.VERSION+'.csv')
+
 
         print('Maximaler Absoluter Fehler:',  np.max(prediction_df['Absoluter Fehler'].to_numpy()))
         print('Mittelwert Absoluter Fehler:', np.mean(prediction_df['Absoluter Fehler'].to_numpy()))
