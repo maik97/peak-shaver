@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import datetime
+from datetime import datetime
 import time
 import glob
 
@@ -67,7 +67,7 @@ class wahrsager:
                 neuron_num_change = 0.5,
                 activation_hidden = 'relu',
                 activation_end    = 'relu',
-                lr                = 0.5,
+                lr                = 0.001,
                 
                 # Trainings-Parameter
                 val_data_size     = 2000,
@@ -105,7 +105,7 @@ class wahrsager:
             self.num_outputs = 12
 
         self.D_PATH  = self.lstm_dataset.__dict__['D_PATH']
-        self.VERSION = '{}'.format(int(time.time()))
+        self.VERSION = datetime.now().strftime("_%d-%m-%Y_%H-%M-%S")
 
         # Einstellungen Pandas:
         pd.set_option('min_rows', 50)
@@ -318,7 +318,7 @@ class wahrsager:
         print('Mittelwert Absoluter Fehler:', np.mean(prediction_df['Absoluter Fehler'].to_numpy()))
 
         # Plotte Dataframe
-        prediction_df.plot()
+        #prediction_df.plot()
         #plt.show()
 
     
@@ -346,8 +346,8 @@ class wahrsager:
             print('Mittelwert Absoluter Fehler:', np.mean(prediction_df['Absoluter Fehler'].to_numpy()))
 
             # Plotte Dataframe
-            prediction_df.plot()
-            plt.show()
+            #prediction_df.plot()
+            #plt.show()
 
 def add_lstm_predictions(self,df,predictions,custom_column_name=None, label_sequence='MEAN'):
 
