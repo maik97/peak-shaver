@@ -63,7 +63,7 @@ def test_overfitting():
             NAME              ='_test_dropout_{}'.format(dropout),
             dropout           = dropout,
             recurrent_dropout = dropout,
-            num_epochs        = 200,
+            num_epochs        = 10,
             PLOTTING          = True,
             ).train()
 

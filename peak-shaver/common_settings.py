@@ -4,10 +4,10 @@ from main.wahrsager import wahrsager
 from main.logger import Logger
 
 # Directory of the dataset:
-D_PATH = '_BIG_D/'
+D_PATH = '_small_d/'
 
 # Parameter mainDataset:
-period_string_min = '5min'
+period_string_min = '15min'
 full_dataset      = True
 
 # Parameter mainDataset.make_input_df:
