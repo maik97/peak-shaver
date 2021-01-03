@@ -71,7 +71,7 @@ class wahrsager:
                 
                 # Trainings-Parameter
                 val_data_size     = 2000,
-                num_epochs        = 20,
+                num_epochs        = 200,
                 ):
 
         self.lstm_dataset      = lstm_dataset

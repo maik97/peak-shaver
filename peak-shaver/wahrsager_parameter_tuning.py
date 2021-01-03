@@ -9,6 +9,7 @@ df, power_dem_df, main_dataset = basic_dataset()
 def standart_settings():
     '''Creates standart results to compare the tests'''
 
+    print('Testing standart_settings()')
     lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
     normal_predictions = wahrsager(lstm_dataset, power_dem_df,
         TYPE = 'NORMAL', 
@@ -27,13 +28,14 @@ def standart_settings():
         lr                = 0.001,
         # Trainings-Parameter
         val_data_size     = 2000,
-        num_epochs        = 20,
+        num_epochs        = 200,
         ).train()
 
 
 def test_learning_rate():
     '''Tests different learning rates'''
 
+    print('Testing test_learning_rate()')
     learning_rate_list = [0.00001,0.0001,0.001,0.01,0.1,0.5]
 
     lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
@@ -43,15 +45,16 @@ def test_learning_rate():
             TYPE       = 'NORMAL', 
             NAME       = '_test_learning_rate_{}'.format(learning_rate),
             lr         = learning_rate,
-            num_epochs = 200,
+            num_epochs = 1000,
             PLOTTING   = True,
            
         ).train()
 
 
-def test_overfitting():
+def test_dropout():
     '''Tests overfitting by comparing training loss to validation loss'''
 
+    print('Testing test_dropout()')
     dropout_list = [0.1,0.2,0.4,0.6]
 
     lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
@@ -63,7 +66,7 @@ def test_overfitting():
             NAME              ='_test_dropout_{}'.format(dropout),
             dropout           = dropout,
             recurrent_dropout = dropout,
-            num_epochs        = 10,
+            num_epochs        = 1000,
             PLOTTING          = True,
             ).train()
 
@@ -72,6 +75,7 @@ def test_overfitting():
 def test_sigmoid():
     ''' Tests difference between relu and sigmoid activation function'''
     
+    print('Testing test_sigmoid()')
     lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
     normal_predictions = wahrsager(lstm_dataset, power_dem_df,
         TYPE = 'NORMAL', 
@@ -85,6 +89,7 @@ def test_sigmoid():
 def test_lstm_layers():
     '''Tests difference between different numbers of lstm layers'''
 
+    print('Testing test_lstm_layers()')
     lstm_layers_list = [16,32,64,256,512,1028]
 
     lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
@@ -92,7 +97,7 @@ def test_lstm_layers():
     for lstm_layers in lstm_layers_list:
         
         normal_predictions = wahrsager(lstm_dataset, power_dem_df,
-            TYPE = 'NORMAL_', 
+            TYPE = 'NORMAL', 
             NAME ='_test_lstm_layers_{}'.format(lstm_layers),
             # Model-Parameter:
             lstm_size         = lstm_layers,
@@ -104,6 +109,7 @@ def test_lstm_layers():
 def test_hidden_layers():
     '''Tests difference between different numbers of hidden layers'''
 
+    print('Testing test_hidden_layers()')
     hidden_layers_list = [1,2]
 
     lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
@@ -120,7 +126,8 @@ def test_hidden_layers():
 
 def test_past_periods():
     ''' Tests difference between different numbers of past periods'''
-
+    
+    print('Testing test_past_periods()')
     past_periods_list = [6,24]
 
     for past_periods in past_periods_list:
@@ -136,6 +143,7 @@ def test_past_periods():
 def test_mean():
     ''' Tests difference between different numbers of past periods'''
 
+    print('Testing test_mean()')
     past_periods_list = [6,12,24]
 
     for past_periods in past_periods_list:
@@ -151,6 +159,7 @@ def test_mean():
 def test_max():
     ''' Tests difference between different numbers of past periods'''
 
+    print('Testing test_max()')
     past_periods_list = [6,12,24]
 
     for past_periods in past_periods_list:
@@ -166,6 +175,7 @@ def test_max():
 def test_max_label_seq():
     ''' Tests difference between different numbers of past periods'''
 
+    print('Testing test_max_label_seq()')
     output_periods_list = [6,12,24]
 
     for output_periods in output_periods_list:
@@ -182,6 +192,7 @@ def test_max_label_seq():
 def test_mean_label_seq():
     ''' Tests difference between different numbers of past periods'''
 
+    print('Testing test_mean_label_seq()')
     output_periods_list = [6,12,24]
 
     for output_periods in output_periods_list:
@@ -198,6 +209,7 @@ def test_mean_label_seq():
 def test_seq():
     ''' Tests difference between different numbers of past periods'''
 
+    print('Testing test_seq()')
     output_periods_list = [6,12,24]
 
     for output_periods in output_periods_list:
@@ -210,18 +222,39 @@ def test_seq():
             #PLOTTING = True,
             ).train()
 
-
+standart_settings()
 #test_learning_rate()
-test_overfitting()
-#standart_settings()
-#test_sigmoid()
-#test_lstm_layers()
-#test_hidden_layers()
 #test_dropout()
-#test_past_periods()
-#test_mean()
-#test_max()
-#test_max_label_seq()
-#test_mean_label_seq()
-#test_seq()
+test_sigmoid()
+test_lstm_layers()
+test_hidden_layers()
+test_past_periods()
+
+try:
+    test_mean()
+except Exception as e:
+    print(e)
+
+try:
+    test_max()
+except Exception as e:
+    print(e)
+
+try:
+    test_max_label_seq()
+except Exception as e:
+    print(e)
+
+try:
+    test_mean_label_seq()
+except Exception as e:
+    print(e)
+
+try:
+    test_seq()
+except Exception as e:
+    print(e)
+
+
+
 
