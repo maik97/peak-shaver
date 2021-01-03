@@ -448,7 +448,7 @@ class lstmInputDataset:
                 label_data = hf['label_data'][:]
 
         except:            
-            rolling_mean_inputs_df = self.self.alle_inputs_df.rolling(self.num_past_periods).mean()
+            rolling_mean_inputs_df = self.alle_inputs_df.rolling(self.num_past_periods).mean()
             rolling_mean_inputs = rolling_mean_inputs_df.to_numpy()
 
             self.timer.start()
