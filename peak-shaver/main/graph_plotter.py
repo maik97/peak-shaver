@@ -27,7 +27,9 @@ def load_tensorboard_logs(D_PATH, log_from, partial_name):
 
 	try:
 		for folder_path in iglob(log_path+'*'+partial_name+'*'):
+			print('path:',folder_path)
 			name = folder_path.split('\\')[-1]
+			name = folder_path.split('/')[-1]
 			ea = event_accumulator.EventAccumulator(folder_path)
 			ea.Reload()
 
@@ -43,7 +45,6 @@ def merge_runs(path,tag,column_name_first_split,column_name_second_split,index_n
 	
 	init_df = True
 	for filename in iglob(path+'*-tag-'+tag+'.csv'):
-
 		if init_df == False:
 			column   = pd.read_csv(filename, delimiter=',')
 			filename = filename.split(column_name_first_split)[-1]
@@ -79,6 +80,7 @@ def simple_plot(df, path, tag, ylabel='', graph_name=None):
 
 	if graph_name != None:
 		plt.title(graph_name)
+
 
 	sns.set_theme(style="whitegrid")
 	#sns.set_context("paper", rc={"font.size":8,"axes.titlesize":8,"axes.labelsize":5})
@@ -118,7 +120,7 @@ def wahrsager_plot(path,tag,standart_df=None):
 		print('Could not create graph for',tag,'with path:',path)
 
 
-def wahrsager_graphs(D_PATH='_small_d/'):
+def wahrsager_graphs(D_PATH='_BIG_D/'):
 
 	partial_name_list = ['standart','learning_rate','dropout']
 	
@@ -126,7 +128,7 @@ def wahrsager_graphs(D_PATH='_small_d/'):
 		'sigmoid','lstm_layers','hidden_layers','past_periods',
 		'mean','max','max_label_seq','mean_label_seq','test_seq']
 
-	tag_list = ['loss','mean_absolute_error','val_loss','val_mean_absolute_error']
+	tag_list = ['loss','mae','val_loss','val_mae']
 
 	
 	for partial_name in partial_name_list:
