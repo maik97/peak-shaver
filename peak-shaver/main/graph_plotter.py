@@ -80,8 +80,12 @@ def simple_plot(df, path, tag, ylabel='', graph_name=None):
 
 	if graph_name != None:
 		plt.title(graph_name)
+<<<<<<< Updated upstream
 
 
+=======
+	
+>>>>>>> Stashed changes
 	sns.set_theme(style="whitegrid")
 	#sns.set_context("paper", rc={"font.size":8,"axes.titlesize":8,"axes.labelsize":5})
 	#plt.rcParams["font.weight"] = "bold"
