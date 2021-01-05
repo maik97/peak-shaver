@@ -32,7 +32,8 @@ class Q_Learner:
         tau (float): Factor for copying weights from model network to target network
         Q_table (array): Initial Q-Table, all values should be set to zero
     """
-    def __init__(self, env, memory_len, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125, Q_table=np.zeros((22,22,22,22,22)), load_table=None):
+    def __init__(self, env, memory_len, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125, Q_table=[22,22,22,22,22], load_table=None):
+
 
         self.env            = env
 
@@ -47,7 +48,11 @@ class Q_Learner:
         self.lr             = lr
         self.tau            = tau
 
+        if isinstance(Q_table, list):
+            self.Q_table    = np.zeros(Q_table)
+        else:
         self.Q_table        = Q_table # jede Dimension jeweils ∈ [0,0.05,...,1]
+        
         self.LOGGER         = self.env.__dict__['LOGGER']
         
         self.horizon = self.env.__dict__['reward_maker'].__dict__['R_HORIZON']
