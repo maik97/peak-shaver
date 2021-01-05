@@ -27,7 +27,8 @@ class DQN:
         loss (string): Defines Keras loss function to comile the DQN model
     """
     def __init__(self, env, memory_len, input_sequence=1, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125,
-                 activation='relu', loss='mean_squared_error', model_type='dense', use_model=None, pre_trained_model=None):
+                 activation='relu', loss='mean_squared_error', model_type='dense', use_model=None, pre_trained_model=None,
+                 hidden_layers=2, hidden_size=518, lstm_size=123):
 
         self.env            = env
         
@@ -52,14 +53,14 @@ class DQN:
         
         if pre_trained_model == None:
             if model_type == 'dense' and use_model == None:
-                self.model        = self.create_normal_model(lr, activation, loss)
-                self.target_model = self.create_normal_model(lr, activation, loss)
+                self.model        = self.create_normal_model(lr, activation, loss, hidden_layers, hidden_size)
+                self.target_model = self.create_normal_model(lr, activation, loss, hidden_layers, hidden_size)
 
             elif model_type == 'lstm' and use_model == None:
                 if self.input_sequence <= 1:
                     raise Exception("input_sequence was set to {} but must be > 1, when model_type='lstm'".format(self.input_sequence))
-                self.model        = self.create_lstm_model(lr, activation, loss)
-                self.target_model = self.create_lstm_model(lr, activation, loss)
+                self.model        = self.create_lstm_model(lr, activation, loss, lstm_size, hidden_size)
+                self.target_model = self.create_lstm_model(lr, activation, loss, lstm_size, hidden_size)
 
             elif use_model != None:
                 self.model        = use_model
@@ -86,7 +87,7 @@ class DQN:
         self.agent_status = AgentStatus(epochs*epoch_len)
 
 
-    def create_normal_model(self, lr, activation, loss):
+    def create_normal_model(self, lr, activation, loss, hidden_layers, hidden_size):
         '''Creates a Deep Neural Network which predicts Q-Values, when the class is initilized.
 
         Args:
@@ -95,13 +96,13 @@ class DQN:
         '''
         input_dim = self.env.observation_space.shape[0]*self.input_sequence
         model = Sequential()
-        model.add(Dense(518, input_dim=input_dim, activation=activation))
-        model.add(Dense(518, activation=activation))
+        model.add(Dense(hidden_size, input_dim=input_dim, activation=activation))
+        model.add(Dense(hidden_size, activation=activation))
         model.add(Dense(self.env.action_space.n))
         model.compile(loss=loss, optimizer=Adam(lr=lr))
         return model
 
-    def create_lstm_model(self, lr, activation, loss):
+    def create_lstm_model(self, lr, activation, loss, lstm_size, hidden_size):
         '''Creates an LSTM which predicts Q-Values, when the class is initilized.
 
         Args:
@@ -110,8 +111,8 @@ class DQN:
         '''
         input_dim = (self.input_sequence, self.env.observation_space.shape[0])
         model = Sequential()
-        model.add(LSTM(518, input_dim=input_dim, activation=activation))
-        model.add(Dense(518, activation=activation))
+        model.add(LSTM(lstm_size, input_dim=input_dim, activation=activation))
+        model.add(Dense(hidden_size, activation=activation))
         model.add(Dense(self.env.action_space.n))
         model.compile(loss=loss, optimizer=Adam(lr=model_lr))
         return model
