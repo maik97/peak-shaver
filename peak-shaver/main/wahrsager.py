@@ -194,7 +194,7 @@ class wahrsager:
                 prediction = self.train()
 
         if self.PLOTTING == True:
-            if self.num_outputs > 1:
+            if self.TYPE == 'SEQ':
                 self.plot_pred_multiple(prediction,self.label_data)
             else:
                 self.plot_pred_single(prediction,self.label_data)
@@ -211,7 +211,11 @@ class wahrsager:
         Returns:
             model (keras model): Compiled Keras LSTM-model
         '''
-    
+        if self.TYPE == 'SEQ':
+            num_outputs = self.num_outputs
+        else:
+            num_outputs = 1
+        
         model = Sequential()
         model.add(LSTM(self.lstm_size, 
                        input_shape       = np.shape(self.training_data[0]),
@@ -224,7 +228,7 @@ class wahrsager:
             model.add(Dropout(self.dropout))
             neuron_size *= self.neuron_num_change
 
-        model.add(Dense(self.num_outputs, activation = self.activation_end))  
+        model.add(Dense(num_outputs, activation = self.activation_end))  
         model.compile(loss='mse', optimizer=Adam(lr=self.lr), metrics=['mae'])
 
         #model.compile(loss='mse', optimizer=adam(lr=0.0001, decay=1e-6), metrics=['mse'])

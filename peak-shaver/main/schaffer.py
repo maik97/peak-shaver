@@ -568,13 +568,13 @@ class lstmInputDataset:
 
             self.timer.start()
             label_data = []
-            for i in range(len(sequence_outputs[:-self.num_past_periods])):
-                label_data = np.append(label_data, sequence_outputs[i:i+self.num_past_periods])
+            for i in range(len(sequence_outputs[:-num_seq_periods])):
+                label_data = np.append(label_data, sequence_outputs[i:i+num_seq_periods])
                 self.timer.print_time_progress('Creating label data (sequence)', i, len(sequence_outputs[:-self.num_past_periods]))
 
             #num_inputs_t = len(sequence_outputs[0]) 
-            num_t = len(sequence_outputs[self.num_past_periods:])
-            label_data = np.reshape(label_data, (num_t, self.num_past_periods))[self.num_past_periods:][self.num_past_periods:]
+            num_t = len(sequence_outputs[num_seq_periods:])
+            label_data = np.reshape(label_data, (num_t, num_seq_periods))[self.num_past_periods:][self.num_past_periods:]
 
             self.timer.start()
             training_data = []
@@ -583,13 +583,14 @@ class lstmInputDataset:
                 self.timer.print_time_progress('Creating training data (sequence)', i, len(sequence_inputs[:-self.num_past_periods]))
 
             num_inputs_t = len(sequence_inputs[0]) 
-            num_t = len(sequence_inputs[num_seq_periods:])
-            training_data = np.reshape(training_data, (num_t, num_seq_periods, num_inputs_t))[num_seq_periods:-num_seq_periods]
+            num_t = len(sequence_inputs[self.num_past_periods:])
+            training_data = np.reshape(training_data, (num_t, self.num_past_periods, num_inputs_t))[self.num_past_periods:-num_seq_periods]
 
             with h5py.File(self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_sequence_{}-{}.h5'.format(self.num_past_periods,num_seq_periods), 'w') as hf:
                 hf.create_dataset("training_data",  data=training_data)
                 hf.create_dataset("label_data",  data=label_data)
-
+        print(np.shape(training_data))
+        print(np.shape(label_data))
         print('Dataset '+self.D_PATH+'tables/'+self.period_string_min+'/training-data/'+self.name+'_sequence_{}-{}.h5 loaded successfully')       
         return training_data, label_data
 
