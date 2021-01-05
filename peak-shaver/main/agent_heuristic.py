@@ -1,5 +1,10 @@
 import numpy as np
-import main.common_func as cm
+
+try:
+    import main.common_func as cm
+except:
+    import common_func as cm
+
 
 class heurisitc:
     '''

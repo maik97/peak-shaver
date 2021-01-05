@@ -36,8 +36,6 @@ Contents
    modules/agent_heuristic_doc
    modules/agent_q_table_doc
    modules/agent_deep_q_doc
-   modules/agent_lstm_q_doc
-   modules/agent_PPO2_doc
 
 .. toctree::
    :maxdepth: 2

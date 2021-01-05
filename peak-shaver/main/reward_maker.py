@@ -3,7 +3,6 @@ import numpy as np
 
 from collections import deque
 
-from main.logger import Logger
 
 class reward_maker():
     '''

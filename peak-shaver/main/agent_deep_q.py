@@ -7,7 +7,10 @@ from keras.models import Sequential, clone_model, load_model
 from keras.layers import Dense, LSTM, Dropout
 from keras.optimizers import Adam
 
-from main.common_func import try_training_on_gpu, AgentStatus
+try:
+    from main.common_func import try_training_on_gpu, AgentStatus
+except:
+    from common_func import try_training_on_gpu, AgentStatus
 
 class DQN:
     """

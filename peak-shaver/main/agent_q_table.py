@@ -51,7 +51,7 @@ class Q_Learner:
         if isinstance(Q_table, list):
             self.Q_table    = np.zeros(Q_table)
         else:
-        self.Q_table        = Q_table # jede Dimension jeweils ∈ [0,0.05,...,1]
+            self.Q_table        = Q_table # jede Dimension jeweils ∈ [0,0.05,...,1]
         
         self.LOGGER         = self.env.__dict__['LOGGER']
         

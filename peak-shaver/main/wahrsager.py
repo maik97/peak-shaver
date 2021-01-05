@@ -17,8 +17,12 @@ from keras.models import Sequential
 from keras.layers import Dense, InputLayer, LSTM, Dropout
 from keras.callbacks import TensorBoard
 
-import main.schaffer
-from main.common_func import try_training_on_gpu, max_seq, mean_seq, wait_to_continue, make_dir
+try:
+    import main.schaffer
+    from main.common_func import try_training_on_gpu, max_seq, mean_seq, wait_to_continue, make_dir
+except:
+    import schaffer
+    from common_func import try_training_on_gpu, max_seq, mean_seq, wait_to_continue, make_dir
 
 # TO-DO:
 # dataset path als parameter

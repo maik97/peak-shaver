@@ -10,7 +10,11 @@ import h5py
 
 import time
 
-from main.common_func import print_progress, make_dir, Timer
+try:
+    from main.common_func import print_progress, make_dir, Timer
+except:
+    from common_func import print_progress, make_dir, Timer
+
 
 # TO-DO:
 # statt global var lieber class

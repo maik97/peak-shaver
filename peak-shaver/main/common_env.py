@@ -7,7 +7,6 @@ from gym import spaces
 
 from collections import deque
 
-from main.logger import Logger
 '''
 ############   TO-DO  ############
 
