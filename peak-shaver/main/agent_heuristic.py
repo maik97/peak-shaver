@@ -5,19 +5,19 @@ try:
 except:
     import common_func as cm
 
+'''
+There are three main heuristic approaches, with the goal to minimize the maximum energy peak:
 
+1. 'Single-Value-Heuristic' approximates the best global value (for all steps), that is used to determine the should energy consumption from the grid.
+
+2. 'Perfekt-Pred-Heuristic' finds the best should energy consumptions for each steps, under the assumption, that the future energy-need is perfectly predicted.
+
+3. 'LSTM-Pred-Heuristic' approximates the best should energy consumptions for each step, with LSTM-predicted future energy-need.
+
+These three aproaches can also have the goal to minimize the sum of cost instead of the maximum peak.
+'''
 class heurisitc:
-    '''
-    There are three main heuristic approaches, with the goal to minimize the maximum energy peak:
-    
-    1. 'Single-Value-Heuristic' approximates the best global value (for all steps), that is used to determine the should energy consumption from the grid.
-    
-    2. 'Perfekt-Pred-Heuristic' finds the best should energy consumptions for each steps, under the assumption, that the future energy-need is perfectly predicted.
-    
-    3. 'LSTM-Pred-Heuristic' approximates the best should energy consumptions for each step, with LSTM-predicted future energy-need.
-    
-    These three aproaches can also have the goal to minimize the sum of cost instead of the maximum peak.
-    
+    '''    
     Args:
         NAME
             Name of the model
