@@ -29,7 +29,7 @@ def load_tensorboard_logs(D_PATH, log_from, partial_name):
 		for folder_path in iglob(log_path+'*'+partial_name+'*'):
 			print('path:',folder_path)
 			name = folder_path.split('\\')[-1]
-			name = folder_path.split('/')[-1]
+			#name = folder_path.split('/')[-1]
 			ea = event_accumulator.EventAccumulator(folder_path)
 			ea.Reload()
 
@@ -80,17 +80,12 @@ def simple_plot(df, path, tag, ylabel='', graph_name=None):
 
 	if graph_name != None:
 		plt.title(graph_name)
-<<<<<<< Updated upstream
 
-
-=======
-	
->>>>>>> Stashed changes
 	sns.set_theme(style="whitegrid")
 	#sns.set_context("paper", rc={"font.size":8,"axes.titlesize":8,"axes.labelsize":5})
 	#plt.rcParams["font.weight"] = "bold"
 	#plt.rcParams["axes.labelweight"] = "bold"
-	ax = sns.lineplot(data=df, dashes=False)
+	ax = sns.lineplot(data=df, dashes=False, sort=False)
 	ax.set(xlabel=df.index.names[0], ylabel=ylabel)
 	plt.savefig(path+df.columns[-1].split(' ')[0]+'_'+tag+'.png')
 	plt.close()
@@ -130,7 +125,7 @@ def wahrsager_graphs(D_PATH='_BIG_D/'):
 	
 	partial_name_list_standart_compare = [
 		'sigmoid','lstm_layers','hidden_layers','past_periods',
-		'mean','max','max_label_seq','mean_label_seq','test_seq']
+		'rolling_mean','rolling_max','max_label_seq','mean_label_seq','test_seq']
 
 	tag_list = ['loss','mae','val_loss','val_mae']
 
