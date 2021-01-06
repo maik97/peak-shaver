@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-RL-Agent with Deep Q-Learning that uses LSTMs
-=============================================
+Deep Q-Learning with LSTM integration
+=====================================
 
 .. literalinclude:: ../../peak-shaver/example_agent_lstm_q.py

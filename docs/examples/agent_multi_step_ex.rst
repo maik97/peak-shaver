@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Deep Q-Learning
-===============
+Deep Q-Learning with Multi-Step-Learning
+========================================
 
-.. literalinclude:: ../../peak-shaver/example_agent_deep_q.py
+.. literalinclude:: ../../peak-shaver/example_agent_multistep.py

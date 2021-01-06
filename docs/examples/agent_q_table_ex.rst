@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-RL-Agent with basic Q-Learning
-==============================
+Basic Q-Learning
+================
 
 .. literalinclude:: ../../peak-shaver/example_agent_q_table.py
 

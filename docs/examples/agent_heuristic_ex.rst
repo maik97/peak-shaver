@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Agent that uses a heuristic
-===========================
+Heuristic Approches
+===================
 
 .. literalinclude:: ../../peak-shaver/example_agent_heuristic.py
