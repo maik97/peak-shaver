@@ -37,7 +37,7 @@ class Logger(object):
 
     def add_to_dict(self, tag, value):
         '''
-        Triggers each step in :meth:`log_scalar` when ``only_per_episode=True``. Temporarily stores the value from the step in a dictionary.
+        Triggers each step in :meth:`logger.Logger.log_scalar` when ``only_per_episode=True``. Temporarily stores the value from the step in a dictionary.
         
         Args:
             tag (string): Name of the scalar
@@ -51,7 +51,7 @@ class Logger(object):
 
     def get_from_dict(self, tag):
         '''
-        Triggers at the end of an episode in :meth:`log_scalar` when ``only_per_episode=True``. Reads the dictionary and calculates the mean before deleting the values.
+        Triggers at the end of an episode in :meth:`logger.Logger.log_scalar` when ``only_per_episode=True``. Reads the dictionary and calculates the mean before deleting the values.
         Args:
             tag (string): Name of the scalar
 
