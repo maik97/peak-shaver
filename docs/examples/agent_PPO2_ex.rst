@@ -6,6 +6,6 @@
 Proximal Policy Optimization
 ============================
 
-.. literalinclude:: ../../peak-shaver/example_agent_PPO2.py
+.. literalinclude:: ../docs_snippets/example_PPO2.py
 
 

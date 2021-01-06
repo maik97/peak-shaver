@@ -6,4 +6,4 @@
 Deep Q-Learning with Multi-Step-Learning
 ========================================
 
-.. literalinclude:: ../../peak-shaver/example_agent_multistep.py
+.. literalinclude:: ../docs_snippets/example_dqn_multistep.py

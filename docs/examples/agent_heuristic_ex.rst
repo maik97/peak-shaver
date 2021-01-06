@@ -6,4 +6,4 @@
 Heuristic Approches
 ===================
 
-.. literalinclude:: ../../peak-shaver/example_agent_heuristic.py
+.. literalinclude:: ../docs_snippets/example_heuristic.py

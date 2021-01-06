@@ -6,4 +6,4 @@
 Deep Q-Learning
 ===============
 
-.. literalinclude:: ../../peak-shaver/example_agent_deep_q.py
+.. literalinclude:: ../docs_snippets/example_dqn.py

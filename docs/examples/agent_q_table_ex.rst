@@ -6,5 +6,5 @@
 Basic Q-Learning
 ================
 
-.. literalinclude:: ../../peak-shaver/example_agent_q_table.py
+.. literalinclude:: ../docs_snippets/example_q_table.py
 

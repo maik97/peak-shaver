@@ -6,4 +6,4 @@
 Deep Q-Learning with LSTM integration
 =====================================
 
-.. literalinclude:: ../../peak-shaver/example_agent_lstm_q.py
+.. literalinclude:: ../docs_snippets/example_dqn_lstm.py
