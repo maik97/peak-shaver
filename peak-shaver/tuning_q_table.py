@@ -1,5 +1,5 @@
 '''
-Example of an RL-Agent that uses the basic Q-Table.
+Parameter tuning: RL-Agent that uses the basic Q-Table.
 '''
 import numpy as np
 from datetime import datetime
