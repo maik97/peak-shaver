@@ -55,7 +55,7 @@ class Q_Learner:
         elif load_table == None:
             self.Q_table        = Q_table # each dimension ∈ [0,0.05,...,1] with standart settings
         else:
-        	with h5py.File(D_PATH+'agent-models/'+load_table, 'r') as hf:
+            with h5py.File(D_PATH+'agent-models/'+load_table, 'r') as hf:
                 self.Q_table = hf[:][:]
 
         # Pass logger object:

@@ -289,7 +289,7 @@ class mainDataset:
             # else machine is inactive:
             else:
                 aktivierung = 0 
-:
+
             aktivierungszeit.append(aktivierung)
         return aktivierungszeit
 

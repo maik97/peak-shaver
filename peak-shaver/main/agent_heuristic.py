@@ -1,5 +1,5 @@
 '''
-There are four main heuristic approaches, with the goal to minimize the maximum energy peak. You can define those in the class with the parameter ``HEURISTIC_TYPE```.
+There are four main heuristic approaches, with the goal to minimize the maximum energy peak. You can define those in the class with the parameter ``HEURISTIC_TYPE``.
 
 1. `Single-Value-Heuristic` approximates the best global value (for all steps), that is used to determine the should energy consumption from the grid.
 
@@ -25,7 +25,7 @@ class heurisitc:
 
     Args:
         env (object): Takes in a GYM environment, use the common_env to simulate the HIPE-Dataset.
-        HEURISTIC_TYPE (string): Determines the type of heuristic to be used: 'Single-Value-Heuristic', 'Perfekt-Pred-Heuristic', 'LSTM-Pred-Heuristic'
+        HEURISTIC_TYPE (string): Determines the type of heuristic to be used: 'Single-Value-Heuristic', 'Perfekt-Pred-Heuristic', 'LSTM-Pred-Heuristic' or 'Practical-Heuristic'
         threshold_dem (float): Determines the global maximum power consumption that shpuld be used from the grid (global SECG).
         use_SMS (bool): Can be used to deactivate the flying wheel when set to `False`
         use_LION (bool): Can be used to deactivate the lithium-ion battery when set to `False`
@@ -70,7 +70,7 @@ class heurisitc:
 
     def global_single_value_for_reward(self, sum_reward, positivity_value=10000):
         '''
-        Class-Function: Uses the mean-value theorem to calculate a new SECG at the at of each episode, instead of minimizing the maximum peak, this function maximizes the sum of rewards.
+        Class-Function: Uses the mean-value theorem to calculate a new SECG at the end of each episode, instead of minimizing the maximum peak, this function maximizes the sum of rewards.
         
         Args:
             sum_reward (float): Takes in the sum of rewards after each episode
@@ -131,10 +131,10 @@ class heurisitc:
 
 
     def find_solution_for_imperfect_pred(self,LSTM_column):
-        '''Funtion to prepare the SECG for each step, used when ``HEURISTIC_TYPE='Perfekt-Pred-Heuristic'``. Used before iterating through each step.
+        '''Funtion to prepare the SECG for each step, used when ``HEURISTIC_TYPE='LSTM-Pred-Heuristic'``. Used before iterating through each step.
 
         Args:
-            LSTM_column (array): Array that represents the predicted machine power consumption at each step
+            LSTM_column (string): Name of the column in the passed dataframe `df`, this column has to contain the predictions you want to use.
         '''
         print('Calculating optimal actions for perfect predictions...')
 
@@ -167,7 +167,7 @@ class heurisitc:
         self.current_step = 0
         return power_to_shave
 
-    def find_practical_solution(self, LSTM_column='seq_max'):
+    def find_practical_solution(self, LSTM_column):
         '''
         Funtion to prepare the SECG for each step, used when ``HEURISTIC_TYPE='Practical-Heuristic'``. Used before iterating through each step.
 
@@ -233,7 +233,13 @@ class heurisitc:
 
 
     def printer(self, i, max_i):
-        '''Helper function to print helpful information about the mean-value process at the process bar'''
+        '''
+        Helper function to print helpful information about the mean-value process at the process bar
+        
+        Args:
+            i (int): Current iteration step
+            max_i (int): The number of all iterations
+        '''
         if self.HEURISTIC_TYPE == 'Single-Value-Heuristic':
             cm.print_progress("Target Demand - {}, Progress".format(self.global_zielverbrauch), i, max_i)
         elif self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
@@ -247,7 +253,7 @@ class heurisitc:
         Main function that tests the chosen heursitic
 
         Args:
-            epochs (int): Number of epochs. Note that this should be one dor all heuristics except ``HEURISTIC_TYPE='Single-Value-Heuristic'`` and ``HEURISTIC_TYPE='Single-Value-Heuristic-Reward'``.
+            epochs (int): Number of epochs. Note that this should be one for all heuristics except ``HEURISTIC_TYPE='Single-Value-Heuristic'`` and ``HEURISTIC_TYPE='Single-Value-Heuristic-Reward'``.
             LSTM_column (string): Name of the column in the passed dataframe `df`, this column has to contain the predictions you want to use.
         '''
         # Check if the heuristic needs preparation:
