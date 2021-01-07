@@ -15,7 +15,7 @@ class Logger(object):
 
     Args:
         NAME (string): Name of the model
-        D_PATH (string): Path that indicates which dataset is used. Use `_BIG_D/` for the full dataset and `_small_d` for the small dataset, if you followed the propesed folder structure.
+        D_PATH (string): Path that indicates which dataset is used. Use `_BIG_D/` for the full dataset and `_small_d/` for the small dataset, if you followed the propesed folder structure.
         only_per_episode (bool): If `True` logs will only be saved once per episode instead of every step. This can save space since the log files can get pretty big for training processes with millions of steps.
     """
 

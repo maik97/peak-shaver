@@ -20,7 +20,7 @@ class mainDataset:
     '''This class is used to create the main dataset from wich the inputs for ``wahrsager`` and any of the agents can be chosen from.
 
     Args:
-        D_PATH (string): Path that indicates which dataset is used. Use `'_BIG_D/'` for the full dataset and `'_small_d' for the small dataset, if you followed the propesed folder structure.
+        D_PATH (string): Path that indicates which dataset is used. Use `'_BIG_D/'` for the full dataset and `'_small_d/'` for the small dataset, if you followed the propesed folder structure.
         period_string_min (string): Sets the time-period for the dataset. The string should look like this: ``xmin`` where x are the minutes of one period.
         full_dataset (bool): Set this to ``True`` if you are using the full dataset and ``false`` otherwis
     '''
@@ -42,7 +42,7 @@ class mainDataset:
         return self.D_PATH
 
     def coulmn_to_smoothed_period_df(self, dataset_name, coulmn_name, c_num=None, c_total=None): # returns Datafram: Strombedarf (nur noch eine Spalte, Index = SensorDateTime, neuerstellt)
-        ''' Trys to open the dataset for a specific machine that is already smoothed to the time-period. Creates a new dataset if a dataset for the given time-period can not be opened.
+        ''' Tries to open the dataset for a specific machine that is already smoothed to the time-period. Creates a new dataset if a dataset for the given time-period can not be opened.
         Used by :meth:`schaffer.mainDataset.smoothed_df`.
 
         Args:
@@ -108,7 +108,7 @@ class mainDataset:
 
 
     def smoothed_df(self): # returns geglätten Dataframe für alle Maschinen (komplette Tabelle, Index = SensorDateTime, neuerstellt)
-        ''' Trys to open the merged and smoothed dataset that includes all machines. Creates a new dataset if the dataset can not be opened.
+        ''' Tries to open the merged and smoothed dataset that includes all machines. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.coulmn_to_smoothed_period_df` to smooth and :meth:`schaffer.mainDataset.merge_columns_to_df` to merge, when creating a new dataset.
 
         Returns:
@@ -170,7 +170,7 @@ class mainDataset:
 
 
     def load_total_power(self):
-        ''' Trys to open the dataset for the sum of all power requirements which are not normalized. Creates a new dataset if the dataset can not be opened.
+        ''' Tries to open the dataset for the sum of all power requirements which are not normalized. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.smoothed_df` when creating a new dataset.
 
         Returns:
@@ -215,7 +215,7 @@ class mainDataset:
 
 
     def normalized_df(self, drop_main_terminal=False):
-        ''' Trys to open the normalized dataset that includes all machines. Creates a new dataset if the dataset can not be opened.
+        ''' Tries to open the normalized dataset that includes all machines. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.normalize` to normalize when creating a new dataset.
 
         Returns:
@@ -295,7 +295,7 @@ class mainDataset:
 
 
     def norm_activation_time_df(self):
-        ''' Trys to open the normalized dataset that includes all activation times for the machines. Creates a new dataset if the dataset can not be opened.
+        ''' Tries to open the normalized dataset that includes all activation times for the machines. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.aktiverungszeit_berechnen` to calculate the activation time and :meth:`schaffer.mainDataset.normalize` to normalize, when creating a new dataset.
 
         Returns:
@@ -413,7 +413,7 @@ class lstmInputDataset:
     '''This class is used to create the LSTM-dataset as the inputs for ``wahrsager``.
 
     Args:
-        main_dataset (object): Takes in :class:`schaffer.MainDataset`
+        main_dataset (object): Takes in :class:`schaffer.mainDataset`
         df (dataframe): The dataframe return by the main_dataset
         num_past_periods (int): The sequende of past periods that will be used as input for an LSTm-network in ``wahrsager``
         '''
@@ -432,7 +432,7 @@ class lstmInputDataset:
 
 
     def rolling_mean_training_data(self):
-        ''' Trys to open an LSTM-input-dataset that was transformed with a `rolling mean` operation with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
+        ''' Tries to open an LSTM-input-dataset that was transformed with a `rolling mean` operation with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for the given paramerters.
 
         Returns:
@@ -471,7 +471,7 @@ class lstmInputDataset:
 
 
     def rolling_max_training_data(self):
-        ''' Trys to open an LSTM-input-dataset that was transformed with a `rolling max` operation with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
+        ''' Tries to open an LSTM-input-dataset that was transformed with a `rolling max` operation with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for the given paramerters.
 
         Returns:
@@ -510,7 +510,7 @@ class lstmInputDataset:
 
 
     def normal_training_data(self):
-        ''' Trys to open an LSTM-input-dataset that was transformed with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
+        ''' Tries to open an LSTM-input-dataset that was transformed with the time-frame ``num_past_periods``. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for the given paramerters.
 
         Returns:
@@ -547,7 +547,7 @@ class lstmInputDataset:
 
 
     def sequence_training_data(self, num_seq_periods=12):
-        ''' Trys to open an LSTM-input-dataset has time-frame ``num_past_periods`` for the sequence-input and ``num_seq_periods`` for the label-sequence. Creates a new dataset if the dataset can not be opened.
+        ''' Tries to open an LSTM-input-dataset has time-frame ``num_past_periods`` for the sequence-input and ``num_seq_periods`` for the label-sequence. Creates a new dataset if the dataset can not be opened.
         Uses :meth:`schaffer.mainDataset.make_input_df` to setup a dataset for them given paramerters.
         
         Returns:
