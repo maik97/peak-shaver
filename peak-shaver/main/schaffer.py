@@ -16,9 +16,6 @@ except:
     from common_func import print_progress, make_dir, Timer
 
 
-# TO-DO:
-# statt global var lieber class
-
 class mainDataset:
     '''This class is used to create the main dataset from wich the inputs for ``wahrsager`` and any of the agents can be chosen from.
 
@@ -126,7 +123,7 @@ class mainDataset:
             print('Could not open:',self.D_PATH+'tables/'+self.period_string_min+'/smoothed_table.csv')
             print('Creating new smoothed_table.csv...')
 
-            # Der Zeitraum im Namen der beiden Datensätzen ist unterschiedlich:
+            # The time period of the big and small dataset are different:
             if self.full_dataset  == True:
                 zeitraum = '2017-10-01_lt_2018-01-01' # BIG_D
             else:
@@ -134,7 +131,7 @@ class mainDataset:
 
             original_path = 'hipe_cleaned_v1.0.1_geq_'+zeitraum+'/'
 
-            # Lade, bzw erstelle über den vorg. Zeitraum geglättete CSVs:
+            # Load or create smoothed tables for each machine
             main_terminal         = self.coulmn_to_smoothed_period_df(original_path+'MainTerminal_PhaseCount_3_geq_'+zeitraum,'main_terminal',1,11)
             chip_press            = self.coulmn_to_smoothed_period_df(original_path+'ChipPress_PhaseCount_3_geq_'+zeitraum,'chip_press',2,11)
             chip_saw              = self.coulmn_to_smoothed_period_df(original_path+'ChipSaw_PhaseCount_3_geq_'+zeitraum,'chip_saw',3,11)
@@ -147,7 +144,7 @@ class mainDataset:
             vacuum_pump_2         = self.coulmn_to_smoothed_period_df(original_path+'VacuumPump2_PhaseCount_2_geq_'+zeitraum,'vacuum_pump_2',10,11)
             washing_machine       = self.coulmn_to_smoothed_period_df(original_path+'WashingMachine_PhaseCount_3_geq_'+zeitraum,'washing_machine',11,11)
 
-            # Erstelle eine zusammengefügte Dataframe mit allen Maschinen:
+            # Merge all tables together:
             df = self.merge_columns_to_df(main_terminal,chip_press,1,10)
             df = self.merge_columns_to_df(df,chip_saw,2,10)
             df = self.merge_columns_to_df(df,high_temperature_oven,3,10)
@@ -159,10 +156,10 @@ class mainDataset:
             df = self.merge_columns_to_df(df,vacuum_pump_2,9,10)
             df = self.merge_columns_to_df(df,washing_machine,10,10)
             
-            # Rauschen um Null entfernen:
+            # Remove noise around zero (It will be important to not have negative values):
             df[df<0.01] = 0
 
-            # Spechere zusammengefügtes Dataframe als csv:
+            # Save merged dataframe as csv:
             df.to_csv(self.D_PATH+'tables/'+self.period_string_min+'/smoothed_table.csv')
             timer_smooth.stop()
             print('Created smoothed_table.csv, elapsed time:', timer_smooth.elapsed_time_string())
@@ -187,11 +184,11 @@ class mainDataset:
             print('Creating new total_power.csv...')
 
             df = self.smoothed_df()
-            # Berechne Summe des insgesamt benötigten Stroms:
+            # Calculate sum of power consumption:
             total_power = pd.DataFrame({
                 'total_power' : df.sum(axis = 1)
                 }, index = df.index)
-            # Speichere Summe des insgesamt benötigten Stroms als CSV:
+            # Save sum of power consumption:
             total_power.to_csv(self.D_PATH+'tables/'+self.period_string_min+'/total_power.csv')
 
         print('Table '+self.D_PATH+'tables/'+self.period_string_min+'/total_power.csv loaded successfully')
@@ -206,12 +203,12 @@ class mainDataset:
         Returns:
             array: A normalized array of the column that can be interpreted as a new (updated) column
         '''
-        # Maximaler Wert im ganzen Array:
+        # Calculate max of the array:
         max_wert = np.max(column)
-        # Falls Werte exisitieren, d.h. kompletter Array ist nicht gleich Null:
+        # Check if values above 0 exists in the array:
         if max_wert != 0:
             normalisiert_array = column / max_wert 
-        # Sonst ist Normalisierung auch gleich Null:
+        # Calculate normalization:
         else:
             normalisiert_array = column
         return normalisiert_array
@@ -222,7 +219,7 @@ class mainDataset:
         Uses :meth:`schaffer.mainDataset.normalize` to normalize when creating a new dataset.
 
         Returns:
-            dataframe: The normalized dataset that includes all machines.
+            drop_main_terminal: Removes the column main_terminal when set to `True`
         '''
         # main terminal könnte statt gedropped zu weren auch "berichtigt" werden indam man minus des rest rechnen
         try:
@@ -241,7 +238,8 @@ class mainDataset:
 
             df          = self.smoothed_df()
             total_power = self.load_total_power()
-            # Normalisiere Maschinen-Dataframe:
+            
+            # Normalize machine dataframe:
             norm_df = pd.DataFrame({
                 'norm_total_power'           : self.normalize(total_power['total_power']),
                 'norm_main_terminal'         : self.normalize(df['main_terminal']), 
@@ -260,7 +258,6 @@ class mainDataset:
             if drop_main_terminal == False: 
                 norm_df.to_csv(self.D_PATH+'tables/'+self.period_string_min+'/normalized_table.csv')
             else:
-                 # main terminal könnte statt gedropped zu weren auch "berichtigt" werden indam man minus des rest rechnen
                 norm_df = norm_df.drop(['norm_main_terminal'])
                 norm_df.to_csv(self.D_PATH+'tables/'+self.period_string_min+'/normalized_table_without_main_terminal.csv')
         
@@ -281,18 +278,18 @@ class mainDataset:
         Returns:
             list: List that counts the periods since when the machine is active,can be interpreted as a new (updated) column
         '''
-        # Initialisiere:
+        # Initialise:
         aktivierungszeit = []
         aktivierung = 0
-        # Iteration über jede Zeile der bestimmten Spalte:
+        # Iteration trough each row of each column:
         for zeile in column:
-            # Wenn Zeile nicht Null, dann ist die Maschine aktiv:
+            # If row is not 0, machine is active:
             if zeile != 0:
-                aktivierung += 1 # Desto länger die Maschine aktiv ist, desto höher die Summe
-            # Wenn Zeile Null, dann ist Maschine inaktiv:
+                aktivierung += 1
+            # else machine is inactive:
             else:
-                aktivierung = 0 # Setze 'Summe' wieder auf Null
-            # Füge den Summen-Wert der Aktivierung dem Array hinzu:
+                aktivierung = 0 
+:
             aktivierungszeit.append(aktivierung)
         return aktivierungszeit
 
@@ -311,9 +308,9 @@ class mainDataset:
             print('Creating new norm_activ_df.csv...')
 
             df = self.smoothed_df()
-            # Normalisiere Aktivitätszeiten:
+            # Normalise activation times:
             norm_aktiv_df = pd.DataFrame({
-                #'norm_aktiv_t_main_terminal'        : 1, # weil main terminal eh immer an ist
+                #'norm_aktiv_t_main_terminal'        : 1, # since main terminal is always active
                 'norm_aktiv_t_chip_press'            : self.normalize(self.aktiverungszeit_berechnen(df['chip_press'])),
                 'norm_aktiv_t_chip_saw'              : self.normalize(self.aktiverungszeit_berechnen(df['chip_saw'])),
                 'norm_aktiv_t_high_temperature_oven' : self.normalize(self.aktiverungszeit_berechnen(df['high_temperature_oven'])),
@@ -339,7 +336,7 @@ class mainDataset:
         Returns:
             dataframe: The new dataframe with the added column
         '''
-        # Tageszeit-Format in Zahl:
+        # Day time conversion to float:
         df['time'] = df.index.time
         df['time'] = self.normalize(df['time'].index.hour * 60 + df['time'].index.minute + df['time'].index.second/60)
         return df
@@ -361,9 +358,9 @@ class mainDataset:
         if day_diff == 'weekday-normal':
             df['day'] = df.index.weekday * 0.1
         elif day_diff == 'weekend-binary':
-            # Arbeitstage = 1:
+            # work day = 1:
             df['day'][df['day'] < 5] = 1 
-            # Wochenende = 0:
+            # weekend = 0:
             df['day'][df['day'] >= 5] = 0
         elif day_diff == 'holiday-weekend':
             feiertag_liste = ['2017-10-02','2017-10-03','2017-10-30','2017-10-31',
@@ -416,14 +413,10 @@ class lstmInputDataset:
     '''This class is used to create the LSTM-dataset as the inputs for ``wahrsager``.
 
     Args:
-        D_PATH (string): Path that indicates which dataset is used. Use `'_BIG_D/'` for the full dataset and `'_small_d' for the small dataset, if you followed the propesed folder structure.
-        period_string_min (string): Sets the time-period for :class:`schaffer.mainDataset`. The string should look like this: ``xmin`` where x are the minutes of one period.
-        full_dataset (bool): Set this to ``True`` if you are using the full dataset and ``false`` otherwise. Parameter that will be used by :class:`schaffer.mainDataset`.
-        num_past_periods (int): The size of the input-sequence for the LSTM.
-        drop_main_terminal (bool): Parameter will be used for :meth:`schaffer.mainDataset.make_input_df`: The column main_terminal will be removed from the dataset if set to `True`.
-        use_time_diff (bool): Parameter will be used for :meth:`schaffer.mainDataset.make_input_df`:  Uses :meth:`schaffer.mainDataset.add_day_time_difference` when set to `True`.
-        day_diff (string): Parameter will be used for :meth:`schaffer.mainDataset.make_input_df`: Uses :meth:`schaffer.mainDataset.add_day_difference` when set to `'weekday-normal'`. `'weekend-binary'` or `'weekend-binary`. Does not use this function if set to `None`.
-    '''
+        main_dataset (object): Takes in :class:`schaffer.MainDataset`
+        df (dataframe): The dataframe return by the main_dataset
+        num_past_periods (int): The sequende of past periods that will be used as input for an LSTm-network in ``wahrsager``
+        '''
 
     def __init__(self, main_dataset, df, num_past_periods=12):
 
@@ -576,7 +569,6 @@ class lstmInputDataset:
                 label_data = np.append(label_data, sequence_outputs[i:i+num_seq_periods])
                 self.timer.print_time_progress('Creating label data (sequence)', i, len(sequence_outputs[:-self.num_past_periods]))
 
-            #num_inputs_t = len(sequence_outputs[0]) 
             num_t = len(sequence_outputs[num_seq_periods:])
             label_data = np.reshape(label_data, (num_t, num_seq_periods))[self.num_past_periods:][self.num_past_periods:]
 
@@ -600,6 +592,9 @@ class lstmInputDataset:
 
 
 class DatasetStatistics:
+    '''
+    MOVE TO MISC!!! (not needed ion the main code, just used to make graphs for the study project)
+    '''
 
     def __init__(self, D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True):
 
