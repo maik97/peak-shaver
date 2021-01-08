@@ -10,23 +10,10 @@ class reward_maker():
 
     Args:
         LOGGER (object): Logs scalars to tensorboard without tensor op, see :class:`logger.Logger`
-        COST_TYPE (string): Mode by which costs are calculated
-            'exact_costs':
-            'yearly_costs':
-            'max_peak_focus':
-        R_TYPE (string): Mode by which rewards are calulated:
-            'costs_focus':
-            'positive':
-            'savings_focus': (use 'yearly_costs' as COST_TYPE when using this mode)
-        R_HORIZON (string): Mode that determines the range of steps to calculate the reward
-            'single_step': calculates reward at each step seperatly
-            'episode': calculates the reward for complete dataset
-            integer for multi-step: Number of steps for multi-step rewards
-        M_STRATEGY (string):
-            None: use None when R_HORIZON is set to 'single_step'
-            'sum_to_terminal': Multi-step reward as described in paper ... 
-            'average_to_neighbour': Multi-step reward as described in paper ... 
-            'recurrent_to_Terminal' Multi-step reward as described in paper ... 
+        COST_TYPE (string): Mode by which costs are calculated. Use'exact_costs', 'yearly_costs' or 'max_peak_focus'.
+        R_TYPE (string): Mode by which rewards are calulated. Use 'costs_focus', 'positive' or 'savings_focus': (use 'yearly_costs' as COST_TYPE when using this mode)
+        R_HORIZON (string): Mode that determines the range of steps to calculate the reward. Use 'single_step': calculates reward at each step seperatly, 'episode': calculates the reward for complete dataset, or an integer for multi-step: Number of steps for multi-step rewards.
+        M_STRATEGY (string): Use None when R_HORIZON is set to 'single_step'. For multi-step rewards use 'sum_to_terminal', 'average_to_neighbour' or 'recurrent_to_Terminal'.
         cost_per_kwh (float): Cost of 1 kwh in €
         LION_Anschaffungs_Preis (float): Cost of one lithium-ion battery in €
         LION_max_Ladezyklen (int): Number of maximum charging cycles of the lithium-ion battery
@@ -135,10 +122,8 @@ class reward_maker():
         '''
         Sets reward range for a GYM environmet
 
-        Parameters
-        ---------
-        x
-            Integer x sets range to (-x,x)
+        Args:
+            x (int): Integer x sets range to (-x,x)
         '''
         MIN_REWARD = -x
         MAX_REWARD = x
