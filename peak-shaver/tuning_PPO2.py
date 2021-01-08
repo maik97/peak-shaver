@@ -26,6 +26,8 @@ def run_agent(name='', n_steps=2500):
     # Import dataset and logger based on the common settings
     df, power_dem_df, logger = dataset_and_logger(NAME)
 
+    epochs = 1
+
 
     # Setup reward_maker
     r_maker = reward_maker(
@@ -60,7 +62,7 @@ def run_agent(name='', n_steps=2500):
 
     model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=D_PATH+'agent-logs/', n_steps=2500)
     #model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=DATENSATZ_PATH+'LOGS/agent_logging',callback=checkpoint_callback, n_steps=2500)
-    model.learn(total_timesteps=2600000, tb_log_name=NAME)
+    model.learn(total_timesteps=epochs*len(df), tb_log_name=NAME)
     model.save(D_PATH+"agent-models/"+NAME)
     #obs = env.reset()
     #for i in range(MAX_STEPS*3):
@@ -68,6 +70,8 @@ def run_agent(name='', n_steps=2500):
     #  obs, rewards, done, info = env.step(action)
     #  env.render()
 
+
+run_agent()
 
 
 def parameter_tuning():

@@ -29,7 +29,7 @@ def run_agent(name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000,
     # Train every x number of steps:
     update_num       = 1000
     # Number of epochs and steps:
-    epochs           = 100
+    epochs           = 1
     epochs_len       = len(df)
     max_steps        = epochs*epochs_len
     # Horizon for Multi-Step-Rewards and/or LSTM-Implementation:
@@ -74,12 +74,14 @@ def run_agent(name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000,
         lr             = 0.5,
         tau            = 0.125,
         # jede Dimension jeweils ∈ [0,0.05,...,1]
-        Q_table        = np.zeros((22,22,22,22,22,22)))
+        #Q_table        = np.zeros((22,22,22,22,22,22))
+        )
 
 
     training(agent, epochs, update_num, num_warmup_steps)
     testing(agent)
 
+run_agent()
 
 def parameter_tuning():
 

@@ -27,7 +27,7 @@ def run_agent(name='', horizon=12):
     # Train every x number of steps:
     update_num       = 50
     # Number of epochs and steps:
-    epochs           = 1000
+    epochs           = 1
     # Horizon for Multi-Step-Rewards and/or LSTM-Implementation:
     horizon = 12
     # input_sequence = 1
@@ -79,6 +79,7 @@ def run_agent(name='', horizon=12):
     training(agent, epochs, update_num, num_warmup_steps)
     testing(agent)
 
+run_agent()
 
 def parameter_tuning():
 
