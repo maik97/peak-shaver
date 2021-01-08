@@ -77,6 +77,7 @@ def run_agent(name='', input_sequence=12):
 
 
     training(agent, epochs, update_num, num_warmup_steps)
+    env.use_all_data()
     testing(agent)
 
 run_agent()

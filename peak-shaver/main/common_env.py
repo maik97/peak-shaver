@@ -29,7 +29,7 @@ class common_env(gym.Env):
         PERIODEN_DAUER (integer): Period-lenght of one step in minutes
         ACTION_TYPE (string): Sets the actions as discrete or continuous inputs. Use  'discrete' or 'contin'.
         reward_maker (object): Takes the used reward_maker object
-        AGENT_TYPE (string): Inititates the environment to inputs from either heurtistic or RL-Agents. Use 'heuristic' or 'normal'.
+        AGENT_TYPE (string): Inititates the environment to inputs from either heurtistic, the RL-Agents or from ``stable-baselines``. Use 'heuristic', 'normal' or 'stable_baseline'.
         max_ziel (float): Defines the maximum possible SECG (in kw), will only be used when AGENT_TYPE is set to 'normal'.
         min_ziel (float): Defines the minimal possible SECG (in kw), will only be used when AGENT_TYPE is set to 'normal'.
 
@@ -48,13 +48,16 @@ class common_env(gym.Env):
             # set max_ziel = 1 and min_ziel = 0, if you want to pass zielnetzverbrauch as value
             max_ziel             = 50,
             min_ziel             = 25,
-            measure_intervall    = 15):
+            measure_intervall    = 15,
+            val_split            = 0.1,
+            ):
         
         super(common_env, self).__init__()
 
 
         # Parameter Datensatz und Logging:
-        self.df                    = df
+        self.og_df                 = df
+        self.df                    = df[:-int(val_split*len(df))]
         self.power_dem_arr         = power_dem_df.to_numpy()
         self.rolling_power_dem     = power_dem_df.rolling(int(measure_intervall/PERIODEN_DAUER)).mean().fillna(0).to_numpy()
         self.input_list            = input_list
@@ -74,14 +77,14 @@ class common_env(gym.Env):
         self.input_dim             = len(self.input_list) + 2 # jeweils plus SoC für beide Akkus
         self.discrete_space        = discrete_space
 
-        if AGENT_TYPE == 'normal':
+        if AGENT_TYPE == 'normal' or AGENT_TYPE == 'stable_baselines':
             self.max_ziel          = max_ziel
             self.min_ziel          = min_ziel
         elif AGENT_TYPE == 'heuristic':
             self.max_ziel          = 1
             self.min_ziel          = 0
         else:
-            raise Exception("AGENT_TYPE not understood. AGENT_TYPE must be: 'normal', 'heuristic'")
+            raise Exception("AGENT_TYPE not understood. AGENT_TYPE must be: 'normal', 'heuristic or 'stable_baselines''")
 
         # Init Agent:
         if self.ACTION_TYPE == 'discrete':
@@ -140,6 +143,14 @@ class common_env(gym.Env):
 
         self.steps_per_week        = 10080 / self.PERIODEN_DAUER # min_pro_woche/Periodendauer
         self.steps_per_day         = 1440  / self.PERIODEN_DAUER # min_pro_trag/Periodendauer
+
+
+    def use_only_val_data(self):
+        self.df = df[int(val_split*len(self.og_df)):]
+
+
+    def use_all_data(self):
+        self.df = self.og_df
 
 
     def check_max_peak(self, past_max_peak):
@@ -403,6 +414,8 @@ class common_env(gym.Env):
                 return obs, reward, done, {}
         elif self.AGENT_TYPE == 'heuristic':
             return obs, reward, done, episode_max_peak, {}
+        elif self.AGENT_TYPE == 'stable_baselines':
+            return obs, reward, done, {}
 
 
     def get_multi_step_reward(self, step_counter_episode):

@@ -140,7 +140,7 @@ class DQN:
         input_dim = (self.input_sequence, self.env.observation_space.shape[0])
         print(input_dim)
         model = Sequential()
-        model.add(LSTM(lstm_size, input_shape=(self.input_sequence, self.env.observation_space.shape[0]), activation=activation))
+        model.add(LSTM(lstm_size, input_shape=(self.input_sequence, self.env.observation_space.shape[0])))
         model.add(Dense(hidden_size, activation=activation))
         model.add(Dense(self.env.action_space.n))
         model.compile(loss=loss, optimizer=Adam(lr=lr))

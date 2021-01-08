@@ -314,33 +314,44 @@ def training(agent, epochs=1000, update_num=1000, num_warmup_steps=100, epoch_sa
             agent.save_agent(e)
 
 
-def testing(agent, random_start=False, SoC_full=True):
+def testing(agent, epochs=1, random_start=False, SoC_full=True, use_stable_b=False, env=None):
     '''
     General function for the learning purposes, which can be used by all agents except those from ``stable-baselines``
     
     Args:
         random_start (bool): If set to `True` the epoch will start at a random point in the dataset
         SoC_full (bool): If set to `True` the batteries will be full at the beginning of an epoch
+        use_stable_b (bool): Set this to `True` if you are using a model from ``stable-baselines``
+        df (dataframe): Needs to be passed if xou are using ``stable-baselines``
     '''
-    horizon   = agent.__dict__['horizon']
-    env       = agent.__dict__['env']
-    epoch_len = len(env.__dict__['df'])
+    if use_stable_b == False:
+        env       = agent.__dict__['env']
+        epoch_len = len(env.__dict__['df'])
+    else:
+        epoch_len = len(env.__dict__['df'])
 
-    print('Testing:')
+    print('Testing for {} epochs...'.format(epochs))
 
     if random_start == False:
         cur_state = env.set_soc_and_current_state(SoC_full)
     else:
         cur_state = env.reset()
 
-    for step in range(epoch_len):
+    for e in range(epochs):
+        for step in range(epoch_len):
 
-        action                          = agent.act(cur_state, test_mode=True)
-        new_state, reward, done, sce, _ = env.step(action)
-        new_state                       = new_state
-        agent.remember(cur_state, action, reward, new_state, done, sce)
-        
-        cur_state = new_state
+            if use_stable_b == False:
+                action                          = agent.act(cur_state, test_mode=True)
+                new_state, reward, done, sce, _ = env.step(action)
+                new_state                       = new_state
+                agent.remember(cur_state, action, reward, new_state, done, sce)
 
-        if done:
-            break
+            else:
+                action, _states = agent.predict(cur_state)
+                new_state, reward, done, _ = env.step(action)
+
+
+            cur_state = new_state
+
+            if done:
+                break

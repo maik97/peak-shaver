@@ -12,7 +12,7 @@ from stable_baselines import PPO2
 
 from datetime import datetime
 
-from common_settings import dataset_and_logger
+import common_settings as cms
 from main.common_func import max_seq, mean_seq, training, testing
 from main.reward_maker import reward_maker
 from main.common_env import common_env
@@ -24,7 +24,7 @@ def run_agent(name='', n_steps=2500):
     NAME   = 'PPO2'+name+now.strftime("_%d-%m-%Y_%H-%M-%S")
 
     # Import dataset and logger based on the common settings
-    df, power_dem_df, logger = dataset_and_logger(NAME)
+    df, power_dem_df, logger = cms.dataset_and_logger(NAME)
 
     epochs = 1
 
@@ -52,23 +52,21 @@ def run_agent(name='', n_steps=2500):
         max_LION_SoC   = 54,
         PERIODEN_DAUER = 5,
         ACTION_TYPE    = 'contin',
-        OBS_TYPE       = 'contin')
+        OBS_TYPE       = 'contin',
+        AGENT_TYPE     = 'stable_baselines')
 
     # Lade vektorisierte Environment
-    env = DummyVecEnv([lambda: env])
+    dummy_env = DummyVecEnv([lambda: env])
 
-    checkpoint_callback = CheckpointCallback(save_freq=100000, save_path=D_PATH+'agent-models/',
+    checkpoint_callback = CheckpointCallback(save_freq=100000, save_path=cms.__dict__['D_PATH']+'agent-models/',
                                              name_prefix=NAME)
 
-    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=D_PATH+'agent-logs/', n_steps=2500)
+    model = PPO2(MlpPolicy, dummy_env, verbose=1, tensorboard_log=cms.__dict__['D_PATH']+'agent-logs/', n_steps=2500)
     #model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=DATENSATZ_PATH+'LOGS/agent_logging',callback=checkpoint_callback, n_steps=2500)
-    model.learn(total_timesteps=epochs*len(df), tb_log_name=NAME)
-    model.save(D_PATH+"agent-models/"+NAME)
-    #obs = env.reset()
-    #for i in range(MAX_STEPS*3):
-    #  action, _states = model.predict(obs)
-    #  obs, rewards, done, info = env.step(action)
-    #  env.render()
+    model.learn(total_timesteps=epochs*len(env.__dict__['df']), tb_log_name=NAME)
+    model.save(cms.__dict__['D_PATH']+"agent-models/"+NAME)
+    
+    testing(model, use_stable_b=True, env=env)
 
 
 run_agent()
