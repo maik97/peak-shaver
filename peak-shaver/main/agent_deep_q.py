@@ -138,11 +138,12 @@ class DQN:
             lstm_size (int): Number of LSTM layers, when ``model_type=lstm``
         '''
         input_dim = (self.input_sequence, self.env.observation_space.shape[0])
+        print(input_dim)
         model = Sequential()
-        model.add(LSTM(lstm_size, input_dim=input_dim, activation=activation))
+        model.add(LSTM(lstm_size, input_shape=(self.input_sequence, self.env.observation_space.shape[0]), activation=activation))
         model.add(Dense(hidden_size, activation=activation))
         model.add(Dense(self.env.action_space.n))
-        model.compile(loss=loss, optimizer=Adam(lr=model_lr))
+        model.compile(loss=loss, optimizer=Adam(lr=lr))
         return model
 
 
@@ -158,8 +159,8 @@ class DQN:
         '''
         # Make multi-state-input array:
         state_array = []
-        for mem in memory[-self.input_sequence+1:]:
-            state, action, reward, new_state, done, step_counter_episode = mem
+        for i in range(self.input_sequence-1):
+            state, action, reward, new_state, done, step_counter_episode = self.memory[-self.input_sequence+1+i]
             state_array = np.append(state_array, state)
         state_array = np.append(state_array, cur_state)
 
@@ -170,7 +171,7 @@ class DQN:
         return state_array
 
 
-    def act(self, state, random_mode=False):
+    def act(self, state, random_mode=False, test_mode=False):
         '''
         Function, in which the agent decides an action, either from greedy-policy or from prediction. Use this function when iterating through each step.
         
@@ -193,7 +194,8 @@ class DQN:
         
         # Random decision if action will be random:
         if np.random.random() < self.epsilon or random_mode == True:
-            return self.env.action_space.sample()
+            if test_mode == False:
+                return self.env.action_space.sample()
         
         # If action is not random:
         # Discrete states as input:
@@ -261,15 +263,15 @@ class DQN:
         # Make multi-state-input array:
         state_array     = []
         new_state_array = []
-        for mem in memory[i:i+self.input_sequence]:
-            state, action, reward, new_state, done, step_counter_episode = mem
+        for i in range(self.input_sequence):
+            state, action, reward, new_state, done, step_counter_episode = self.memory[-self.input_sequence+1+i]
             state_array     = np.append(state_array, state)
             new_state_array = np.append(new_state_array, new_state)
         
         # Reshape array that can be passed to an LSTM input:
         if self.model_type == 'lstm':
-            state_array     = state_array.reshape(-1,self.input_sequence,len(cur_state[0]))
-            new_state_array = new_state_array.reshape(-1,self.input_sequence,len(cur_state[0]))
+            state_array     = state_array.reshape(-1,self.input_sequence,len(state[0]))
+            new_state_array = new_state_array.reshape(-1,self.input_sequence,len(state[0]))
         
         return state_array, action, reward, new_state_array, done, step_counter_episode
 
@@ -305,12 +307,17 @@ class DQN:
                 Q_future = max(self.target_model.predict(new_state)[0])
                 target[0][action] = reward + Q_future * self.gamma
 
-            state_batch = np.append(state_batch, state)
+            state_batch  = np.append(state_batch, state)
             target_batch = np.append(target_batch, target)
 
+
         # Reshaping
-        state_batch  = state_batch.reshape(-1,len(state[0]))
-        target_batch = target_batch.reshape(-1,len(target[0]))
+        if self.model_type != 'lstm':
+            state_batch  = state_batch.reshape(-1,len(state[0]))
+            target_batch = target_batch.reshape(-1,len(target[0]))
+        else:
+            state_batch  = state_batch.reshape(batch_size, len(state[0]),-1)
+            target_batch = target_batch.reshape(batch_size, len(target[0]))
 
         # Prepare agent status to log and print:
         name         = self.env.__dict__['NAME']
