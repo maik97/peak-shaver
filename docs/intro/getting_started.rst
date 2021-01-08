@@ -8,7 +8,7 @@ Getting Started Guide
 Installation and Dependencies
 *****************************
 
-You can download the zip file from the `github repository <https://github.com/maik97/peak-shaver>`_ (alternatively just clone the project to your own github) or run the command below if you have `git <https://git-scm.com/downloads>`_ installed. Since we want to encourage improvements of the project there won't be a pip available.
+You can download the zip file from the `github repository <https://github.com/maik97/peak-shaver>`_ (alternatively just clone the project to your own github) or run the command below if you have `git <https://git-scm.com/downloads>`_ installed.
 
 .. code-block:: console
    
@@ -30,7 +30,7 @@ If you dont know how to install those properly look up `pip <https://pip.pypa.io
 
 Note that ``tensorflow 1.9.0`` is an older version and only works with ``python 3.6``. The code of ``logger`` needs to be updated in order to be compatible with of ``tensorflow 2.x.x``.
 
-The dataset to simulate the can be downloaded here: `HIPE Dataset <https://www.energystatusdata.kit.edu/hipe.php>`_ . There are two different versions, one is the complete dataset over three months, the smaller one is just the first week.
+The dataset can be downloaded here: `HIPE Dataset <https://www.energystatusdata.kit.edu/hipe.php>`_ . There are two different versions, one is the complete dataset over three months, the smaller one is just the first week.
 
 Folder Structure
 ****************
