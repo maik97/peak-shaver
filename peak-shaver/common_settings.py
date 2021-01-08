@@ -2,6 +2,7 @@
 from main.schaffer import mainDataset, lstmInputDataset
 from main.wahrsager import wahrsager
 from main.logger import Logger
+from main.common_func import max_seq, mean_seq
 
 # Directory of the dataset:
 D_PATH = '_small_d/'

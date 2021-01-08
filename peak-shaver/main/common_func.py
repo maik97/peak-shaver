@@ -324,7 +324,7 @@ def testing(agent, random_start=False, SoC_full=True):
     '''
     horizon   = agent.__dict__['horizon']
     env       = agent.__dict__['env']
-    epoch_len = len(env.__dict__['epoch_len'])
+    epoch_len = len(env.__dict__['df'])
 
     print('Testing:')
 
