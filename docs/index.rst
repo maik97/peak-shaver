@@ -39,7 +39,6 @@ Contents
    modules/schaffer_doc
    modules/wahrsager_doc
    modules/common_env_doc
-   modules/reward_maker_doc
    modules/logger_doc
    modules/agent_heuristic_doc
    modules/agent_q_table_doc
