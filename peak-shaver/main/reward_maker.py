@@ -9,7 +9,7 @@ class reward_maker():
     Class for reward calculations. 
 
     Args:
-        LOGGER (object): Logs scalars to tensorboard without tensor op, see :class:`logger.Logger`
+        LOGGER (object): Logs scalars to tensorboard without tensor ops, see :class:`logger.Logger`
         COST_TYPE (string): Mode by which costs are calculated. Use'exact_costs', 'yearly_costs' or 'max_peak_focus'.
         R_TYPE (string): Mode by which rewards are calulated. Use 'costs_focus', 'positive' or 'savings_focus': (use 'yearly_costs' as COST_TYPE when using this mode)
         R_HORIZON (string): Mode that determines the range of steps to calculate the reward. Use 'single_step': calculates reward at each step seperatly, 'episode': calculates the reward for complete dataset, or an integer for multi-step: Number of steps for multi-step rewards.
@@ -21,8 +21,7 @@ class reward_maker():
         SMS_max_Nutzungsjahre (int): Number of years a flywheel storage can be used
         Leistungspreis (float): Cost of maximum peak per year calculated by €/kw 
         focus_peak_multiplier (float): Factor by which the peak-costs are multiplied, used when COST_TYPE is set to 'max_peak_focus'
-        logging_list (string):  Logs cost with :class:`logger.Logger`:
-            'exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step'
+        logging_list (list):  Logs cost with :class:`logger.Logger`. Possible strings in list: 'exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step'
         deactivate_SMS (bool): Can be used to deactivate the flying wheel when set to `True`
         deactivate_LION (bool): Can be used to deactivate the lithium-ion battery when set to `True`
     '''
