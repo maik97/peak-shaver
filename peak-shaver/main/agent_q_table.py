@@ -30,10 +30,10 @@ class Q_Learner:
         epsilon_decay (float): Factor by which epsilon decays, value between 0 and 1. Can also be set to `linear` when you want epsilon to decrease over all steps (In this case ``epsilon_min`` will not be used).
         lr (float): Sets the learning rate of the RL-Agent
         tau (float): Factor for copying weights from model network to target network
-        Q_table (array or list): Will be intepreted as a Q-Table when passing an array (all values should be initially set to zero) or will create a Q-Table when passing a list (list must be the shape for the Q-Table).
+        Q_table (array or list): Will be intepreted as a Q-Table when passing an array (all values should be initially set to zero) or will create a Q-Table when passing a list (list must be the shape for the Q-Table). If `None` is passed the Q-Table will be created automatically.
         load_table (string): Name of an existing Q-Table in `[D_PATH]/agent-models`. Loads a pre-trained table (Note that the table must be in .h5 format).
     """
-    def __init__(self, env, memory_len, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125, Q_table=[22,22,22,22,22], load_table=None):
+    def __init__(self, env, memory_len, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125, Q_table=None, load_table=None):
 
 
         self.env            = env
@@ -49,15 +49,23 @@ class Q_Learner:
         self.lr             = lr
         self.tau            = tau
 
-        # Create or loads Q-Table:
-        if isinstance(Q_table, list) and load_table == None:
-            self.Q_table    = np.zeros(Q_table)
-        elif load_table == None:
-            self.Q_table        = Q_table # each dimension ∈ [0,0.05,...,1] with standart settings
+        # Create or load Q-Table:
+        if Q_table != None or load_table != None:
+            if isinstance(Q_table, list) and load_table == None:
+                self.Q_table    = np.zeros(Q_table)
+            elif load_table == None:
+                self.Q_table        = Q_table # each dimension ∈ [0,0.05,...,1] with standart settings
+            else:
+                with h5py.File(D_PATH+'agent-models/'+load_table, 'r') as hf:
+                    self.Q_table = hf[:][:]
         else:
-            with h5py.File(D_PATH+'agent-models/'+load_table, 'r') as hf:
-                self.Q_table = hf[:][:]
+            self.Q_table = np.zeros([self.env.__dict__['discrete_space']]*(self.env.__dict__['input_dim']+1))
 
+        # Check size of Q-Table:
+        if len(np.shape(self.Q_table))-1 != self.env.__dict__['input_dim']:
+            raise Exception('Shape of Q-Table has length {}, but needs to be: {}'.format(len(np.shape(self.Q_table)),self.env.__dict__['input_dim']+1))
+        if len(self.Q_table[0]) != self.env.__dict__['discrete_space']:
+            raise Exception('Dimension lenghts of Q-Table are {}, but need to be: {}'.format(len(self.Q_table[0]),self.env.__dict__['discrete_space']))
         # Pass logger object:
         self.LOGGER         = self.env.__dict__['LOGGER']
         
@@ -82,7 +90,7 @@ class Q_Learner:
         self.agent_status = AgentStatus(epochs*epoch_len)
 
 
-    def act(self, state, random_mode=False):
+    def act(self, state, random_mode=False, test_mode=False):
         '''
         Function, in which the agent decides an action, either from greedy-policy or from prediction. Use this function when iterating through each step.
         
@@ -105,7 +113,8 @@ class Q_Learner:
         
         # Random decision if action will be random:
         if np.random.random() < self.epsilon or random_mode==True:
-            return self.env.action_space.sample()  # = random action
+            if test_mode == False:
+                return self.env.action_space.sample()  # = random action
         
         # If action is not random:
         # state[0] : Power_demand

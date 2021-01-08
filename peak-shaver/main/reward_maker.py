@@ -8,45 +8,36 @@ class reward_maker():
     '''
     Class for reward calculations. 
 
-    Parameters
-    ---------
-    COST_TYPE
-        Mode by which costs are calculated:
-        'exact_costs':
-        'yearly_costs':
-        'max_peak_focus':
-    R_TYPE
-        Mode by which rewards are calulated:
-        'costs_focus':
-        'positive':
-        'savings_focus': (use 'yearly_costs' as COST_TYPE when using this mode)
-    R_HORIZON
-        Mode that determines the range of steps to calculate the reward
-        'single_step': calculates reward at each step seperatly
-        'episode': calculates the reward for complete dataset
-        integer for multi-step: Number of steps for multi-step rewards
-    M_STRATEGY:
-        None: use None when R_HORIZON is set to 'single_step'
-        'sum_to_terminal': Multi-step reward as described in paper ... 
-        'average_to_neighbour': Multi-step reward as described in paper ... 
-        'recurrent_to_Terminal' Multi-step reward as described in paper ... 
-    cost_per_kwh
-        Cost of 1 kwh in €
-    LION_Anschaffungs_Preis
-        Cost of one lithium-ion battery in €
-    LION_max_Ladezyklen
-        Number of maximum charging cycles of the lithium-ion battery
-    SMS_Anschaffungs_Preis
-        Cost of one flywheel storage unit in €
-    SMS_max_Nutzungsjahre
-        Number of years a flywheel storage can be used
-    Leistungspreis
-        Cost of maximum peak per year calculated by €/kw 
-    focus_peak_multiplier
-        Factor by which the peak-costs are multiplied, used when COST_TYPE is set to 'max_peak_focus'
-    logging_list
-        Creates callback to trace costs, tracebale costs:
-        'exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step'
+    Args:
+        LOGGER (object): Logs scalars to tensorboard without tensor op, see :class:`logger.Logger`
+        COST_TYPE (string): Mode by which costs are calculated
+            'exact_costs':
+            'yearly_costs':
+            'max_peak_focus':
+        R_TYPE (string): Mode by which rewards are calulated:
+            'costs_focus':
+            'positive':
+            'savings_focus': (use 'yearly_costs' as COST_TYPE when using this mode)
+        R_HORIZON (string): Mode that determines the range of steps to calculate the reward
+            'single_step': calculates reward at each step seperatly
+            'episode': calculates the reward for complete dataset
+            integer for multi-step: Number of steps for multi-step rewards
+        M_STRATEGY (string):
+            None: use None when R_HORIZON is set to 'single_step'
+            'sum_to_terminal': Multi-step reward as described in paper ... 
+            'average_to_neighbour': Multi-step reward as described in paper ... 
+            'recurrent_to_Terminal' Multi-step reward as described in paper ... 
+        cost_per_kwh (float): Cost of 1 kwh in €
+        LION_Anschaffungs_Preis (float): Cost of one lithium-ion battery in €
+        LION_max_Ladezyklen (int): Number of maximum charging cycles of the lithium-ion battery
+        SMS_Anschaffungs_Preis (float): Cost of one flywheel storage unit in €
+        SMS_max_Nutzungsjahre (int): Number of years a flywheel storage can be used
+        Leistungspreis (float): Cost of maximum peak per year calculated by €/kw 
+        focus_peak_multiplier (float): Factor by which the peak-costs are multiplied, used when COST_TYPE is set to 'max_peak_focus'
+        logging_list (string):  Logs cost with :class:`logger.Logger`:
+            'exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step'
+        deactivate_SMS (bool): Can be used to deactivate the flying wheel when set to `True`
+        deactivate_LION (bool): Can be used to deactivate the lithium-ion battery when set to `True`
     '''
     def __init__(
             self, LOGGER,
@@ -94,6 +85,13 @@ class reward_maker():
     def pass_env(self, PERIODEN_DAUER, steps_per_episode, max_power_dem, mean_power_dem, sum_power_dem):
         '''
         Takes Init Parameter from GYM environment for the HIPE dataset, initiates all other necessary parameters and calculates the costs without peak shaving.
+        
+        Args:
+            PERIODEN_DAUER (int):
+            steps_per_episode (int):
+            max_power_dem (float):
+            mean_power_dem (float):
+            sum_power_dem
         '''
         self.PERIODEN_DAUER    = PERIODEN_DAUER
         self.steps_per_episode = steps_per_episode
@@ -199,12 +197,12 @@ class reward_maker():
 
 
 
-    def cost_function(self, sum_power_dem, sum_LION_nutzung, max_peak, observed_period):
+    def cost_function(self, interval_sum_power_dem, sum_LION_nutzung, max_peak, observed_period):
         '''
         Calculates the cost at a step when peak shaving is used
         '''
-        cost_power = sum_power_dem * self.PERIODEN_DAUER * (self.cost_per_kwh/60)
-        #c * steps   #kw * steps     #min pro step            #c / (kw * min)
+        cost_power = interval_sum_power_dem * self.PERIODEN_DAUER * (self.cost_per_kwh/60)
+        #c * steps   #kw * steps              #min pro step            #c / (kw * min)
 
         if self.deactivate_LION == False:
             cost_LION  = sum_LION_nutzung * (self.LION_Anschaffungs_Preis / self.LION_max_Ladezyklen)       # -> Abschreibung über Nutzung
@@ -245,10 +243,10 @@ class reward_maker():
 
         
         cost_power, cost_LION, cost_SMS, cost_peak = self.cost_function(
-                                                                    sum_power_dem    = self.power_dem,
-                                                                    sum_LION_nutzung = self.LION_nutzung,
-                                                                    max_peak         = self.max_peak_diff,
-                                                                    observed_period  = 1 # step
+                                                                    interval_sum_power_dem = self.power_dem,
+                                                                    sum_LION_nutzung       = self.LION_nutzung,
+                                                                    max_peak               = self.max_peak_diff,
+                                                                    observed_period        = 1 # step
                                                                     )
 
 
