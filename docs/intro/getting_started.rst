@@ -53,24 +53,31 @@ Folder Structure
 
 Data Preparation
 ****************
-The data preparation will be executed automaticaly when you first run ``wahrsager`` or any of the agents (provided you didn't do it manually). But it is recommended to create the preparations separately with ``schaffer`` since this can take up some time and you have the freedom to set up some parameters to your liking.
+The data preparation will be executed automaticaly when you first run ``wahrsager`` or any of the agents (provided you didn't do it manually). But it is recommended to create the preparations separately with ``schaffer`` since this can take up some time and you have the freedom to set up some parameters to your liking. If you decide to create all the datasets at once you can use `peak-shaver-master/peak-shaver/common_settings.py`. This can also provide a standart setup for the agents, so sou don't have to create a setup for all agents manually.
 
 Create the basic dataset:
 
 .. code-block:: python
     
-    from main.schaffer import mainDataset
+    from main.schaffer import mainDataset, lstmInputDataset
+    from main.common_func import wait_to_continue
 
-    main_dataset_creator = mainDataset(D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True)
+    # Setup main dataset creater/loader:
+    main_dataset = mainDataset(
+        D_PATH='_BIG_D/',
+        period_string_min='5min',
+        full_dataset=True)
 
     # Run this first, since this can take up a lot of time:
     main_dataset_creator.smoothed_df()
-    
+    # wait_to_continue() # Pauses the execution until you press enter
+
     # These don't take up a lot of time to run, 
     # but you can run those beforhand to check if everything is setup properly:
     main_dataset_creator.load_total_power()
     main_dataset_creator.normalized_df()
     main_dataset_creator.norm_activation_time_df()
+    # wait_to_continue()
 
 - :meth:`schaffer.mainDataset.smoothed_df` will take the dataset and smooth the data to a specific time-frame.
 - :meth:`schaffer.mainDataset.load_total_power` will take the table from ``smoothed_df`` and calculates the (not normalized) sum of the power requirements.
@@ -83,24 +90,36 @@ Create an input-dataset:
 
 .. code-block:: python
     
-    from main.schaffer import lstmInputDataset
+    # Continuation from the code above (needs `main_dataset` and imports)
 
-    lstm_dataset_creator = lstmInputDataset(D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True,
-                                            num_past_periods=12, drop_main_terminal=False, use_time_diff=True,
-                                            day_diff='holiday-weekend')
+    # Import main dataset as dataframe:
+    df = main_dataset.make_input_df(
+        drop_main_terminal=False,
+        use_time_diff=True,
+        day_diff='holiday-weekend')
+
+    # Setup lstm dataset creator/loader:
+    lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
 
     # If you want to check that everything works fine, run those rather step by step:
     lstm_dataset_creator.rolling_mean_training_data()
+    #wait_to_continue()
+
     lstm_dataset_creator.rolling_max_training_data()
+    #wait_to_continue()
+
     lstm_dataset_creator.normal_training_data()
+    #wait_to_continue()
+
     lstm_dataset_creator.sequence_training_data(num_seq_periods=12)
+    #wait_to_continue()
 
 - :meth:`schaffer.lstmInputDataset.rolling_mean_training_data` creates an input-dataset that was transformed with a `rolling mean` operation
 - :meth:`schaffer.lstmInputDataset.rolling_max_training_data` creates an input-dataset that was transformed with a `rolling max` operation
 - :meth:`schaffer.lstmInputDataset.normal_training_data` creates a normale input-dataset.
 - :meth:`schaffer.lstmInputDataset.normal_training_data` creates an input-dataset with sequence-labels the size of ``num_seq_periods``.
 
-Make sure to use the same parameters in ``lstmInputDataset`` that you used in ``mainDataset``
+Make sure to use the same parameters in ``lstmInputDataset`` that you used in ``mainDataset``.
 
 
 Making Predictions

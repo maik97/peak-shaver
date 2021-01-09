@@ -21,7 +21,7 @@ class reward_maker():
         SMS_max_Nutzungsjahre (int): Number of years a flywheel storage can be used
         Leistungspreis (float): Cost of maximum peak per year calculated by €/kw 
         focus_peak_multiplier (float): Factor by which the peak-costs are multiplied, used when COST_TYPE is set to 'max_peak_focus'
-        logging_list (list):  Logs cost with :class:`logger.Logger`. Possible strings in list are 'exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step'
+        logging_list (list):  Logs cost with :class:`logger.Logger`. Possible strings in list are 'exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step'.
         deactivate_SMS (bool): Can be used to deactivate the flying wheel when set to `True`
         deactivate_LION (bool): Can be used to deactivate the lithium-ion battery when set to `True`
     '''
@@ -77,7 +77,7 @@ class reward_maker():
             steps_per_episode (int):
             max_power_dem (float):
             mean_power_dem (float):
-            sum_power_dem
+            sum_power_dem (float):
         '''
         self.PERIODEN_DAUER    = PERIODEN_DAUER
         self.steps_per_episode = steps_per_episode
@@ -363,25 +363,6 @@ class reward_maker():
     def get_log(self):
         return self.sum_cost_saving, self.sum_step_reward, self.step_reward, self.sum_steps
 
-
-
-
-def main():
-    import wahrsager
-    import schaffer
-    print('Teste Initialisierungen')
-    test_reward_maker = reward_maker(
-                            COST_TYPE               = 'exact_costs', # 'yearly_costs', 'max_peak_focus'
-                            R_TYPE                  = 'costs_focus', # 'savings_focus'
-                            R_HORIZON               = 'single_step', # 'multi_step', 'episode', '...'
-                            cost_per_kwh            = 0.07,  # in €
-                            LION_Anschaffungs_Preis = 32000, # in €
-                            LION_max_Ladezyklen     = 1000,
-                            SMS_Anschaffungs_Preis  = 10000, # in €
-                            SMS_max_Nutzungsjahre   = 15,    # in Jahre
-                            Leistungspreis          = 90,    # in €
-                            focus_peak_multiplier   = 4      # multiplier for max_peak costs
-                            )
 
 
 

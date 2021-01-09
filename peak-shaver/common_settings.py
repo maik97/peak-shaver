@@ -19,6 +19,7 @@ day_diff           = 'holiday-weekend'
 # Other parameter:
 num_past_periods = 12
 
+
 def basic_dataset():
 
 	# Load the dataset:
@@ -38,7 +39,8 @@ def basic_dataset():
 
 	return df, power_dem_df, main_dataset
 
-def dataset_and_logger(NAME):
+
+def dataset_and_logger(NAME='test', preprocess_all=False):
 
 	df, power_dem_df, main_dataset = basic_dataset()
 
@@ -46,14 +48,31 @@ def dataset_and_logger(NAME):
 	lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=num_past_periods)
 
 	# Making predictions:
-	normal_predictions = wahrsager(lstm_dataset, power_dem_df, TYPE='NORMAL').pred()[:-num_past_periods]
-	seq_predictions    = wahrsager(lstm_dataset, power_dem_df, TYPE='SEQ', num_outputs=num_past_periods).pred()
+	if  preprocess_all == False:
+		normal_predictions = wahrsager(lstm_dataset, power_dem_df, TYPE='NORMAL').pred()[:-num_past_periods]
+		seq_predictions    = wahrsager(lstm_dataset, power_dem_df, TYPE='SEQ', num_outputs=num_past_periods).pred()
+	# Only preprocess:
+	else:
+		lstm_dataset_creator.rolling_mean_training_data()
+		lstm_dataset_creator.rolling_max_training_data()
+		lstm_dataset_creator.normal_training_data()
+		lstm_dataset_creator.sequence_training_data(num_seq_periods=num_past_periods)
 
-	# Adding the predictions to the dataset:
-	df            = df[num_past_periods*2:-num_past_periods]
-	df['normal']  = normal_predictions
-	df['seq_max'] = max_seq(seq_predictions)
+	if  preprocess_all == False:
+		# Adding the predictions to the dataset:
+		df            = df[num_past_periods*2:-num_past_periods]
+		df['normal']  = normal_predictions
+		df['seq_max'] = max_seq(seq_predictions)
 
-	logger = Logger(NAME,D_PATH)
+		# Initilize logging:
+		logger = Logger(NAME,D_PATH)
 
-	return df, power_dem_df, logger
+		return df, power_dem_df, logger
+
+
+main():
+	dataset_and_logger(preprocess_all=True)
+
+
+if __name__ == '__main__':
+	main()
