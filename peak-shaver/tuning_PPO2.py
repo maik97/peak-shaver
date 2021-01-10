@@ -58,7 +58,7 @@ def run_agent(name='', n_steps=2500):
         ACTION_TYPE    = 'contin',
         OBS_TYPE       = 'contin',
         # Tells the environment to make standart GYM outputs, 
-        # so agents from stable-baselines (or any other standart module) can be used
+        # so agents from stable-baselines (or any other RL-library that uses gym) can be used
         AGENT_TYPE     = 'standart_gym')
 
     # Create vectorised environment:
