@@ -16,15 +16,15 @@ You can download the zip file from the `github repository <https://github.com/ma
 
 Make sure to have these libraries with the right versions installed:
 
-- matplotlib==3.3.3
 - numpy==1.19.4
 - pandas==0.25.3
-- stable-baselines==2.10.1
-- tensorboard==1.9.0
+- matplotlib==3.3.3
+- seaborn==0.11.0
 - tensorflow==1.9.0
+- tensorboard==1.9.0
 - gym==0.17.3
-- tqdm
-- h5py
+- stable-baselines==2.10.1
+- h5py==2.10.0
 
 If you dont know how to install those properly look up `pip <https://pip.pypa.io/en/stable/>`_ . You can also install all dependedencies at once via the requirements.txt found in the github repository.
 
@@ -65,7 +65,7 @@ Create the basic dataset:
     # Setup main dataset creater/loader:
     main_dataset = mainDataset(
         D_PATH='_BIG_D/',
-        period_string_min='5min',
+        period_min='5',
         full_dataset=True)
 
     # Run this first, since this can take up a lot of time:

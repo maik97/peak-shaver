@@ -38,7 +38,7 @@ class DQN:
     """
     def __init__(self, env, memory_len, input_sequence=1, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125,
                  activation='relu', loss='mean_squared_error', model_type='dense', use_model=None, pre_trained_model=None,
-                 hidden_layers=2, hidden_size=518, lstm_size=123):
+                 hidden_layers=2, hidden_size=518, lstm_size=128):
 
         self.env            = env
         

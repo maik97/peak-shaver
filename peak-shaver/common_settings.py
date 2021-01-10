@@ -8,7 +8,7 @@ from main.common_func import max_seq, mean_seq
 D_PATH = '_small_d/'
 
 # Parameter mainDataset:
-period_string_min = '15min'
+period_min        = 15
 full_dataset      = True
 
 # Parameter mainDataset.make_input_df:
@@ -25,7 +25,7 @@ def basic_dataset():
 	# Load the dataset:
 	main_dataset = mainDataset(
 	    D_PATH=D_PATH,
-	    period_string_min=period_string_min,
+	    period_min=period_min,
 	    full_dataset=full_dataset)
 
 	# Normalized dataframe:
@@ -67,7 +67,7 @@ def dataset_and_logger(NAME='test', preprocess_all=False):
 		# Initilize logging:
 		logger = Logger(NAME,D_PATH)
 
-		return df, power_dem_df, logger
+		return df, power_dem_df, logger, period_min
 
 
 main():

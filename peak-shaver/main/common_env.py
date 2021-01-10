@@ -29,7 +29,7 @@ class common_env(gym.Env):
         PERIODEN_DAUER (integer): Period-lenght of one step in minutes
         ACTION_TYPE (string): Sets the actions as discrete or continuous inputs. Use  'discrete' or 'contin'.
         reward_maker (object): Takes the used reward_maker object
-        AGENT_TYPE (string): Inititates the environment to inputs from either heurtistic, the RL-Agents or from ``stable-baselines``. Use 'heuristic', 'normal' or 'stable_baseline'.
+        AGENT_TYPE (string): Inititates the environment to inputs from either heurtistic, the RL-Agents or from ``stable-baselines``. Use 'heuristic', 'normal' or 'standart_gym'.
         max_ziel (float): Defines the maximum possible SECG (in kw), will only be used when AGENT_TYPE is set to 'normal'.
         min_ziel (float): Defines the minimal possible SECG (in kw), will only be used when AGENT_TYPE is set to 'normal'.
 
@@ -77,14 +77,14 @@ class common_env(gym.Env):
         self.input_dim             = len(self.input_list) + 2 # jeweils plus SoC für beide Akkus
         self.discrete_space        = discrete_space
 
-        if AGENT_TYPE == 'normal' or AGENT_TYPE == 'stable_baselines':
+        if AGENT_TYPE == 'normal' or AGENT_TYPE == 'standart_gym':
             self.max_ziel          = max_ziel
             self.min_ziel          = min_ziel
         elif AGENT_TYPE == 'heuristic':
             self.max_ziel          = 1
             self.min_ziel          = 0
         else:
-            raise Exception("AGENT_TYPE not understood. AGENT_TYPE must be: 'normal', 'heuristic or 'stable_baselines''")
+            raise Exception("AGENT_TYPE not understood. AGENT_TYPE must be: 'normal', 'heuristic or 'standart_gym''")
 
         # Init Agent:
         if self.ACTION_TYPE == 'discrete':
@@ -414,7 +414,7 @@ class common_env(gym.Env):
                 return obs, reward, done, {}
         elif self.AGENT_TYPE == 'heuristic':
             return obs, reward, done, episode_max_peak, {}
-        elif self.AGENT_TYPE == 'stable_baselines':
+        elif self.AGENT_TYPE == 'standart_gym':
             return obs, reward, done, {}
 
 

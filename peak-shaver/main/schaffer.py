@@ -21,13 +21,14 @@ class mainDataset:
 
     Args:
         D_PATH (string): Path that indicates which dataset is used. Use `'_BIG_D/'` for the full dataset and `'_small_d/'` for the small dataset, if you followed the propesed folder structure.
-        period_string_min (string): Sets the time-period for the dataset. The string should look like this: ``xmin`` where x are the minutes of one period.
+        period_min (int): Sets the time-period for the dataset in minutes
         full_dataset (bool): Set this to ``True`` if you are using the full dataset and ``false`` otherwis
     '''
-    def __init__(self, D_PATH='_BIG_D/', period_string_min='5min', full_dataset=False):
+    def __init__(self, D_PATH='_BIG_D/', period_min=5, full_dataset=False):
 
         self.D_PATH            = D_PATH
-        self.period_string_min = period_string_min
+        self.period_min        = period_min
+        self.period_string_min = '{}min'.format(period_min)
         self.full_dataset      = full_dataset
         self.timer             = Timer()
 
@@ -40,6 +41,8 @@ class mainDataset:
 
     def return_parameter(self):
         return self.D_PATH
+
+    def period
 
     def coulmn_to_smoothed_period_df(self, dataset_name, coulmn_name, c_num=None, c_total=None): # returns Datafram: Strombedarf (nur noch eine Spalte, Index = SensorDateTime, neuerstellt)
         ''' Tries to open the dataset for a specific machine that is already smoothed to the time-period. Creates a new dataset if a dataset for the given time-period can not be opened.
