@@ -17,8 +17,8 @@ This agent implements the PPO2-agent from ```stable-baselines``. Inputs and outp
 		ACTION_TYPE = 'contin',
 		OBS_TYPE    = 'contin',
 		# Tells the environment to make standart GYM outputs, 
-    	# so agents from stable-baselines (or any other standart module) can be used
-    	AGENT_TYPE  = 'standart_gym')
+		# so agents from stable-baselines (or any other standart module) can be used
+		AGENT_TYPE  = 'standart_gym')
 
 Since its not possible to use the multi-step-rewards from :class:`reward_maker.reward_maker`, you have to use this standart initilization:
 

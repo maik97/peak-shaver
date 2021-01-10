@@ -15,8 +15,8 @@ This agent has the same structure as :ref:`Deep Q-Learning<agent_deep_q_ex>`, bu
 		...
 		# Model type must be set to 'lstm' now
 		model_type     = 'lstm',
-	    # LSTM size can be set:
-	    lstm_size      = 128)
+		# LSTM size can be set:
+		lstm_size      = 128)
 
 Note that you can additionally use multi-step-rewards as described in :ref:`Deep Q-Learning with Multi-Step-Learning <agent_multi_step_ex>`.
 
