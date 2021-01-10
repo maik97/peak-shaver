@@ -7,7 +7,7 @@
 Deep Q-Learning with Multi-Step-Learning
 ========================================
 
-This agent has the same structure as :ref:`Deep Q-Learning<agent_deep_q_ex>, but in order to implement multi-step-rewards the class :class:`reward_maker.reward_maker` needs to include following initialzation:
+This agent has the same structure as :ref:`Deep Q-Learning<agent_deep_q_ex>`, but in order to implement multi-step-rewards the class :class:`reward_maker.reward_maker` needs to include following initilization:
 
 .. code-block:: python
 	

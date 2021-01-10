@@ -12,9 +12,21 @@ A deep Q-Learning agent uses a neural network instead of a q-table for the learn
 	
 	env = common_env(
 		...
+		# DQN inputs can be conti and must be discrete:
 		ACTION_TYPE    = 'discrete',
 		OBS_TYPE       = 'contin',
+		# Set number of discrete values:
 		discrete_space = 22)
+
+There are also more options to configure the neural network available, when initiating :class:`agent_deep_q.DQN`
+
+.. code-block:: python
+	
+	agent = DQN(
+		...
+		activation     = 'relu',
+		loss           = 'mean_squared_error',
+		hidden_size    = 518)
 
 Note that you can additionally use multi-step-rewards and/ or an LSTM integretaion. Those are described in :ref:`Deep Q-Learning with Multi-Step-Learning <agent_multi_step_ex>` and :ref:`Deep Q-Learning with LSTM integration <agent_lstm_q_ex>. 
 

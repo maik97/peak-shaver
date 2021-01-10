@@ -7,11 +7,11 @@
 Deep Q-Learning with LSTM integration
 =====================================
 
-This agent has the same structure as :ref:`Deep Q-Learning<agent_deep_q_ex>, but in order to implement an LSTM-network the class :class:`reward_maker.reward_maker` needs to include following initialzation:
+This agent has the same structure as :ref:`Deep Q-Learning<agent_deep_q_ex>`, but in order to implement an LSTM-network the class :class:`agent_deep_q.DQN` needs to include following initilization:
 
 .. code-block:: python
 
-	env = common_env(
+	agent = DQN(
 		...
 		# Model type must be set to 'lstm' now
 		model_type     = 'lstm',
