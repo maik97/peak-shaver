@@ -1,5 +1,5 @@
 '''
-Example of an RL-Agent that uses Dualing Deep Q-Networks.
+Example of an DQN-Agent that implements LSTM.
 '''
 from datetime import datetime
 
