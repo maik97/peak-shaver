@@ -14,7 +14,7 @@ You can download the zip file from the `github repository <https://github.com/ma
    
     $ git clone git://github.com/maik97/peak-shaver.git
 
-Make sure to have these libraries with the right versions installed:
+Make sure to have these libraries with the right versions installed (espacially import for tensorflow and tensorboard, the other libraries should be possible with >=[version]):
 
 - numpy==1.19.4
 - pandas==0.25.3
@@ -28,7 +28,7 @@ Make sure to have these libraries with the right versions installed:
 
 If you dont know how to install those properly look up `pip <https://pip.pypa.io/en/stable/>`_ . You can also install all dependedencies at once via the requirements.txt found in the github repository.
 
-Note that ``tensorflow 1.9.0`` is an older version and only works with ``python 3.6``. The code of ``logger`` needs to be updated in order to be compatible with of ``tensorflow 2.x.x``.
+Note that ``tensorflow 1.9.0`` is an older version and only works with ``python 3.6``. The code of ``logger`` needs to be updated in order to be compatible with of ``tensorflow 2.x.x``. (This can't be guaranteed though)
 
 The dataset can be downloaded here: `HIPE Dataset <https://www.energystatusdata.kit.edu/hipe.php>`_ . There are two different versions, one is the complete dataset over three months, the smaller one is just the first week.
 
@@ -84,7 +84,7 @@ Create the basic dataset:
 - :meth:`schaffer.mainDataset.normalized_df` will take the table from ``smoothed_df`` and normalize the data
 - :meth:`schaffer.mainDataset.norm_activation_time_df` will take the table from ``smoothed_df`` and calculate the normalized activation times of the machines.
 
-In this tutorial we seperate the big and small datasets, by setting ``D_PATH=_BIG_D`` for the big one and ``D_PATH=_BIG_D`` for the small one. Dont forget to set ``full_dataset=False`` if you want to use the small dataset. ``period_string_min`` can be set to `xmin` where x are the minutes one period should be.
+In this tutorial we seperate the big and small datasets, by setting ``D_PATH=_BIG_D`` for the big one and ``D_PATH=_BIG_D`` for the small one. Dont forget to set ``full_dataset=False`` if you want to use the small dataset. ``period_min`` can be set to an integer that defines the minutes one period.
 
 Create an input-dataset:
 
@@ -118,8 +118,6 @@ Create an input-dataset:
 - :meth:`schaffer.lstmInputDataset.rolling_max_training_data` creates an input-dataset that was transformed with a `rolling max` operation
 - :meth:`schaffer.lstmInputDataset.normal_training_data` creates a normale input-dataset.
 - :meth:`schaffer.lstmInputDataset.normal_training_data` creates an input-dataset with sequence-labels the size of ``num_seq_periods``.
-
-Make sure to use the same parameters in ``lstmInputDataset`` that you used in ``mainDataset``.
 
 
 Making Predictions

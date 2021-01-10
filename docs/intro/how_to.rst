@@ -33,7 +33,7 @@ Setting up parameters and loading the dataset:
     D_PATH = '_BIG_D/'
 
     # Load the dataset:
-    main_dataset = mainDataset(D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True)
+    main_dataset = mainDataset(D_PATH='_BIG_D/', period_min=5m, full_dataset=True)
     # Normalized dataframe:
     df = main_dataset.make_input_df(drop_main_terminal=False, use_time_diff=True, day_diff='holiday-weekend')
     # Sum of the power demand dataframe (nor normalized):
@@ -47,9 +47,8 @@ Making LSTM-Predictions:
 .. code-block:: python
     
     # Load the LSTM input dataset:
-    lstm_dataset = lstmInputDataset(D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True,
-                                            num_past_periods=12, drop_main_terminal=False, use_time_diff=True,
-                                            day_diff='holiday-weekend')
+    lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=12)
+
     # Making predictions:
     normal_predictions = wahrsager(lstm_dataset, TYPE=, NAME=).pred()[:-12]
     seq_predictions    = wahrsager(lstm_dataset, TYPE=, NAME=, num_outputs=12).pred()
@@ -66,75 +65,73 @@ Initilizing parameters for the iteration:
 
 .. code-block:: python
     
-    # Initilisiere Parameter für Target-Network
-    update_num       = 1
-    update_counter   = 0
-
-    # Inititialsiere Epoch-Parameter:
-    epochs           = 1000
-    epochs_len       = len(df)
-
+    # Number of warm-up steps:
     num_warmup_steps = 100
-    warmup_counter   = 0
-
-    R_HORIZON = 0
+    # Train every x number of steps:
+    update_num       = 50
+    # Number of epochs and steps:
+    epochs           = 1
 
 Setting up the ``reward_maker``:
 
 .. code-block:: python
     
     r_maker = reward_maker(
-        COST_TYPE               = 'exact_costs',     # 'yearly_costs', 'max_peak_focus'
-        R_TYPE                  = 'savings_focus',   #'costs_focus', 'savings_focus'
-        M_STRATEGY              = 'single_step',              # None, 'sum_to_terminal', 'average_to_neighbour', 'recurrent_to_Terminal'
-        R_HORIZON               = None,         # 'episode', 'single_step', integer for multi-step
-        cost_per_kwh            = 0.2255,  # in €
-        LION_Anschaffungs_Preis = 34100,   # in €
+        LOGGER                  = logger,
+        # Settings:
+        COST_TYPE               = 'exact_costs',
+        R_TYPE                  = 'savings_focus',
+        R_HORIZON               = 'single_step',
+        # Parameter to calculate costs:
+        cost_per_kwh            = 0.2255,
+        LION_Anschaffungs_Preis = 34100,
         LION_max_Ladezyklen     = 1000,
-        SMS_Anschaffungs_Preis  = 115000/3,# in €
-        SMS_max_Nutzungsjahre   = 20,      # in Jahre
-        Leistungspreis          = 102,     # in €
-        focus_peak_multiplier   = 4        # multiplier for max_peak costs
-        )
+        SMS_Anschaffungs_Preis  = 115000/3,
+        SMS_max_Nutzungsjahre   = 20,
+        Leistungspreis          = 102)
 
 Setting up the ``common_env``:
 
 .. code-block:: python
     
+    # Setup common_env
     env = common_env(
-        df                   = df,
-        power_dem_arr        = power_dem_arr,
-        input_list           = ['norm_total_power','max_pred_seq'],
-        DATENSATZ_PATH       = DATENSATZ_PATH,
-        NAME                 = NAME,
-        max_SMS_SoC          = 12,
-        max_LION_SoC         = 54,
-        PERIODEN_DAUER       = 5,
-        ACTION_TYPE          = 'discrete',
-        num_discrete_obs     = 21,
-        num_discrete_actions = 22,
-        #action_space         = spaces.Discrete(22), # A ∈ [0,1]
-        #observation_space    = spaces.Box(low=0, high=21, shape=(4,1), dtype=np.float16),
-        reward_maker         = r_maker)
+        reward_maker   = r_maker,
+        df             = df,
+        power_dem_df   = power_dem_df,
+        # Datset Inputs for the states:
+        input_list     = ['norm_total_power','normal','seq_max'],
+        # Batters stats:
+        max_SMS_SoC    = 12/3,
+        max_LION_SoC   = 54,
+        # Period length in minutes:
+        PERIODEN_DAUER = period_min,
+        # DQN inputs can be conti and must be discrete:
+        ACTION_TYPE    = 'discrete',
+        OBS_TYPE       = 'contin',
+        # Set number of discrete values:
+        discrete_space = 22,
+        # Size of validation data:
+        val_split      = 0.1)
 
 Setting up the ``agent_q_table``:
 
 .. code-block:: python
     
-    Agent = Q_Learner(
+    # Setup Agent:
+    agent = DQN(
         env            = env,
-        #memory         = deque(maxlen=(update_num)),
-        memory         = deque(maxlen=(R_HORIZON+update_num)),
-
+        memory_len     = update_num,
+        # Training parameter:
         gamma          = 0.85,
         epsilon        = 0.8,
         epsilon_min    = 0.1,
         epsilon_decay  = 0.999996,
         lr             = 0.5,
         tau            = 0.125,
-
-        Q_table        = np.zeros((22,22,22,22,22)), # jede Dimension jeweils ∈ [0,0.05,...,1]
-        )
+        activation     = 'relu',
+        loss           = 'mean_squared_error',
+        hidden_size    = 518)
 
 Iterating through epochs:
 
@@ -178,139 +175,3 @@ Iterating through epochs:
     cur_state                  = new_state
 
 
-
-Full code:
-
-.. code-block:: python
-    
-    from datetime import datetime
-    from collections import deque
-
-    from main.schaffer import mainDataset, lstmInputDataset
-    from main.wahrsager import wahrsager
-    from main.common_func import max_seq, mean_seq
-    from main.common_env import common_env
-    from main.reward_maker import reward_maker
-
-    # Import the Q-Table agent: 
-    from main.agent_q_table import Q_Learner
-
-    # Naming the agent and setting up the directory path:
-    now    = datetime.now()
-    NAME   = 'Q_Table'+now.strftime("_%d-%m-%Y_%H:%M:%S")
-    D_PATH = '_BIG_D/'
-
-    # Load the dataset:
-    main_dataset = mainDataset(D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True)
-    # Normalized dataframe:
-    df = main_dataset.make_input_df(drop_main_terminal=False, use_time_diff=True, day_diff='holiday-weekend')
-    # Sum of the power demand dataframe (nor normalized):
-    power_dem_arr = main_dataset.load_total_power()
-
-    # Load the LSTM input dataset:
-    lstm_dataset = lstmInputDataset(D_PATH='_BIG_D/', period_string_min='5min', full_dataset=True,
-                                            num_past_periods=12, drop_main_terminal=False, use_time_diff=True,
-                                            day_diff='holiday-weekend')
-    # Making predictions:
-    normal_predictions = wahrsager(lstm_dataset, TYPE=, NAME=).pred()[:-12]
-    seq_predictions    = wahrsager(lstm_dataset, TYPE=, NAME=, num_outputs=12).pred()
-
-    # Adding the predictions to the dataset:
-    df            = df[24:-12]
-    df['normal']  = normal_predictions
-    df['seq-max'] = max_seq(seq_predictions)
-
-    # Initilisiere Parameter für Target-Network
-    update_num       = 1
-    update_counter   = 0
-
-    # Inititialsiere Epoch-Parameter:
-    epochs           = 1000
-    epochs_len       = len(df)
-
-    num_warmup_steps = 100
-    warmup_counter   = 0
-
-    R_HORIZON = 0
-
-
-    r_maker = reward_maker(
-        COST_TYPE               = 'exact_costs',     # 'yearly_costs', 'max_peak_focus'
-        R_TYPE                  = 'savings_focus',   #'costs_focus', 'savings_focus'
-        M_STRATEGY              = 'single_step',              # None, 'sum_to_terminal', 'average_to_neighbour', 'recurrent_to_Terminal'
-        R_HORIZON               = None,         # 'episode', 'single_step', integer for multi-step
-        cost_per_kwh            = 0.2255,  # in €
-        LION_Anschaffungs_Preis = 34100,   # in €
-        LION_max_Ladezyklen     = 1000,
-        SMS_Anschaffungs_Preis  = 115000/3,# in €
-        SMS_max_Nutzungsjahre   = 20,      # in Jahre
-        Leistungspreis          = 102,     # in €
-        focus_peak_multiplier   = 4        # multiplier for max_peak costs
-        )
-
-
-    env = common_env(
-        df                   = df,
-        power_dem_arr        = power_dem_arr,
-        input_list           = ['norm_total_power','max_pred_seq'],
-        DATENSATZ_PATH       = DATENSATZ_PATH,
-        NAME                 = NAME,
-        max_SMS_SoC          = 12,
-        max_LION_SoC         = 54,
-        PERIODEN_DAUER       = 5,
-        ACTION_TYPE          = 'discrete',
-        num_discrete_obs     = 21,
-        num_discrete_actions = 22,
-        #action_space         = spaces.Discrete(22), # A ∈ [0,1]
-        #observation_space    = spaces.Box(low=0, high=21, shape=(4,1), dtype=np.float16),
-        reward_maker         = r_maker)
-
-    Agent = Q_Learner(
-        env            = env,
-        #memory         = deque(maxlen=(update_num)),
-        memory         = deque(maxlen=(R_HORIZON+update_num)),
-
-        gamma          = 0.85,
-        epsilon        = 0.8,
-        epsilon_min    = 0.1,
-        epsilon_decay  = 0.999996,
-        lr             = 0.5,
-        tau            = 0.125,
-
-        Q_table        = np.zeros((22,22,22,22,22)), # jede Dimension jeweils ∈ [0,0.05,...,1]
-        )
-
-    for e in range(epochs):
-        cur_state = env.reset()
-
-        while warmup_counter < num_warmup_steps:
-            action, epsilon            = Agent.act(cur_state)
-            new_state, reward, done, step_counter_episode, _ = env.step(action, epsilon)
-            new_state                  = new_state.reshape(len(cur_state),1).tolist()            
-            Agent.remember(cur_state, action, reward, new_state, done, step_counter_episode)
-            cur_state                  = new_state
-
-            warmup_counter += 1
-
-        for s in range(epochs_len):
-            action, epsilon            = Agent.act(cur_state)
-            new_state, reward, done, step_counter_episode, _ = env.step(action, epsilon)
-            new_state                  = new_state.reshape(len(cur_state),1).tolist()            
-            Agent.remember(cur_state, action, reward, new_state, done, step_counter_episode)
-            cur_state                  = new_state
-
-            if done == False:
-            index_len = update_num
-            else:
-                index_len = update_num + R_HORIZON
-
-            update_counter += 1
-            if update_counter == update_num or done == True:
-                Agent.replay(index_len)
-                update_counter = 0
-
-            if done:
-                break
-
-        if e % 10 == 0:
-            Agent.save_agent(NAME, DATENSATZ_PATH, e)
