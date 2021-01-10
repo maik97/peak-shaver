@@ -7,10 +7,12 @@ Make sure to be in the ``peak-shaver`` directory and open up a new command windo
 
 .. code-block:: console
    
-    $ tensorboard --logdir=_BIG_D/logs/
+    $ tensorboard --logdir=_BIG_D/[log-type]/
 
 For the small dataset:
 
 .. code-block:: console
    
-    $ tensorboard --logdir=_small_d/logs/
+    $ tensorboard --logdir=_small_d/[log-type]/
+
+The ``log-type`` can either be `agent_logs` or `lstm-logs`
