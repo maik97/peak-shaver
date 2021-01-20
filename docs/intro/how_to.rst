@@ -6,27 +6,35 @@ How to use the agents
 Not updated yet!
 Look up Getting Started and Examples, since those provide the correct informations for the current build.
 
-This sections aims to provide a tutorial how to set up an agent. For this purpose the ``agent_q_table`` will be used. You can look up the examples for the other agents to see the differences, but the basic structure is for all agents (except PPO2) pretty much the same. The code will be explained step by step and put together at the end.
+This sections aims to provide a tutorial how to set up an agent. For this purpose the ``agent_q_table`` will be used. You can look up the examples for the other agents to see the differences, but the basic structure is for all agents pretty much the same. In order to use agents from other RL-Libriaris you need to make some minor changes, which will be explained at the end. If you didn't read the Getting Started Guide, we recommend to check this out first.
 
-Importing the dependencies:
+Setting up common settings
+**************************
+- filepath
+- codesnippet: paramter and wahrsager
+
+
+Importing the dependencies
+**************************
 
 .. code-block:: python
-
+    
+    # Datetime will be used to crate a timestamp when naming a agent-run
     from datetime import datetime
-    from collections import deque
 
-    from main.schaffer import mainDataset, lstmInputDataset
-    from main.wahrsager import wahrsager
-    from main.common_func import max_seq, mean_seq
-    from main.common_env import common_env
+    # Normal imports to set up an agent:
+    from common_settings import dataset_and_logger
+    from main.common_func import training, testing
     from main.reward_maker import reward_maker
+    from main.common_env import common_env
 
     # Import the Q-Table agent: 
     from main.agent_q_table import Q_Learner
 
 The last line determines the agent we want to use. In this case we want to import an agent that uses a Q-Table. This will limit the input and action-space to discrete values, which will be important for setting up the environment later.
 
-Setting up parameters and loading the dataset:
+Setting up parameters and loading the dataset
+*********************************************
 
 .. code-block:: python
 
@@ -47,6 +55,8 @@ Setting up parameters and loading the dataset:
 
 Making LSTM-Predictions:
 
+- Remove, since this is in common settings
+
 .. code-block:: python
     
     # Load the LSTM input dataset:
@@ -64,7 +74,8 @@ Making LSTM-Predictions:
 - warum df[24:-12], etc
 - beispiel um normale labels und sequence labels zu verwenden
 
-Initilizing parameters for the iteration:
+Initilizing parameters for the iteration
+****************************************
 
 .. code-block:: python
     
@@ -75,7 +86,8 @@ Initilizing parameters for the iteration:
     # Number of epochs and steps:
     epochs           = 1
 
-Setting up the ``reward_maker``:
+Setting up the ``reward_maker``
+*******************************
 
 .. code-block:: python
     
@@ -93,7 +105,8 @@ Setting up the ``reward_maker``:
         SMS_max_Nutzungsjahre   = 20,
         Leistungspreis          = 102)
 
-Setting up the ``common_env``:
+Setting up the ``common_env``
+*****************************
 
 .. code-block:: python
     
@@ -117,7 +130,8 @@ Setting up the ``common_env``:
         # Size of validation data:
         val_split      = 0.1)
 
-Setting up the ``agent_q_table``:
+Setting up the ``agent_q_table``
+********************************
 
 .. code-block:: python
     
@@ -136,45 +150,8 @@ Setting up the ``agent_q_table``:
         loss           = 'mean_squared_error',
         hidden_size    = 518)
 
-Iterating through epochs:
+Training process
+****************
 
-.. code-block:: python
-    
-    for e in range(epochs):
-        cur_state = env.reset()
-
-        while warmup_counter < num_warmup_steps:
-            ...
-            warmup_counter += 1
-
-        for s in range(epochs_len):
-            ...
-
-            if done == False:
-            index_len = update_num
-            else:
-                index_len = update_num + R_HORIZON
-
-            update_counter += 1
-            if update_counter == update_num or done == True:
-                Agent.replay(index_len)
-                update_counter = 0
-
-            if done:
-                break
-
-        if e % 10 == 0:
-            Agent.save_agent(NAME, DATENSATZ_PATH, e)
-
-'...':
-
-.. code-block:: python
-    
-    # For every step (normal and warm-up):
-    action, epsilon            = Agent.act(cur_state)
-    new_state, reward, done, step_counter_episode, _ = env.step(action, epsilon)
-    new_state                  = new_state.reshape(len(cur_state),1).tolist()            
-    Agent.remember(cur_state, action, reward, new_state, done, step_counter_episode)
-    cur_state                  = new_state
-
-
+Agents from other RL-Libraries
+******************************
