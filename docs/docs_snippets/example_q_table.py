@@ -1,9 +1,7 @@
 '''
 Example of an RL-Agent that uses the basic Q-Table.
 '''
-import numpy as np
 from datetime import datetime
-from collections import deque
 
 from common_settings import dataset_and_logger
 from main.common_func import max_seq, mean_seq, training, testing
