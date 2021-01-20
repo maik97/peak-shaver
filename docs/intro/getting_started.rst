@@ -3,7 +3,7 @@
 Getting Started Guide
 =====================
 
-``peak-shaver`` aims to provide the tools to explore different approaches of reinforcement learning within a simulation of the `HIPE Dataset <https://www.energystatusdata.kit.edu/hipe.php>`_ . The module for the simulation ``common_env`` is made as a ``gym`` environment, which provides a common API for a wide range of different RL-libraries (for example ``stable-baseline`` which is also used as part of the study project). You can also create your own Agents following the ``gym`` guide-lines. But note that ``common_env`` requires some extra methods (look up the :ref:`module <common_env_doc>`) which will also be explained in this guide. For example is ``reward_maker`` used to specify the kind of reward the agent will receive.
+``peak-shaver`` aims to provide the tools to explore different approaches of reinforcement learning within a simulation of the `HIPE Dataset <https://www.energystatusdata.kit.edu/hipe.php>`_ . The module for the simulation ``common_env`` is made as a ``gym`` environment, which provides a common API for a wide range of different RL-libraries (for example ``stable-baseline`` which is also used as part of the study project). You can also create your own Agents following the ``gym`` guide-lines, but note that ``common_env`` can provide some extra functionality (look up the :ref:`module <common_env_doc>`, for example the extra return `episode_max_peak` in :meth:`common_env.common_env.step`). Furthermore the module ``reward_maker`` is used to specify the kind of reward the agent will receive.
 
 Installation and Dependencies
 *****************************
@@ -14,7 +14,7 @@ You can download the zip file from the `github repository <https://github.com/ma
    
     $ git clone git://github.com/maik97/peak-shaver.git
 
-Make sure to have these libraries with the right versions installed (espacially import for tensorflow and tensorboard, the other libraries should be possible with >=[version]):
+Make sure to have these libraries with the right versions installed (espacially tensorflow and tensorboard, the other libraries should be possible with >=[version]):
 
 - numpy==1.19.4
 - pandas==0.25.3
@@ -53,7 +53,7 @@ Folder Structure
 
 Data Preparation
 ****************
-The data preparation will be executed automaticaly when you first run ``wahrsager`` or any of the agents (provided you didn't do it manually). But it is recommended to create the preparations separately with ``schaffer`` since this can take up some time and you have the freedom to set up some parameters to your liking. If you decide to create all the datasets at once you can use `peak-shaver-master/peak-shaver/common_settings.py`. This can also provide a standart setup for the agents, so sou don't have to create a setup for all agents manually.
+The data preparation will be executed automaticaly when you first run ``wahrsager`` or any of the agents (provided you didn't do it manually). But it is recommended to create the preparations separately with ``schaffer`` since this can take up some time. If you decide to create all the datasets at once you can use `peak-shaver-master/peak-shaver/common_settings.py`. This can also provide a standart setup for the agents, so you don't have to create a setup for all agents manually.
 
 Create the basic dataset:
 
@@ -84,7 +84,7 @@ Create the basic dataset:
 - :meth:`schaffer.mainDataset.normalized_df` will take the table from ``smoothed_df`` and normalize the data
 - :meth:`schaffer.mainDataset.norm_activation_time_df` will take the table from ``smoothed_df`` and calculate the normalized activation times of the machines.
 
-In this tutorial we seperate the big and small datasets, by setting ``D_PATH=_BIG_D`` for the big one and ``D_PATH=_BIG_D`` for the small one. Dont forget to set ``full_dataset=False`` if you want to use the small dataset. ``period_min`` can be set to an integer that defines the minutes one period.
+In this tutorial we seperate the big and small datasets, by setting ``D_PATH=_BIG_D`` for the big one and ``D_PATH=_BIG_D`` for the small one. Dont forget to set ``full_dataset=False`` if you want to use the small dataset. ``period_min`` can be set to an integer that defines the minutes of one period. :meth:`common_func.wait_to_continue` pauses the code, so you have time to check out the created datasets.
 
 Create an input-dataset:
 
@@ -154,7 +154,7 @@ There are different approaches to modify the input-dataset, which can be set wit
 - ``prediction_mean_label_seq`` with ``TYPE='MEAN_LABEL_SEQ'``: Predictions where just the label data is modified with a rolling mean
 - ``prediction_seq`` with ``TYPE='SEQ'``: Sequence-Predictions of the unmodified dataset, each sequence can be transformed to the mean or max value with ``max_seq(prediction_seq)`` or ``mean_seq(prediction_seq)``
 
-All these different approaches will have similar results, but can be used to optimize the predictions furthermore. If you want to tune the parameters, look up the ``wahrsager`` class :ref:`here <wahrsager_doc>` (change time-frame, LSTM size, ...). Note that for every new time-frame a separate dataset will be created.
+All these different approaches will have similar results, but can be used to optimize the predictions. If you want to tune the parameters, look up the ``wahrsager`` class :ref:`here <wahrsager_doc>` (change time-frame, LSTM size, ...). Note that for every new time-frame a separate dataset will be created.
 
 Set ``PLOTTING=True`` if you want to see a graph of the predictions compared to the actual data. You also can find the saved graphs in either _BIG_D/LSTM-graphs/ or _small_d/LSTM-graphs/. An example graph is provided below:
 

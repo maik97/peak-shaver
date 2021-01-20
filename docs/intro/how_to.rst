@@ -44,7 +44,7 @@ Setting up parameters and loading the dataset
     D_PATH = '_BIG_D/'
 
     # Load the dataset:
-    main_dataset = mainDataset(D_PATH='_BIG_D/', period_min=5m, full_dataset=True)
+    main_dataset = mainDataset(D_PATH='_BIG_D/', period_min=5, full_dataset=True)
     # Normalized dataframe:
     df = main_dataset.make_input_df(drop_main_terminal=False, use_time_diff=True, day_diff='holiday-weekend')
     # Sum of the power demand dataframe (nor normalized):
