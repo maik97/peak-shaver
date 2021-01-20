@@ -42,7 +42,6 @@ class mainDataset:
     def return_parameter(self):
         return self.D_PATH
 
-    def period
 
     def coulmn_to_smoothed_period_df(self, dataset_name, coulmn_name, c_num=None, c_total=None): # returns Datafram: Strombedarf (nur noch eine Spalte, Index = SensorDateTime, neuerstellt)
         ''' Tries to open the dataset for a specific machine that is already smoothed to the time-period. Creates a new dataset if a dataset for the given time-period can not be opened.
