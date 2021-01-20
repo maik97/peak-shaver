@@ -102,7 +102,7 @@ class GraphMaker:
 			self.merge_dict['Tresholds_'+heur_name] = ['Tresholds_'+heur_name]
 			self.merge_dict['Configurations_'+heur_name] = ['Configurations_'+heur_name]
 				
-		self.use_tags(['cost_saving'])
+		self.use_tags(['sum_cost_saving'])
 
 		self.type_first_split  = 'heuristic_'
 		self.type_second_split = '_t-stamp'
@@ -134,7 +134,7 @@ class GraphMaker:
 					#self.csv_path_list = []
 					if self.custom_tags == False:
 						self.tag_list = []
-						
+
 					for tag in ea.Tags()['scalars']:
 						csv_path = self.graph_path+'seperate_log_csv/'+name+'/'+csv_name+'-tag-'+tag+'.csv'
 						
@@ -292,6 +292,12 @@ class GraphMaker:
 			print('Saved graph to:',self.graph_path+'graphs/'+name+'/'+name+'_'+tag+'.png')
 
 
+	def usual_prep_and_graph_creation(self):
+		self.logs_to_csv()
+		self.create_basic_longforms()
+		self.merge_longforms()
+		self.create_graphs()
+
 
 
 def main():
@@ -301,10 +307,10 @@ def main():
 	graph_maker.plot_options()
 	
 	graph_maker.setup_wahrsager()
-	graph_maker.logs_to_csv()
-	graph_maker.create_basic_longforms()
-	graph_maker.merge_longforms()
-	graph_maker.create_graphs()
+	graph_maker.usual_prep_and_graph_creation()
+
+	graph_maker.setup_heuristic()
+	graph_maker.usual_prep_and_graph_creation()
 
 	#graph_maker.setup_heuristic()
 	#graph_maker.heuristic_logs_to_csv()
