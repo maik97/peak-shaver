@@ -22,12 +22,12 @@ from main.common_env import common_env
 from main.agent_heuristic import heurisitc
 
 
-def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', epochs=1,
+def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=1,
                  threshold_dem=50, deactivate_SMS=False, deactivate_LION=False):
 
     # Naming the agent:
     now            = datetime.now()
-    NAME           = str(round(threshold_dem))+'_TARGET_VALUE_'+HEURISTIC_TYPE+now.strftime("_%d-%m-%Y_%H-%M-%S")
+    NAME           = 'heuristic_'+test_name+'_'+HEURISTIC_TYPE+'_'+str(round(threshold_dem))+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
     
     # Import dataset and logger based on the common settings
     df, power_dem_df, logger, period_min = dataset_and_logger(NAME)
@@ -86,26 +86,26 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', epochs=1,
 
 def test_threshold_for_all_heuristics():
     # Find maximum performance of battery configuration:
-    threshold_dem = use_heuristic('Single-Value-Heuristic', epochs=15, threshold_dem=50)
+    threshold_dem = use_heuristic('Single-Value-Heuristic', test_name='find_threshold', epochs=15, threshold_dem=50)
     
     # Test all heuristic:
-    use_heuristic('Perfekt-Pred-Heuristic', threshold_dem=threshold_dem)
-    use_heuristic('LSTM-Pred-Heuristic', threshold_dem=threshold_dem)
-    use_heuristic('Practical-Heuristic', threshold_dem=threshold_dem)
+    use_heuristic('Perfekt-Pred-Heuristic', test_name='Compare_Approches', threshold_dem=threshold_dem)
+    use_heuristic('LSTM-Pred-Heuristic', test_name='Compare_Approches', threshold_dem=threshold_dem)
+    use_heuristic('Practical-Heuristic', test_name='Compare_Approches', threshold_dem=threshold_dem)
 
 
 def test_for_different_thresholds(HEURISTIC_TYPE,threshold_list=[10,20,30,40,50,60,70,80,90]):
     # Test different threshold values
     for threshold in threshold_list:
-        use_heuristic(HEURISTIC_TYPE, threshold_dem=threshold)
+        use_heuristic(HEURISTIC_TYPE, test_name='Tresholds', threshold_dem=threshold)
 
 
 def test_battery_activations(HEURISTIC_TYPE,threshold_dem=60):
     # Test battery-configurations:
-    use_heuristic(HEURISTIC_TYPE, threshold_dem=threshold_dem)
-    use_heuristic(HEURISTIC_TYPE, threshold_dem=threshold_dem, deactivate_SMS=True,)
-    use_heuristic(HEURISTIC_TYPE, threshold_dem=threshold_dem, deactivate_LION=True)
-    use_heuristic(HEURISTIC_TYPE, threshold_dem=threshold_dem, deactivate_SMS=True, deactivate_LION=True)
+    use_heuristic(HEURISTIC_TYPE, test_name='Configurations', threshold_dem=threshold_dem)
+    use_heuristic(HEURISTIC_TYPE, test_name='Configurations', threshold_dem=threshold_dem, deactivate_SMS=True,)
+    use_heuristic(HEURISTIC_TYPE, test_name='Configurations', threshold_dem=threshold_dem, deactivate_LION=True)
+    use_heuristic(HEURISTIC_TYPE, test_name='Configurations', threshold_dem=threshold_dem, deactivate_SMS=True, deactivate_LION=True)
 
 
 def main():
