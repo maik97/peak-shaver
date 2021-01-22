@@ -26,8 +26,22 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=
                  threshold_dem=50, deactivate_SMS=False, deactivate_LION=False):
 
     # Naming the agent:
-    now            = datetime.now()
-    NAME           = 'heuristic_'+test_name+'_'+HEURISTIC_TYPE+'_'+str(round(threshold_dem))+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
+    now = datetime.now()
+    if test_name != 'Configurations'
+        NAME = 'heuristic_'+test_name+'_'+HEURISTIC_TYPE+'_'+str(round(threshold_dem))+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
+    else:
+        if deactivate_SMS == True:
+            SMS_string = 'SMS'
+        else:
+            SMS_string = 'None'
+        if deactivate_LION == True:
+            LION_string = 'LION'
+        else:
+            LION_string = 'None'
+
+        NAME = str(round(threshold_dem))+'-'+LION_string+'-'+LION_string
+        NAME = 'heuristic_'+test_name+'_'+HEURISTIC_TYPE+'_'+NAME+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
+
     
     # Import dataset and logger based on the common settings
     df, power_dem_df, logger, period_min = dataset_and_logger(NAME)
