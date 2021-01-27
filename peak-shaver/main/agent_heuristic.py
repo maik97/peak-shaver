@@ -265,7 +265,7 @@ class heurisitc:
         elif self.HEURISTIC_TYPE == 'Practical-Heuristic':
             self.find_practical_solution(LSTM_column)
 
-        print('Testing the Heuristic for',epochs,'Epochs')
+        print('Testing',self.HEURISTIC_TYPE,'with a treshold of',self.global_zielverbrauch,'for',epochs,'Epochs')
         print('Sum of initial battery charge:',power_to_shave)
         
         # Iterate Testing:

@@ -106,10 +106,10 @@ class reward_maker():
         print('Peak-Kosten:',  round(cost_peak,2))
         print('Gesamtkosten:', round(self.sum_usual_costs,2),'\n')
 
-        self.power_dem_list = []
-        self.peak_diff_list = []
-        self.cost_peak_test = []
-        self.cost_strom_test =[]
+        #self.power_dem_list = []
+        #self.peak_diff_list = []
+        #self.cost_peak_test = []
+        #self.cost_strom_test =[]
 
     def get_sum_of_usual_costs(self):
         '''
@@ -215,6 +215,7 @@ class reward_maker():
         cost_peak = max_peak_diff * self.Leistungspreis #* (self.steps_per_episode /self.steps_per_year)
         #c * steps   #kw        # c / kw * jahr       #steps / (steps*jahr)
 
+        '''
         self.power_dem_list.append(interval_sum_power_dem)
         self.peak_diff_list.append(max_peak_diff)
         self.cost_peak_test.append(cost_peak)
@@ -227,7 +228,7 @@ class reward_maker():
             print(sum(self.cost_peak_test))
             print(sum(self.cost_strom_test)*self.auf_jahr_rechnen)
             exit()
-
+        '''
         return cost_power, cost_LION, cost_SMS, cost_peak
 
     def get_reward(self):

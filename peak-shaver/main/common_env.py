@@ -342,8 +342,6 @@ class common_env(gym.Env):
         # Aktueller Energie-Bedarf der Maschinen:
         power_dem = self.df['norm_total_power'][self.current_step] * self.max_power_dem
 
-        self.power_dem_test.append(power_dem)
-
         # LADEN:
         if  self.ziel_netzverbrauch > power_dem:
             if SMS_priority == True:
@@ -404,10 +402,6 @@ class common_env(gym.Env):
         # Setze neuen Step (hier könnten globale max_peaks auf null gesetzt werden):
         done   = self.step_counter()
 
-        if done == True:
-            print(sum(self.power_dem_test))
-            print(sum(self.df['norm_total_power'])*self.max_power_dem)
-
         # Nächste Inputs:
         obs    = self.next_observation()
 
@@ -460,8 +454,6 @@ class common_env(gym.Env):
 
         # Reset Reward-Maker
         self.reward_maker.reset()
-
-        self.power_dem_test = []
 
         return self.next_observation()
 
