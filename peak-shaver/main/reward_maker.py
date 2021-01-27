@@ -68,7 +68,7 @@ class reward_maker():
         
 
 
-    def pass_env(self, PERIODEN_DAUER, steps_per_episode, max_power_dem, mean_power_dem, sum_power_dem):
+    def pass_env(self, PERIODEN_DAUER, steps_per_episode, max_power_dem, mean_power_dem, sum_power_dem, max_rolling_power_dem):
         '''
         Takes Init Parameter from GYM environment for the HIPE dataset, initiates all other necessary parameters and calculates the costs without peak shaving.
         
@@ -84,6 +84,7 @@ class reward_maker():
         self.max_power_dem     = max_power_dem
         self.mean_power_dem    = mean_power_dem
         self.sum_power_dem     = sum_power_dem
+        self.max_rolling_power_dem = max_rolling_power_dem
 
         # Init Parameter Zeit:
         self.minutes_per_year  = 525600
@@ -105,6 +106,11 @@ class reward_maker():
         print('Peak-Kosten:',  round(cost_peak,2))
         print('Gesamtkosten:', round(self.sum_usual_costs,2),'\n')
 
+        self.power_dem_list = []
+        self.peak_diff_list = []
+        self.cost_peak_test = []
+        self.cost_strom_test =[]
+
     def get_sum_of_usual_costs(self):
         '''
         Calculation of costs without peak shaving
@@ -112,7 +118,7 @@ class reward_maker():
         cost_power = self.sum_power_dem * self.PERIODEN_DAUER * (self.cost_per_kwh/60) * self.auf_jahr_rechnen
         #c * steps   #kw * steps           #min pro step         #c / (kw * min)
 
-        cost_peak  = self.max_power_dem * self.Leistungspreis 
+        cost_peak  = self.max_rolling_power_dem * self.Leistungspreis 
         #c * steps   #kw                  # c / kw * jahr
         return cost_power, cost_peak
 
@@ -179,12 +185,18 @@ class reward_maker():
                                 "R_HORIZON was set to:", self.R_HORIZON,
                                 "Alternatively use 'single_step' or 'episode', instead of an integer")
 
+    def asfjulfsda(self):
+        cost_power = self.sum_power_dem * self.PERIODEN_DAUER * (self.cost_per_kwh/60) * self.auf_jahr_rechnen
+        #c * steps   #kw * steps           #min pro step         #c / (kw * min)
 
+        cost_peak  = self.max_power_dem * self.Leistungspreis 
+        #c * steps   #kw                  # c / kw * jahr
 
-    def cost_function(self, interval_sum_power_dem, sum_LION_nutzung, max_peak, observed_period):
+    def cost_function(self, interval_sum_power_dem, sum_LION_nutzung, max_peak_diff, observed_period):
         '''
         Calculates the cost at a step when peak shaving is used
         '''
+
         cost_power = interval_sum_power_dem * self.PERIODEN_DAUER * (self.cost_per_kwh/60)
         #c * steps   #kw * steps              #min pro step            #c / (kw * min)
 
@@ -200,8 +212,21 @@ class reward_maker():
         else:
             cost_SMS = 0
         
-        cost_peak = max_peak * self.Leistungspreis #* (self.steps_per_episode /self.steps_per_year)
+        cost_peak = max_peak_diff * self.Leistungspreis #* (self.steps_per_episode /self.steps_per_year)
         #c * steps   #kw        # c / kw * jahr       #steps / (steps*jahr)
+
+        self.power_dem_list.append(interval_sum_power_dem)
+        self.peak_diff_list.append(max_peak_diff)
+        self.cost_peak_test.append(cost_peak)
+        self.cost_strom_test.append(cost_power)
+        if self.done == True:
+            print(len(self.power_dem_list))
+            print(sum(self.power_dem_list))
+            print(sum(self.peak_diff_list)*self.Leistungspreis)
+            print(np.mean(self.power_dem_list))
+            print(sum(self.cost_peak_test))
+            print(sum(self.cost_strom_test)*self.auf_jahr_rechnen)
+            exit()
 
         return cost_power, cost_LION, cost_SMS, cost_peak
 
@@ -229,7 +254,7 @@ class reward_maker():
         cost_power, cost_LION, cost_SMS, cost_peak = self.cost_function(
                                                                     interval_sum_power_dem = self.power_dem,
                                                                     sum_LION_nutzung       = self.LION_nutzung,
-                                                                    max_peak               = self.max_peak_diff,
+                                                                    max_peak_diff          = self.max_peak_diff,
                                                                     observed_period        = 1 # step
                                                                     )
 
@@ -242,7 +267,7 @@ class reward_maker():
         elif self.COST_TYPE == 'yearly_costs':
             costs = yearly_costs
         elif self.COST_TYPE == 'max_peak_focus':
-            costs = (cost_power + cost_LION + cost_SMS + (self.focus_peak_multiplier * cost_peak) ) * self.auf_jahr_rechnen
+            costs = (cost_power + cost_LION + cost_SMS + (self.focus_peak_multiplier * cost_peak) )
         else:
             raise Exception("COST_TYPE not understood. Please use: 'exact_costs', 'yearly_costs', 'max_peak_focus'")
 
@@ -337,18 +362,18 @@ class reward_maker():
         self.sum_cost_saving  += cost_saving
 
         if any(string in ['exact_costs'] for string in self.logging_list):
-            self.LOGGER.log_scalar('Reward-Maker - exact_costs:',  exact_costs,  self.sum_steps, self.done)
+            self.LOGGER.log_scalar('step_exact_costs:',  exact_costs,  self.sum_steps, self.done)
         if any(string in ['yearly_costs'] for string in self.logging_list):
-            self.LOGGER.log_scalar('Reward-Maker - yearly_costs:', yearly_costs, self.sum_steps, self.done)
+            self.LOGGER.log_scalar('step_yearly_costs:', yearly_costs, self.sum_steps, self.done)
         if any(string in ['cost_saving'] for string in self.logging_list):
-            self.LOGGER.log_scalar('Reward-Maker - cost_saving:',  cost_saving,  self.sum_steps, self.done)
+            self.LOGGER.log_scalar('step_cost_saving:',  cost_saving,  self.sum_steps, self.done)
 
         if any(string in ['sum_exact_costs'] for string in self.logging_list):
-            self.LOGGER.log_scalar('Sum_Episode - exact_costs:',  self.sum_exact_costs,  self.sum_steps, self.done)
+            self.LOGGER.log_scalar('sum_exact_costs',  self.sum_exact_costs,  self.sum_steps, self.done)
         if any(string in ['sum_yearly_costs'] for string in self.logging_list):
-            self.LOGGER.log_scalar('Sum_Episode - yearly_costs:', self.sum_yearly_costs, self.sum_steps, self.done)
+            self.LOGGER.log_scalar('sum_yearly_costs', self.sum_yearly_costs, self.sum_steps, self.done)
         if any(string in ['sum_cost_saving'] for string in self.logging_list):
-            self.LOGGER.log_scalar('Sum_Episode - cost_saving:',  self.sum_cost_saving,  self.sum_steps, self.done)
+            self.LOGGER.log_scalar('sum_cost_saving',  self.sum_cost_saving,  self.sum_steps, self.done)
 
 
     def reward_LOGGER(self, step_reward, sum_steps):
@@ -356,8 +381,8 @@ class reward_maker():
         self.step_reward       = step_reward
 
         if any(string in ['step_reward'] for string in self.logging_list):
-            self.LOGGER.log_scalar('Reward-Maker - step_reward:',  step_reward,  sum_steps, self.done)
-            self.LOGGER.log_scalar('Sum_Episode - step_reward:',  self.sum_step_reward, sum_steps, self.done)
+            self.LOGGER.log_scalar('step_reward:',  step_reward,  sum_steps, self.done)
+            self.LOGGER.log_scalar('sum_reward:',  self.sum_step_reward, sum_steps, self.done)
 
 
     def get_log(self):

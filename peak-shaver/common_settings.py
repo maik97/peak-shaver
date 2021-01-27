@@ -5,10 +5,10 @@ from main.logger import Logger
 from main.common_func import max_seq, mean_seq
 
 # Directory of the dataset:
-D_PATH = '_small_d/'
+D_PATH = '_BIG_D/'
 
 # Parameter mainDataset:
-period_min        = 15
+period_min        = 5
 full_dataset      = True
 
 # Parameter mainDataset.make_input_df:
@@ -70,7 +70,7 @@ def dataset_and_logger(NAME='test', preprocess_all=False):
 		return df, power_dem_df, logger, period_min
 
 
-main():
+def main():
 	dataset_and_logger(preprocess_all=True)
 
 

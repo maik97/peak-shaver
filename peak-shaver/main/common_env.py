@@ -56,8 +56,16 @@ class common_env(gym.Env):
 
 
         # Parameter Datensatz und Logging:
-        self.og_df                 = df
-        self.df                    = df[:-int(val_split*len(df))]
+        self.og_df = df
+        if val_split != 0:
+            self.df = df[:-int(val_split*len(df))]
+        else:
+            self.df = df
+        print('')
+        print('Length of train data:',len(self.df))
+        print('Length of val data:', len(self.og_df) - len(self.df))
+        print('')
+
         self.power_dem_arr         = power_dem_df.to_numpy()
         self.rolling_power_dem     = power_dem_df.rolling(int(measure_intervall/PERIODEN_DAUER)).mean().fillna(0).to_numpy()
         self.input_list            = input_list
@@ -104,19 +112,22 @@ class common_env(gym.Env):
             raise Exception("OBS_TYPE not understood. OBS_TYPE must be: 'discrete', 'contin'")
 
         # Init fixe Parameter
-        self.max_power_dem         = np.max(self.rolling_power_dem)
+        self.max_power_dem         = np.max(self.power_dem_arr)
+        self.max_rolling_power_dem = np.max(self.rolling_power_dem)
         self.mean_power_dem        = np.mean(self.power_dem_arr)
-        self.sum_power_dem         = np.sum(self.power_dem_arr)
+        self.sum_power_dem         = np.sum(self.df['norm_total_power']*self.max_power_dem)
         self.steps_per_episode     = len(self.df['norm_total_power'])
         print('\nMaximum Power-Demand:', round(self.max_power_dem,2))
+        print('Maximum Power-Demand (15min):', round(self.max_rolling_power_dem,2))
         print('Mean Power-Demand:',      round(self.mean_power_dem,2))
+        print('Sum of Power-Demand',     round(self.sum_power_dem,2))
         print('Steps pro Episode:',      round(self.steps_per_episode,2))
 
 
         # Init Rewards
         self.reward_maker          = reward_maker
         self.reward_range          = self.reward_maker.get_reward_range() #als (MIN_REWARD, MAX_REWARD)
-        self.reward_maker.pass_env(self.PERIODEN_DAUER, self.steps_per_episode, self.max_power_dem, self.mean_power_dem, self.sum_power_dem)
+        self.reward_maker.pass_env(self.PERIODEN_DAUER, self.steps_per_episode, self.max_power_dem, self.mean_power_dem, self.sum_power_dem, self.max_rolling_power_dem)
         
         self.deactivate_SMS        = self.reward_maker.__dict__['deactivate_SMS']
         self.deactivate_LION       = self.reward_maker.__dict__['deactivate_LION']
@@ -331,6 +342,8 @@ class common_env(gym.Env):
         # Aktueller Energie-Bedarf der Maschinen:
         power_dem = self.df['norm_total_power'][self.current_step] * self.max_power_dem
 
+        self.power_dem_test.append(power_dem)
+
         # LADEN:
         if  self.ziel_netzverbrauch > power_dem:
             if SMS_priority == True:
@@ -391,6 +404,10 @@ class common_env(gym.Env):
         # Setze neuen Step (hier könnten globale max_peaks auf null gesetzt werden):
         done   = self.step_counter()
 
+        if done == True:
+            print(sum(self.power_dem_test))
+            print(sum(self.df['norm_total_power'])*self.max_power_dem)
+
         # Nächste Inputs:
         obs    = self.next_observation()
 
@@ -443,6 +460,8 @@ class common_env(gym.Env):
 
         # Reset Reward-Maker
         self.reward_maker.reset()
+
+        self.power_dem_test = []
 
         return self.next_observation()
 

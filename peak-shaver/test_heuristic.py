@@ -27,7 +27,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=
 
     # Naming the agent:
     now = datetime.now()
-    if test_name != 'Configurations'
+    if test_name != 'Configurations':
         NAME = 'heuristic_'+test_name+'_'+HEURISTIC_TYPE+'_'+str(round(threshold_dem))+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
     else:
         if deactivate_SMS == True:
@@ -39,7 +39,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=
         else:
             LION_string = 'None'
 
-        NAME = str(round(threshold_dem))+'-'+LION_string+'-'+LION_string
+        NAME = str(round(threshold_dem))+'-'+LION_string+'-'+SMS_string
         NAME = 'heuristic_'+test_name+'_'+HEURISTIC_TYPE+'_'+NAME+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
 
     
@@ -84,7 +84,9 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=
         ACTION_TYPE    = 'contin',
         OBS_TYPE       = 'contin',
         # Define heuristic usage:
-        AGENT_TYPE     = 'heuristic')
+        AGENT_TYPE     = 'heuristic',
+        val_split      = 0)
+
     # Use the complete dataset (no validation split):
     env.use_all_data()
 
@@ -124,13 +126,17 @@ def test_battery_activations(HEURISTIC_TYPE,threshold_dem=60):
 
 def main():
 
+
+
     # General test with max performance threshhold:
-    test_threshold_for_all_heuristics()
+    #test_threshold_for_all_heuristics()
 
     # Test the three main heuristics with different thresholds and with different battery activations:
     for HEURISTIC_TYPE in ['Perfekt-Pred-Heuristic','LSTM-Pred-Heuristic','Practical-Heuristic']:
-        test_for_different_thresholds(HEURISTIC_TYPE)
-        test_battery_activations(HEURISTIC_TYPE)
+        #test_for_different_thresholds(HEURISTIC_TYPE)
+        #test_battery_activations(HEURISTIC_TYPE)
+        use_heuristic(HEURISTIC_TYPE, test_name='test_rewards', threshold_dem=100, deactivate_SMS=True, deactivate_LION=True)
+
 
 
 if __name__ == "__main__":

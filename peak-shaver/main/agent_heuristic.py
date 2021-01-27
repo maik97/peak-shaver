@@ -184,7 +184,7 @@ class heurisitc:
         global_value = self.global_zielverbrauch
 
         # Iterate trhough each step (forwards):
-        for i in range(len(power_dem_arr)):
+        for i in range(len(sequence_pred)):
             power_dem_step     = power_dem_arr[i]
             sequence_pred_step = sequence_pred[i]
 

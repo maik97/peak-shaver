@@ -31,6 +31,8 @@ class GraphMaker:
 		self.name_dict   = {}
 		self.custom_tags = False
 
+		os.chdir('../'+D_PATH)
+
 
 	def plot_options(self, style="whitegrid", use_grid=False, graph_name=True):
 
@@ -52,8 +54,8 @@ class GraphMaker:
 
 	def setup_wahrsager(self):
 
-		self.graph_path      = '../'+self.D_PATH+'lstm-plots/'
-		self.log_path        = '../'+self.D_PATH+'lstm-logs/'
+		self.graph_path      = 'lstm-plots/'
+		self.log_path        = 'lstm-logs/'
 		#self.compare_df_path = self.graph_path+'standart/'
 
 		self.dont_merge = ['standart','learning_rate','dropout','final']
@@ -84,8 +86,8 @@ class GraphMaker:
 
 		# 'heuristic_'+test_name+'_'+HEURISTIC_TYPE+'_'+str(round(threshold_dem))+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
 
-		self.graph_path = '../'+self.D_PATH+'agent-plots/heuristic/'
-		self.log_path   = '../'+self.D_PATH+'agent-logs/'
+		self.graph_path = 'agent-plots/heuristic/'
+		self.log_path   = 'agent-logs/'
 
 		self.test_name_list = ['Compare_Approches','Tresholds','Configurations']
 		self.heur_name_list = ['Perfekt-Pred-Heuristic','LSTM-Pred-Heuristic','Practical-Heuristic']
@@ -98,11 +100,11 @@ class GraphMaker:
 		self.merge_dict = {}
 		self.merge_dict['Compare_Approches'] = []
 		for heur_name in self.heur_name_list:
-			self.merge_dict['Compare_Approches'].append('Compare_Approches_'+test_name)
+			self.merge_dict['Compare_Approches'].append('Compare_Approches_'+heur_name)
 			self.merge_dict['Tresholds_'+heur_name] = ['Tresholds_'+heur_name]
 			self.merge_dict['Configurations_'+heur_name] = ['Configurations_'+heur_name]
 				
-		self.use_tags(['sum_cost_saving'])
+		self.use_tags(['cost_saving'])
 
 		self.type_first_split  = 'heuristic_'
 		self.type_second_split = '_t-stamp'
@@ -123,30 +125,33 @@ class GraphMaker:
 
 			make_dir(self.graph_path+'seperate_log_csv/'+name)
 		
-			try:
-				for folder_path in iglob(self.log_path+'*'+name+'*'):
-					print('path:',folder_path)
-					csv_name = folder_path.split('\\')[-1]
-					#name = folder_path.split('/')[-1]
-					ea = event_accumulator.EventAccumulator(folder_path)
-					ea.Reload()
+			#try:
+			for folder_path in iglob(self.log_path+'*'+name+'*'):
+				print('path:',folder_path)
+				csv_name = folder_path.split('\\')[-1]
+				#name = folder_path.split('/')[-1]
+				ea = event_accumulator.EventAccumulator(folder_path)
+				ea.Reload()
 
-					#self.csv_path_list = []
+				#self.csv_path_list = []
+				if self.custom_tags == False:
+					self.tag_list = []
+
+				for tag in ea.Tags()['scalars']:
+					tag_str = tag.replace(':','').split(' ')[-1]
+					print(tag_str)
+					csv_path = self.graph_path+'seperate_log_csv/'+name+'/'+csv_name+'-tag-'+tag_str+'.csv'
+					
+					#print(pd.DataFrame(ea.Scalars(tag)))
+					pd.DataFrame(ea.Scalars(tag)).to_csv(csv_path)
+					
 					if self.custom_tags == False:
-						self.tag_list = []
-
-					for tag in ea.Tags()['scalars']:
-						csv_path = self.graph_path+'seperate_log_csv/'+name+'/'+csv_name+'-tag-'+tag+'.csv'
-						
-						pd.DataFrame(ea.Scalars(tag)).to_csv(csv_path)
-						
-						if self.custom_tags == False:
-							self.tag_list.append(tag)
+						self.tag_list.append(tag)
 						#self.csv_path_list.append(csv_path)
 			
-			except Exception as e:
-				print('Exception:', e)
-				print('Could not open any log with path:',self.log_path,'that includes',name)
+			#except Exception as e:
+			#	print('Exception:', e)
+			#	print('Could not open any log with path:',self.log_path,'that includes',name)
 
 	
 	def create_basic_longforms(self):
@@ -159,55 +164,57 @@ class GraphMaker:
 			learn_time_dict_list = [] 
 			for tag in self.tag_list:
 
-				try:
-					print('Creating longform for',name,'with',tag,'...')
-					df_list = []
-					name_list = []
-					for filename in iglob(self.graph_path+'seperate_log_csv/'+name+'/*-tag-'+tag+'.csv'):
+				#try:
+				print('Creating longform for',name,'with',tag,'...')
+				df_list = []
+				name_list = []
+				for filename in iglob(self.graph_path+'seperate_log_csv/'+name+'/*-tag-'+tag+'.csv'):
 
-						# Name:
-						df = pd.read_csv(filename, delimiter=',')
-						df = df.rename(columns={df.columns[-1]:name})	
-						df = df.rename(columns={df.columns[0]:self.index_name})	
-						
-						# Index:
-						df             = df.set_index('step')
-						df.columns     = df.columns.str.replace('_',' ')
-						df.index.names = [self.index_name]
+					# Name:
+					df = pd.read_csv(filename, delimiter=',')
+					df = df.set_index('step')
+					df = df.rename(columns={df.columns[-1]:name})	
+					df = df.rename(columns={df.columns[0]:self.index_name})	
 
-						# drop unnamed:
-						df = df.drop(columns=[df.columns[0]])
 
-						# Add column for type:
-						if any(type_string in [name] for type_string in self.name_type_list):
-							df['type']  = type_string
-							print(type_string)
-						else:
-							type_string = filename.split(self.type_first_split)[-1]
-							type_string = type_string.split(self.type_second_split)[0]
-							type_string = type_string.split('_')[-1]
-							df['type']  = type_string
+					# Index:
+					df.columns     = df.columns.str.replace('_',' ')
+					df.index.names = [self.index_name]
 
-						# Add column for run number:
-						run = name_list.count(type_string)
-						df['run']  = run
-						#print(run)
-						#print(filename)
+					# drop unnamed:
+					df = df.drop(columns=[df.columns[0]])
 
-						# Calculate learning time:
-						learn_time_dict_list.append(self.calc_learn_time(df[df.columns[-4]], tag, name, run))
-						df = df.drop(columns=[df.columns[-4]])
-						
-						#df.name = filename
-						df_list.append(df)
-						name_list.append(type_string)
+					# Add column for type:
+					if any(type_string in name for type_string in self.name_type_list):
+						type_string = name.split('_')[-1]
+						df['type']  = type_string
+					else:
+						type_string = filename.split(self.type_first_split)[-1]
+						type_string = type_string.split(self.type_second_split)[0]
+						type_string = type_string.split('_')[-1]
+						df['type']  = type_string
 
-					# Save longform table:
-					concat_df = pd.concat(df_list)
-					concat_df.to_csv(self.graph_path+'basic_longform_csv/'+name+'/'+name+'_'+tag+'.csv')
+					# Add column for run number:
+					run = name_list.count(type_string)
+					df['run']  = run
+					#print(run)
+					#print(filename)
 
-				except Exception as e:
-					print(e)
+
+					# Calculate learning time:
+					learn_time_dict_list.append(self.calc_learn_time(df[df.columns[-4]], tag, name, run))
+					df = df.drop(columns=[df.columns[-4]])
+					
+					#df.name = filename
+					df_list.append(df)
+					name_list.append(type_string)
+
+				# Save longform table:
+				concat_df = pd.concat(df_list)
+				concat_df.to_csv(self.graph_path+'basic_longform_csv/'+name+'/'+name+'_'+tag+'.csv')
+
+				#except Exception as e:
+				#	print(e)
 			
 			# Save learning time table:
 			learn_time_df = pd.DataFrame(learn_time_dict_list)
@@ -245,18 +252,19 @@ class GraphMaker:
 			for tag in self.tag_list:
 				df_list = []
 				for name in self.merge_dict[key]:
-					try:
-						path = self.graph_path+'basic_longform_csv/'+name+'/'+name+'_'+tag+'.csv'
-						print('Merge to',key,'from',path)
-						df = pd.read_csv(path, delimiter=',', index_col=self.index_name)
-						df = df.rename(columns={df.columns[-3]:key})
-						df.columns = df.columns.str.replace('_',' ')
-						df_list.append(df)
-					except Exception as e:
-						print(e)
+					#try:
+					path = self.graph_path+'basic_longform_csv/'+name+'/'+name+'_'+tag+'.csv'
+					print('Merge to',key,'from',path)
+					df = pd.read_csv(path, delimiter=',', index_col=self.index_name)
+					df = df.rename(columns={df.columns[-3]:key})
+					df.columns = df.columns.str.replace('_',' ')
+					df_list.append(df)
+					print(df)
+					#except Exception as e:
+					#	print(e)
 
-					concat_df = pd.concat(df_list)
-					concat_df.to_csv(self.graph_path+'final_longform_csv/'+key+'/'+key+'_'+tag+'.csv')
+				concat_df = pd.concat(df_list)
+				concat_df.to_csv(self.graph_path+'final_longform_csv/'+key+'/'+key+'_'+tag+'.csv')
 
 
 	def create_graphs(self, plot_type='simple'):
@@ -306,8 +314,8 @@ def main():
 
 	graph_maker.plot_options()
 	
-	graph_maker.setup_wahrsager()
-	graph_maker.usual_prep_and_graph_creation()
+	#graph_maker.setup_wahrsager()
+	#graph_maker.usual_prep_and_graph_creation()
 
 	graph_maker.setup_heuristic()
 	graph_maker.usual_prep_and_graph_creation()
