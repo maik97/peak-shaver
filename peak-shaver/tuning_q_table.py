@@ -14,7 +14,7 @@ from main.common_env import common_env
 from main.agent_q_table import Q_Learner
 
 
-def run_agent(num_runs=3, name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000, 
+def run_agent(num_runs=1, name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000, 
               epsilon_decay=0.999996, input_list=['norm_total_power','normal','seq_max']):
     
     for i in range(num_runs):
@@ -90,7 +90,7 @@ def run_agent(num_runs=3, name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000,
 def parameter_tuning():
 
     run_agent(name='standart')
-
+    '''
     # Learning rate:
     lr_list = [0.1,0.25,0.75,1]
     for lr in lr_list:
@@ -122,6 +122,6 @@ def parameter_tuning():
     for input_list in input_list_list:
         run_agent(name='input_list_{}'.format(i), input_list=input_list)
         i += 1
-
+	'''
 
 parameter_tuning()

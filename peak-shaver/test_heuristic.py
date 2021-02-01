@@ -58,7 +58,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=
         cost_per_kwh            = 0.2255,
         LION_Anschaffungs_Preis = 34100,
         LION_max_Ladezyklen     = 1000,
-        SMS_Anschaffungs_Preis  = 115000/3,
+        SMS_Anschaffungs_Preis  = 33000,#115000/3,
         SMS_max_Nutzungsjahre   = 20,
         Leistungspreis          = 102,
         # Setup logging tags:
@@ -76,7 +76,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=
         # Datset Inputs for the states:
         input_list     = ['norm_total_power','normal','seq_max'],
         # Batters stats:
-        max_SMS_SoC    = 12/3,
+        max_SMS_SoC    = 15,
         max_LION_SoC   = 54,
         # Period length in minutes:
         PERIODEN_DAUER = period_min,
@@ -126,7 +126,7 @@ def test_battery_activations(HEURISTIC_TYPE,threshold_dem=60):
 
 def main():
 
-    use_heuristic('Perfekt-Pred-Heuristic', test_name='Tresholds', threshold_dem=69)
+    #use_heuristic('Perfekt-Pred-Heuristic', test_name='Tresholds', threshold_dem=69)
 
 
     # General test with max performance threshhold:
@@ -134,8 +134,8 @@ def main():
     
     # Test the three main heuristics with different thresholds and with different battery activations:
     for HEURISTIC_TYPE in ['Perfekt-Pred-Heuristic','LSTM-Pred-Heuristic','Practical-Heuristic']:
-        #test_for_different_thresholds(HEURISTIC_TYPE)
-        test_battery_activations(HEURISTIC_TYPE)
+        test_for_different_thresholds(HEURISTIC_TYPE)
+        #test_battery_activations(HEURISTIC_TYPE)
         #use_heuristic(HEURISTIC_TYPE, test_name='test_rewards', threshold_dem=100, deactivate_SMS=True, deactivate_LION=True)
     
 

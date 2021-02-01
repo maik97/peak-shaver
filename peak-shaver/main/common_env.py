@@ -217,7 +217,7 @@ class common_env(gym.Env):
 
         # Überprüfe, ob Ende der Episode erreicht wurde:
         if self.step_counter_episode >= self.steps_per_episode:
-            self.LOGGER.log_scalar('5.3 Maximaler Peak (Episode):', self.episode_max_peak, self.episode_counter, True)
+            self.LOGGER.log_scalar('5.3 max-peak-epoch', self.episode_max_peak, self.episode_counter, True)
             self.episode_counter     += 1
             self.step_counter_episode = 0
             self.episode_max_peak     = 0
@@ -227,14 +227,14 @@ class common_env(gym.Env):
 
         # Neue Woche
         if self.step_counter_week >= self.steps_per_week or done == True:
-            self.LOGGER.log_scalar('5.2 Maximaler Peak (Woche):', self.week_max_peak, self.week_counter, done)
+            self.LOGGER.log_scalar('5.2 max-peak-week', self.week_max_peak, self.week_counter, done)
             self.week_counter     += 1
             self.step_counter_week = 0
             self.week_max_peak     = 0
 
         # Neuer Tag
         if self.step_counter_day >= self.steps_per_day or done == True:
-            self.LOGGER.log_scalar('5.1 Maximaler Peak (Tag):', self.day_max_peak, self.day_counter, done)
+            self.LOGGER.log_scalar('5.1 max-peak-day', self.day_max_peak, self.day_counter, done)
             self.day_counter     += 1
             self.step_counter_day = 0
             self.day_max_peak     = 0
@@ -625,15 +625,15 @@ class common_env(gym.Env):
             action (integer or array): integer when action space is discrete and array when action space is continious
         '''
         if self.ACTION_TYPE == 'discrete':
-            self.LOGGER.log_scalar('1.1 Discrete Action:', action, self.sum_steps, done)
+            self.LOGGER.log_scalar('1.1 discrete-action', action, self.sum_steps, done)
         elif self.ACTION_TYPE == 'contin':
-            self.LOGGER.log_scalar('1.2 Continuous Action:', action[0], self.sum_steps, done)
-            self.LOGGER.log_scalar('1.3 Prio-SMS:', action[1], self.sum_steps, done)
+            self.LOGGER.log_scalar('1.2 continuous-action', action[0], self.sum_steps, done)
+            self.LOGGER.log_scalar('1.3 Prio-SMS', action[1], self.sum_steps, done)
 
-        self.LOGGER.log_scalar('2.1 Grid-energy-consumption (real):', self.netzverbrauch, self.sum_steps, done)
-        self.LOGGER.log_scalar('2.2 Grid-energy-consumption (target):', self.ziel_netzverbrauch, self.sum_steps, done)
-        self.LOGGER.log_scalar('3.1 SoC SMS:', self.SMS_SoC/60, self.sum_steps, done)
-        self.LOGGER.log_scalar('3.2 SoC LION:', self.LION_SoC/60, self.sum_steps, done)
+        self.LOGGER.log_scalar('2.1 real-GEC', self.netzverbrauch, self.sum_steps, done)
+        self.LOGGER.log_scalar('2.2 target-GEC', self.ziel_netzverbrauch, self.sum_steps, done)
+        self.LOGGER.log_scalar('3.1 SoC-SMS', self.SMS_SoC/60, self.sum_steps, done)
+        self.LOGGER.log_scalar('3.2 SoC-LION', self.LION_SoC/60, self.sum_steps, done)
 
         '''
         try:
@@ -646,8 +646,8 @@ class common_env(gym.Env):
         '''
         if done == True:
             sum_cost_saving, sum_step_reward, step_reward, sum_steps = self.reward_maker.get_log()
-            self.LOGGER.log_scalar('4.1 Summe Ersparnis - Episode:',  sum_cost_saving, self.episode_counter, done)
-            self.LOGGER.log_scalar('4.2 Summe Rewards - Episode:',  sum_step_reward, self.episode_counter, done)
+            self.LOGGER.log_scalar('4.1 Summe Ersparnis - Episode',  sum_cost_saving, self.episode_counter, done)
+            self.LOGGER.log_scalar('4.2 Summe Rewards - Episode',  sum_step_reward, self.episode_counter, done)
 
 
 

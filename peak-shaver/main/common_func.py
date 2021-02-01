@@ -13,7 +13,6 @@ tensorboard --logdir=_small_d/logs/
 tensorboard --logdir=_BIG_D/logs/
 '''
 
-
 def make_dir(new_dir):
     '''
     Creates a new directory, if the directory does not already exist.
