@@ -105,8 +105,11 @@ class heurisitc:
         # Setup iteration:
         power_to_shave = 0
         zielnetzverbrauch = []
-        power_dem_arr = self.env.__dict__['power_dem_arr']
         global_value = self.global_zielverbrauch
+
+        power_dem_arr = self.df['norm_total_power'].to_numpy().copy()
+        power_dem_arr *= self.env.__dict__['max_power_dem']
+        print(power_dem_arr)
 
         # Iterate backwards through each step:
         for power_dem_step in power_dem_arr[::-1]:
@@ -136,12 +139,12 @@ class heurisitc:
         Args:
             LSTM_column (string): Name of the column in the passed dataframe `df`, this column has to contain the predictions you want to use.
         '''
-        print('Calculating optimal actions for perfect predictions...')
+        print('Calculating optimal actions for imperfect predictions...')
 
         # Setup iteration:
         power_to_shave = 0
         zielnetzverbrauch = []
-        power_dem_arr = self.env.__dict__['df'][LSTM_column].to_numpy()
+        power_dem_arr = self.env.__dict__['df'][LSTM_column].to_numpy().copy()
         power_dem_arr *= self.env.__dict__['max_power_dem']
         print(power_dem_arr)
         global_value = self.global_zielverbrauch
@@ -174,6 +177,7 @@ class heurisitc:
         Args:
             LSTM_column (string): Name of the column in the passed dataframe `df`, this column has to contain the predictions you want to use.
         '''
+        print('Calculating practical actions for imperfect predictions...')
 
         # Setup iteration:
         power_to_shave = 0
@@ -266,7 +270,7 @@ class heurisitc:
             self.find_practical_solution(LSTM_column)
 
         print('Testing',self.HEURISTIC_TYPE,'with a treshold of',self.global_zielverbrauch,'for',epochs,'Epochs')
-        print('Sum of initial battery charge:',power_to_shave)
+        #print('Sum of initial battery charge:',power_to_shave)
         
         # Iterate Testing:
         for e in range(epochs):

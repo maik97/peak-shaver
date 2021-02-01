@@ -30,11 +30,11 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=
     if test_name != 'Configurations':
         NAME = 'heuristic_'+test_name+'_'+HEURISTIC_TYPE+'_'+str(round(threshold_dem))+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
     else:
-        if deactivate_SMS == True:
+        if deactivate_SMS == False:
             SMS_string = 'SMS'
         else:
             SMS_string = 'None'
-        if deactivate_LION == True:
+        if deactivate_LION == False:
             LION_string = 'LION'
         else:
             LION_string = 'None'
@@ -126,17 +126,18 @@ def test_battery_activations(HEURISTIC_TYPE,threshold_dem=60):
 
 def main():
 
+    use_heuristic('Perfekt-Pred-Heuristic', test_name='Tresholds', threshold_dem=69)
 
 
     # General test with max performance threshhold:
-    test_threshold_for_all_heuristics()
-
+    #test_threshold_for_all_heuristics()
+    
     # Test the three main heuristics with different thresholds and with different battery activations:
     for HEURISTIC_TYPE in ['Perfekt-Pred-Heuristic','LSTM-Pred-Heuristic','Practical-Heuristic']:
-        test_for_different_thresholds(HEURISTIC_TYPE)
-        #test_battery_activations(HEURISTIC_TYPE)
+        #test_for_different_thresholds(HEURISTIC_TYPE)
+        test_battery_activations(HEURISTIC_TYPE)
         #use_heuristic(HEURISTIC_TYPE, test_name='test_rewards', threshold_dem=100, deactivate_SMS=True, deactivate_LION=True)
-
+    
 
 
 if __name__ == "__main__":

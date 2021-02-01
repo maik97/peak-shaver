@@ -474,8 +474,11 @@ class common_env(gym.Env):
             self.LION_SoC = random.randint(0.5*self.max_LION_SoC, self.max_LION_SoC)
 
         if SoC != None:
-            self.LION_SoC = min(SoC,self.max_LION_SoC)
-            self.SMS_SoC = min(SoC-self.LION_SoC,self.max_SMS_SoC)
+            self.LION_SoC = min(SoC*self.PERIODEN_DAUER,self.max_LION_SoC)
+            self.SMS_SoC = min(SoC*self.PERIODEN_DAUER-self.LION_SoC,self.max_SMS_SoC)
+
+        print('Initial Charge SMS',self.SMS_SoC)
+        print('Initial Charge LION',self.LION_SoC)
 
         # Reset Reward-Maker
         self.reward_maker.reset()
