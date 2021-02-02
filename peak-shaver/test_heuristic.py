@@ -58,7 +58,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=
         cost_per_kwh            = 0.2255,
         LION_Anschaffungs_Preis = 34100,
         LION_max_Ladezyklen     = 1000,
-        SMS_Anschaffungs_Preis  = 33000,#115000/3,
+        SMS_Anschaffungs_Preis  = 55000,#115000/3,
         SMS_max_Nutzungsjahre   = 20,
         Leistungspreis          = 102,
         # Setup logging tags:
@@ -76,7 +76,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=
         # Datset Inputs for the states:
         input_list     = ['norm_total_power','normal','seq_max'],
         # Batters stats:
-        max_SMS_SoC    = 15,
+        max_SMS_SoC    = 25,
         max_LION_SoC   = 54,
         # Period length in minutes:
         PERIODEN_DAUER = period_min,
