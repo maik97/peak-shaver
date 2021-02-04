@@ -40,6 +40,10 @@ class common_env(gym.Env):
     def __init__(self, reward_maker, df, power_dem_df, input_list,
             max_SMS_SoC          = 12,
             max_LION_SoC         = 54,
+            LION_max_entladung   = 50,
+            SMS_max_entladung    = 100,
+            SMS_entladerate      = 0.72,
+            LION_entladerate     = 0.00008,
             PERIODEN_DAUER       = 5,
             ACTION_TYPE          = 'discrete', #'contin'
             OBS_TYPE             = 'discrete', 
@@ -75,9 +79,12 @@ class common_env(gym.Env):
         # Parameter Environment:
         self.max_SMS_SoC           = max_SMS_SoC  * 60 # umrechnung von kwh in kwmin
         self.max_LION_SoC          = max_LION_SoC * 60 # umrechnung von kwh in kwmin
-        self.LION_max_entladung    = 50 #kw
-        self.SMS_max_entladung     = 100 #kw
-        self.SMS_entladerate       = 0.0025
+        self.LION_max_entladung    = LION_max_entladung #50 #kw
+        self.SMS_max_entladung     = SMS_max_entladung #100 #kw
+        self.SMS_entladerate       = (SMS_entladerate/(24*60))*PERIODEN_DAUER#*self.max_SMS_SoC
+        self.LION_entladerate      = (LION_entladerate/(24*60))*PERIODEN_DAUER#*self.max_LION_SoC
+        print(self.SMS_entladerate)
+        print(self.LION_entladerate)
         self.PERIODEN_DAUER        = PERIODEN_DAUER    # in min
 
         # Parameter Agent:
@@ -368,6 +375,7 @@ class common_env(gym.Env):
             # Berechne Verlust SMS pro Step:
         
         self.p_loss = self.SMS_verlust()
+        lion_verlust = self.LION_verlust()
 
 
     def step(self, action):
@@ -632,12 +640,34 @@ class common_env(gym.Env):
         Returns:
             SoC_loss (float): Charge loss in kw
         '''
+        '''
         if self.SMS_SoC >= self.max_SMS_SoC*self.SMS_entladerate:
             self.SMS_SoC -= self.max_SMS_SoC*self.SMS_entladerate 
             return self.max_SMS_SoC*self.SMS_entladerate 
         else:
             self.SMS_SoC = 0
             return 0
+        '''
+        self.SMS_SoC -= self.SMS_SoC*self.SMS_entladerate 
+        return self.SMS_SoC*self.SMS_entladerate 
+
+
+    def LION_verlust(self):
+        ''' Calculates the loss of the flying wheel
+
+        Returns:
+            SoC_loss (float): Charge loss in kw
+        '''
+        '''
+        if self.LION_SoC >= self.max_LION_SoC*self.LION_entladerate:
+            self.LION_SoC -= self.max_LION_SoC*self.LION_entladerate 
+            return self.max_LION_SoC*self.LION_entladerate 
+        else:
+            self.LION_SoC = 0
+            return 0
+        '''
+        self.LION_SoC -= self.LION_SoC*self.LION_entladerate 
+        return self.LION_SoC*self.LION_entladerate 
    
     
     def step_LOGGER(self, action, done):
