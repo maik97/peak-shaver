@@ -59,7 +59,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=
         LION_Anschaffungs_Preis = 34100,
         LION_max_Ladezyklen     = 1000,
         SMS_Anschaffungs_Preis  = 55000,#115000/3,
-        SMS_max_Nutzungsjahre   = 20,
+        SMS_max_Nutzungsjahre   = 25,
         Leistungspreis          = 102,
         # Setup logging tags:
         logging_list            = ['cost_saving','exact_costs','sum_exact_costs','sum_cost_saving'],
@@ -130,11 +130,11 @@ def main():
 
 
     # General test with max performance threshhold:
-    #test_threshold_for_all_heuristics()
+    test_threshold_for_all_heuristics()
     
     # Test the three main heuristics with different thresholds and with different battery activations:
-    for HEURISTIC_TYPE in ['Perfekt-Pred-Heuristic','LSTM-Pred-Heuristic','Practical-Heuristic']:
-        test_for_different_thresholds(HEURISTIC_TYPE)
+    #for HEURISTIC_TYPE in ['Perfekt-Pred-Heuristic','LSTM-Pred-Heuristic','Practical-Heuristic']:
+        #test_for_different_thresholds(HEURISTIC_TYPE)
         #test_battery_activations(HEURISTIC_TYPE)
         #use_heuristic(HEURISTIC_TYPE, test_name='test_rewards', threshold_dem=100, deactivate_SMS=True, deactivate_LION=True)
     
