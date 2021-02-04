@@ -275,6 +275,8 @@ class heurisitc:
         # Iterate Testing:
         for e in range(epochs):
 
+            print('\nepoch:', e)
+
             cur_state = self.env.reset()
             self.env.set_soc_and_current_state(SoC=power_to_shave)
 
@@ -293,7 +295,11 @@ class heurisitc:
             elif self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
                 neu_global_zielverbrauch = self.global_single_value_for_reward(self.env.__dict__[reward_maker].get_sum_reward())
 
+            print('cost savings:',self.env.__dict__['reward_maker'].__dict__['sum_cost_saving'])
+
+
         # Return new SECG if necessary for chosen heuristic:
         if self.HEURISTIC_TYPE == 'Single-Value-Heuristic' or self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
             return neu_global_zielverbrauch
+
 
