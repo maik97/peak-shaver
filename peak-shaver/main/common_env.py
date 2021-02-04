@@ -76,6 +76,7 @@ class common_env(gym.Env):
         self.max_SMS_SoC           = max_SMS_SoC  * 60 # umrechnung von kwh in kwmin
         self.max_LION_SoC          = max_LION_SoC * 60 # umrechnung von kwh in kwmin
         self.LION_max_entladung    = 50 #kw
+        self.SMS_max_entladung     = 100 #kw
         self.SMS_entladerate       = 0.0025
         self.PERIODEN_DAUER        = PERIODEN_DAUER    # in min
 
@@ -522,6 +523,28 @@ class common_env(gym.Env):
         Returns:
             energieverbrauch (float): real amount that could be discharged in kw
         '''
+        akku_entladung *= self.PERIODEN_DAUER # kw in kwt
+        #print(akku_entladung)
+        # wenn ladestand groß genug und erforderliche Leistung nicht über 250
+        if self.SMS_SoC > akku_entladung and akku_entladung < self.SMS_max_entladung*self.PERIODEN_DAUER: #max kw, bzw 250kwt
+            self.SMS_SoC -= akku_entladung
+            tatsächliche_akku_entladung = akku_entladung / self.PERIODEN_DAUER
+        
+        #wenn ladestand groß genug, aber geforderete leistung nicht innerhalb der zeit erbracht werden kann:
+        elif self.SMS_SoC > akku_entladung and akku_entladung > self.SMS_max_entladung*self.PERIODEN_DAUER:
+            self.SMS_SoC -= self.SMS_max_entladung
+            tatsächliche_akku_entladung = self.SMS_max_entladung / self.PERIODEN_DAUER
+        
+        # wenn ladestand nicht ausreichst:
+        elif self.SMS_SoC < akku_entladung:
+            tatsächliche_akku_entladung = self.SMS_SoC / self.PERIODEN_DAUER
+            self.SMS_SoC = 0
+        
+        else: # akku_entladung == 0:
+            tatsächliche_akku_entladung = 0
+
+        return tatsächliche_akku_entladung
+        '''
         # Berechne Akku Entladung in kwmin
         akku_entladung *= self.PERIODEN_DAUER # kw in kwt
 
@@ -536,7 +559,7 @@ class common_env(gym.Env):
             self.SMS_SoC = 0
 
         return tatsächliche_akku_entladung
-
+        '''
     
     def LION_laden(self, lade_menge):
         '''
@@ -580,12 +603,12 @@ class common_env(gym.Env):
         akku_entladung *= self.PERIODEN_DAUER # kw in kwt
         #print(akku_entladung)
         # wenn ladestand groß genug und erforderliche Leistung nicht über 250
-        if self.LION_SoC > akku_entladung and akku_entladung < self.LION_max_entladung: #max kw, bzw 250kwt
+        if self.LION_SoC > akku_entladung and akku_entladung < self.LION_max_entladung*self.PERIODEN_DAUER: #max kw, bzw 250kwt
             self.LION_SoC -= akku_entladung
             tatsächliche_akku_entladung = akku_entladung / self.PERIODEN_DAUER
         
         #wenn ladestand groß genug, aber geforderete leistung nicht innerhalb der zeit erbracht werden kann:
-        elif self.LION_SoC > akku_entladung and akku_entladung > self.LION_max_entladung:
+        elif self.LION_SoC > akku_entladung and akku_entladung > self.LION_max_entladung*self.PERIODEN_DAUER:
             self.LION_SoC -= self.LION_max_entladung
             tatsächliche_akku_entladung = self.LION_max_entladung / self.PERIODEN_DAUER
         
