@@ -225,7 +225,7 @@ class common_env(gym.Env):
 
         # Überprüfe, ob Ende der Episode erreicht wurde:
         if self.step_counter_episode >= self.steps_per_episode:
-            self.LOGGER.log_scalar('5.3 max-peak-epoch', self.episode_max_peak, self.episode_counter, True)
+            self.LOGGER.log_scalar('4.3 max-peak-epoch', self.episode_max_peak, self.episode_counter, True)
             self.episode_counter     += 1
             self.step_counter_episode = 0
             self.episode_max_peak     = 0
@@ -235,14 +235,14 @@ class common_env(gym.Env):
 
         # Neue Woche
         if self.step_counter_week >= self.steps_per_week or done == True:
-            self.LOGGER.log_scalar('5.2 max-peak-week', self.week_max_peak, self.week_counter, done)
+            self.LOGGER.log_scalar('4.2 max-peak-week', self.week_max_peak, self.week_counter, done)
             self.week_counter     += 1
             self.step_counter_week = 0
             self.week_max_peak     = 0
 
         # Neuer Tag
         if self.step_counter_day >= self.steps_per_day or done == True:
-            self.LOGGER.log_scalar('5.1 max-peak-day', self.day_max_peak, self.day_counter, done)
+            self.LOGGER.log_scalar('4.1 max-peak-day', self.day_max_peak, self.day_counter, done)
             self.day_counter     += 1
             self.step_counter_day = 0
             self.day_max_peak     = 0
@@ -699,8 +699,8 @@ class common_env(gym.Env):
         '''
         if done == True:
             sum_cost_saving, sum_step_reward, step_reward, sum_steps = self.reward_maker.get_log()
-            self.LOGGER.log_scalar('4.1 Summe Ersparnis - Episode',  sum_cost_saving, self.episode_counter, done)
-            self.LOGGER.log_scalar('4.2 Summe Rewards - Episode',  sum_step_reward, self.episode_counter, done)
+            self.LOGGER.log_scalar('5.1 sum_savings_epoch',  sum_cost_saving, self.episode_counter, done)
+            self.LOGGER.log_scalar('5.2 sum_reward_epoch',  sum_step_reward, self.episode_counter, done)
 
 
 

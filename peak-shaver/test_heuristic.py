@@ -3,11 +3,11 @@ There are four main heuristic approaches, with the goal to minimize the maximum 
 
 1. `Single-Value-Heuristic` approximates the best global value (for all steps), that is used to determine the should energy consumption from the grid.
 
-2. `Perfekt-Pred-Heuristic` finds the best should energy consumptions for each steps, under the assumption, that the future energy-need is perfectly predicted.
+2. `Perfekt-Pred` finds the best should energy consumptions for each steps, under the assumption, that the future energy-need is perfectly predicted.
 
-3. `LSTM-Pred-Heuristic` approximates the best should energy consumptions for each step, with LSTM-predicted future energy-need.
+3. `LSTM-Pred` approximates the best should energy consumptions for each step, with LSTM-predicted future energy-need.
 
-4. `Practical-Heuristic` tries to find a solution with LSTM-predictions of the next step (without knowledge about the predictions over all steps from the beginning like in approach 3).
+4. `Practical` tries to find a solution with LSTM-predictions of the next step (without knowledge about the predictions over all steps from the beginning like in approach 3).
 
 The first approach can also have the goal to minimize the sum of cost instead of the maximum peak. Use `Single-Value-Heuristic-Reward` if you want to try this.
 '''
@@ -22,7 +22,7 @@ from main.common_env import common_env
 from main.agent_heuristic import heurisitc
 
 
-def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred-Heuristic', test_name='', epochs=1,
+def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
                  threshold_dem=50, deactivate_SMS=False, deactivate_LION=False):
 
     # Naming the agent:
@@ -109,9 +109,9 @@ def test_threshold_for_all_heuristics():
     threshold_dem = use_heuristic('Single-Value-Heuristic', test_name='find_threshold', epochs=15, threshold_dem=50)
     
     # Test all heuristic:
-    use_heuristic('Perfekt-Pred-Heuristic', test_name='Compare_Approches', threshold_dem=threshold_dem)
-    use_heuristic('LSTM-Pred-Heuristic', test_name='Compare_Approches', threshold_dem=threshold_dem)
-    use_heuristic('Practical-Heuristic', test_name='Compare_Approches', threshold_dem=threshold_dem)
+    use_heuristic('Perfekt-Pred', test_name='Compare_Approches', threshold_dem=threshold_dem)
+    use_heuristic('LSTM-Pred', test_name='Compare_Approches', threshold_dem=threshold_dem)
+    use_heuristic('Practical', test_name='Compare_Approches', threshold_dem=threshold_dem)
 
 
 def test_for_different_thresholds(HEURISTIC_TYPE,threshold_list=[10,20,30,40,50,60,70,80,90]):
@@ -130,14 +130,14 @@ def test_battery_activations(HEURISTIC_TYPE,threshold_dem=60):
 
 def main():
 
-    #use_heuristic('Perfekt-Pred-Heuristic', test_name='Tresholds', threshold_dem=69)
+    use_heuristic('Perfekt-Pred', test_name='Tresholds', threshold_dem=32)
 
 
     # General test with max performance threshhold:
-    test_threshold_for_all_heuristics()
+    #test_threshold_for_all_heuristics()
     
     # Test the three main heuristics with different thresholds and with different battery activations:
-    #for HEURISTIC_TYPE in ['Perfekt-Pred-Heuristic','LSTM-Pred-Heuristic','Practical-Heuristic']:
+    #for HEURISTIC_TYPE in ['Perfekt-Pred','LSTM-Pred','Practical']:
         #test_for_different_thresholds(HEURISTIC_TYPE)
         #test_battery_activations(HEURISTIC_TYPE)
         #use_heuristic(HEURISTIC_TYPE, test_name='test_rewards', threshold_dem=100, deactivate_SMS=True, deactivate_LION=True)

@@ -18,7 +18,7 @@ def run_agent(num_runs=3, name='', input_sequence=12, lstm_size=128):
 
         # Naming the agent:
         now    = datetime.now()
-        NAME   = 'DQN+LSTM'+now.strftime("_%d-%m-%Y_%H-%M-%S")
+        NAME   = 'agent_DQN+LSTM_'+name+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
 
         # Import dataset and logger based on the common settings
         df, power_dem_df, logger, period_min = dataset_and_logger(NAME)
@@ -29,7 +29,7 @@ def run_agent(num_runs=3, name='', input_sequence=12, lstm_size=128):
         # Train every x number of steps:
         update_num       = 50
         # Number of epochs and steps:
-        epochs           = 1
+        epochs           = 100
 
 
         # Setup reward_maker

@@ -17,12 +17,12 @@ from main.common_env import common_env
 def run_agent(name='', n_steps=2500):
     # Naming the agent:
     now    = datetime.now()
-    NAME   = 'PPO2'+name+now.strftime("_%d-%m-%Y_%H-%M-%S")
+    NAME   = 'agent_PPO2_'+name+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
 
     # Import dataset and logger based on the common settings
     df, power_dem_df, logger, period_min = cms.dataset_and_logger(NAME)
 
-    epochs = 1
+    epochs = 100
 
 
     # Setup reward_maker

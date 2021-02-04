@@ -20,7 +20,7 @@ def run_agent(num_runs=1, name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000,
     for i in range(num_runs):
         # Naming the agent:
         now    = datetime.now()
-        NAME   = 'Q_Table'+name+now.strftime("_%d-%m-%Y_%H-%M-%S")
+        NAME   = 'agent_Q-Table_'+name+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
 
         # Import dataset and logger based on the common settings
         df, power_dem_df, logger, period_min = dataset_and_logger(NAME)
@@ -28,7 +28,7 @@ def run_agent(num_runs=1, name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000,
         # Number of warm-up steps:
         num_warmup_steps = 100
         # Number of epochs and steps:
-        epochs           = 1
+        epochs           = 100
 
 
         # Setup reward_maker

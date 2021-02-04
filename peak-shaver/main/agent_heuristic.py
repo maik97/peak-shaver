@@ -1,15 +1,15 @@
 '''
 There are four main heuristic approaches, with the goal to minimize the maximum energy peak. You can define those in the class with the parameter ``HEURISTIC_TYPE``.
 
-1. `Single-Value-Heuristic` approximates the best global value (for all steps), that is used to determine the should energy consumption from the grid.
+1. `Single-Value` approximates the best global value (for all steps), that is used to determine the should energy consumption from the grid.
 
-2. `Perfekt-Pred-Heuristic` finds the best should energy consumptions for each steps, under the assumption, that the future energy-need is perfectly predicted.
+2. `Perfekt-Pred` finds the best should energy consumptions for each steps, under the assumption, that the future energy-need is perfectly predicted.
 
-3. `LSTM-Pred-Heuristic` approximates the best should energy consumptions for each step, with LSTM-predicted future energy-need.
+3. `LSTM-Pred` approximates the best should energy consumptions for each step, with LSTM-predicted future energy-need.
 
-4. `Practical-Heuristic` tries to find a solution with LSTM-predictions of the next step (without knowledge about the predictions over all steps from the beginning like in approach 3).
+4. `Practical` tries to find a solution with LSTM-predictions of the next step (without knowledge about the predictions over all steps from the beginning like in approach 3).
 
-The first approach can also have the goal to minimize the sum of cost instead of the maximum peak. Use `Single-Value-Heuristic-Reward` if you want to try this.
+The first approach can also have the goal to minimize the sum of cost instead of the maximum peak. Use `Single-Value-Reward` if you want to try this.
 '''
 import numpy as np
 
@@ -25,7 +25,7 @@ class heurisitc:
 
     Args:
         env (object): Takes in a GYM environment, use the common_env to simulate the HIPE-Dataset.
-        HEURISTIC_TYPE (string): Determines the type of heuristic to be used: 'Single-Value-Heuristic', 'Perfekt-Pred-Heuristic', 'LSTM-Pred-Heuristic' or 'Practical-Heuristic'
+        HEURISTIC_TYPE (string): Determines the type of heuristic to be used: 'Single-Value', 'Perfekt-Pred', 'LSTM-Pred' or 'Practical'
         threshold_dem (float): Determines the global maximum power consumption that shpuld be used from the grid (global SECG).
         use_SMS (bool): Can be used to deactivate the flying wheel when set to `False`
         use_LION (bool): Can be used to deactivate the lithium-ion battery when set to `False`
@@ -98,7 +98,7 @@ class heurisitc:
 
 
     def find_optimum_for_perfect_pred(self):
-        '''Class-Funtion: Prepares the SECG for each step, used when ``HEURISTIC_TYPE=Perfekt-Pred-Heuristic'``. Used before iterating through each step.'''
+        '''Class-Funtion: Prepares the SECG for each step, used when ``HEURISTIC_TYPE=Perfekt-Pred'``. Used before iterating through each step.'''
         
         print('Calculating optimal actions for perfect predictions...')
 
@@ -134,7 +134,7 @@ class heurisitc:
 
 
     def find_solution_for_imperfect_pred(self,LSTM_column):
-        '''Funtion to prepare the SECG for each step, used when ``HEURISTIC_TYPE='LSTM-Pred-Heuristic'``. Used before iterating through each step.
+        '''Funtion to prepare the SECG for each step, used when ``HEURISTIC_TYPE='LSTM-Pred'``. Used before iterating through each step.
 
         Args:
             LSTM_column (string): Name of the column in the passed dataframe `df`, this column has to contain the predictions you want to use.
@@ -172,7 +172,7 @@ class heurisitc:
 
     def find_practical_solution(self, LSTM_column):
         '''
-        Funtion to prepare the SECG for each step, used when ``HEURISTIC_TYPE='Practical-Heuristic'``. Used before iterating through each step.
+        Funtion to prepare the SECG for each step, used when ``HEURISTIC_TYPE='Practical'``. Used before iterating through each step.
 
         Args:
             LSTM_column (string): Name of the column in the passed dataframe `df`, this column has to contain the predictions you want to use.
@@ -223,16 +223,16 @@ class heurisitc:
             
             SMS_PRIO (float): priority of SMS at step
         '''
-        if self.HEURISTIC_TYPE == 'Single-Value-Heuristic' or self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
+        if self.HEURISTIC_TYPE == 'Single-Value' or self.HEURISTIC_TYPE == 'Single-Value-Reward':
             return [self.global_zielverbrauch, SMS_PRIO] # 0 bedeutet dass SMS-Priority aktiviert wird.
         
-        elif any(self.HEURISTIC_TYPE in s for s in ['Perfekt-Pred-Heuristic','LSTM-Pred-Heuristic','Practical-Heuristic']):
-            #self.HEURISTIC_TYPE == 'Perfekt-Pred-Heuristic' or self.HEURISTIC_TYPE =='LSTM-Pred-Heuristic':
+        elif any(self.HEURISTIC_TYPE in s for s in ['Perfekt-Pred','LSTM-Pred','Practical']):
+            #self.HEURISTIC_TYPE == 'Perfekt-Pred' or self.HEURISTIC_TYPE =='LSTM-Pred':
             action = [self.heuristic_zielnetzverbrauch[self.current_step], SMS_PRIO]
             self.current_step += 1
             return action
         else:
-            raise Exception("HEURISTIC_TYPE not understood. HEURISTIC_TYPE must be: 'Single-Value-Heuristic', 'Single-Value-Heuristic-Reward', 'Perfekt-Pred-Heuristic', 'LSTM-Pred-Heuristic'")
+            raise Exception("HEURISTIC_TYPE not understood. HEURISTIC_TYPE must be: 'Single-Value', 'Single-Value-Reward', 'Perfekt-Pred', 'LSTM-Pred'")
 
 
 
@@ -244,9 +244,9 @@ class heurisitc:
             i (int): Current iteration step
             max_i (int): The number of all iterations
         '''
-        if self.HEURISTIC_TYPE == 'Single-Value-Heuristic':
+        if self.HEURISTIC_TYPE == 'Single-Value':
             cm.print_progress("Target Demand - {}, Progress".format(self.global_zielverbrauch), i, max_i)
-        elif self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
+        elif self.HEURISTIC_TYPE == 'Single-Value-Reward':
             cm.print_progress("Target Demand - {}, Sum Reward - {}, Progress".format(self.global_zielverbrauch, self.prev_sum_reward), i, max_i)
         else:
             cm.print_progress('Progress',i , max_i)
@@ -257,16 +257,16 @@ class heurisitc:
         Main function that tests the chosen heursitic
 
         Args:
-            epochs (int): Number of epochs. Note that this should be one for all heuristics except ``HEURISTIC_TYPE='Single-Value-Heuristic'`` and ``HEURISTIC_TYPE='Single-Value-Heuristic-Reward'``.
+            epochs (int): Number of epochs. Note that this should be one for all heuristics except ``HEURISTIC_TYPE='Single-Value'`` and ``HEURISTIC_TYPE='Single-Value-Reward'``.
             LSTM_column (string): Name of the column in the passed dataframe `df`, this column has to contain the predictions you want to use.
         '''
         # Check if the heuristic needs preparation:
         power_to_shave = None
-        if self.HEURISTIC_TYPE == 'Perfekt-Pred-Heuristic':
+        if self.HEURISTIC_TYPE == 'Perfekt-Pred':
             power_to_shave = self.find_optimum_for_perfect_pred()
-        elif self.HEURISTIC_TYPE == 'LSTM-Pred-Heuristic':
+        elif self.HEURISTIC_TYPE == 'LSTM-Pred':
             power_to_shave = self.find_solution_for_imperfect_pred(LSTM_column)
-        elif self.HEURISTIC_TYPE == 'Practical-Heuristic':
+        elif self.HEURISTIC_TYPE == 'Practical':
             self.find_practical_solution(LSTM_column)
 
         print('Testing',self.HEURISTIC_TYPE,'with a treshold of',self.global_zielverbrauch,'for',epochs,'Epochs')
@@ -290,16 +290,16 @@ class heurisitc:
                     break
             
             # Calculate new SECG if necessary for chosen heuristic:
-            if self.HEURISTIC_TYPE == 'Single-Value-Heuristic':
+            if self.HEURISTIC_TYPE == 'Single-Value':
                 neu_global_zielverbrauch = self.global_single_value_for_max_peak(max_peak)
-            elif self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
+            elif self.HEURISTIC_TYPE == 'Single-Value-Reward':
                 neu_global_zielverbrauch = self.global_single_value_for_reward(self.env.__dict__[reward_maker].get_sum_reward())
 
             print('cost savings:',self.env.__dict__['reward_maker'].__dict__['sum_cost_saving'])
 
 
         # Return new SECG if necessary for chosen heuristic:
-        if self.HEURISTIC_TYPE == 'Single-Value-Heuristic' or self.HEURISTIC_TYPE == 'Single-Value-Heuristic-Reward':
+        if self.HEURISTIC_TYPE == 'Single-Value' or self.HEURISTIC_TYPE == 'Single-Value-Reward':
             return neu_global_zielverbrauch
 
 

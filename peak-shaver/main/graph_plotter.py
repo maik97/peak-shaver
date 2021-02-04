@@ -79,7 +79,7 @@ class GraphMaker:
 
 		self.index_name = 'epoch'
 
-		self.name_type_list = [None]
+		self.name_type_list = ['None']
 
 
 	def setup_heuristic(self):
@@ -89,8 +89,8 @@ class GraphMaker:
 		self.graph_path = 'agent-plots/heuristic/'
 		self.log_path   = 'agent-logs/'
 
-		self.test_name_list = ['Compare_Approches','Tresholds','Configurations']
-		self.heur_name_list = ['Perfekt-Pred-Heuristic','LSTM-Pred-Heuristic','Practical-Heuristic']
+		self.test_name_list = ['Fine-Tresholds']#['Compare_Approches','Tresholds','Configurations']
+		self.heur_name_list = ['Perfekt-Pred']#,'LSTM-Pred','Practical']
 
 		self.all_names = []
 		for test_name in self.test_name_list:
@@ -98,28 +98,68 @@ class GraphMaker:
 				self.all_names.append(test_name+'_'+heur_name)
 
 		self.merge_dict = {}
-		self.merge_dict['Compare_Approches'] = []
+		#self.merge_dict['Compare_Approches'] = []
 		for heur_name in self.heur_name_list:
-			self.merge_dict['Compare_Approches'].append('Compare_Approches_'+heur_name)
-			self.merge_dict['Tresholds_'+heur_name] = ['Tresholds_'+heur_name]
-			self.merge_dict['Configurations_'+heur_name] = ['Configurations_'+heur_name]
+			#self.merge_dict['Compare_Approches'].append('Compare_Approches_'+heur_name)
+			self.merge_dict['Fine-Tresholds_'+heur_name] = ['Fine-Tresholds_'+heur_name]
+			#self.merge_dict['Configurations_'+heur_name] = ['Configurations_'+heur_name]
 				
-		self.use_tags(['cost_saving'])
+		self.use_tags(['sum_cost_saving'])
 
 		self.type_first_split  = 'heuristic_'
 		self.type_second_split = '_t-stamp'
 
 		self.index_name = 'step'
-
+		'''
 		self.name_type_list = []
 		for name in self.merge_dict['Compare_Approches']:
 			self.name_type_list.append(name)
+		'''
 
 
-	#def setup_agents(self):
+	def setup_agents(self):
+
+		self.graph_path = 'agent-plots/heuristic/'
+		self.log_path   = 'agent-logs/'
+
+		self.agents_list = ['Q-Table','DQN','DQN+MS','DQN+LSTM']#,'PPO2']
+
+		self.param_dict = {
+			'Q-Table': ['standart','learning_rate','gamma','tau',
+						'update_num','epsilon_decay','input_list'],
+
+			'DQN': ['standart','learning_rate','gamma','tau',
+							'update_num','epsilon_decay','input_list', 'hidden_size'],
+
+			'DQN+MULITSTEP': ['horizon'],
+
+			'DQN+LSTM': ['standart','input_sequence','lstm_size']
+			}
+
+		self.all_names = []
+		for agent_name in self.param_dict.keys:
+			for param_name in self.param_dict[agent_name]:
+				self.all_names.append(agent_name+'_'+param_name)
+
+		self.merge_dict = {}
+		for agent_name in self.param_dict.keys:
+			if self.param_dict[agent_name][0] == 'standart':
+				for param_name in self.param_dict[agent_name]:
+					self.merge_dict[agent_name+'_'+param_name] = ['standart',param_name]
+			else:
+				for param_name in self.param_dict[agent_name]:
+					self.merge_dict[agent_name+'_'+param_name] = [param_name]
+
+		self.type_first_split  = 'agent_'
+		self.type_second_split = '_t-stamp'
+
+		self.index_name = 'step'
+
+		self.name_type_list = ['None']
 
 
 	def logs_to_csv(self):
+		working_dir = os.getcwd()
 
 		for name in self.all_names:
 
@@ -140,10 +180,14 @@ class GraphMaker:
 				for tag in ea.Tags()['scalars']:
 					tag_str = tag.replace(':','').split(' ')[-1]
 					print(tag_str)
+					#os.chdir(self.graph_path+'seperate_log_csv/'+name+'/')
 					csv_path = self.graph_path+'seperate_log_csv/'+name+'/'+csv_name+'-tag-'+tag_str+'.csv'
-					
+
 					#print(pd.DataFrame(ea.Scalars(tag)))
 					pd.DataFrame(ea.Scalars(tag)).to_csv(csv_path)
+					#print(test)
+					#test.to_csv(csv_name+'-tag-'+tag_str+'.csv')
+					#os.chdir(working_dir)
 					
 					if self.custom_tags == False:
 						self.tag_list.append(tag)
@@ -164,57 +208,57 @@ class GraphMaker:
 			learn_time_dict_list = [] 
 			for tag in self.tag_list:
 
-				#try:
-				print('Creating longform for',name,'with',tag,'...')
-				df_list = []
-				name_list = []
-				for filename in iglob(self.graph_path+'seperate_log_csv/'+name+'/*-tag-'+tag+'.csv'):
+				try:
+					print('Creating longform for',name,'with',tag,'...')
+					df_list = []
+					name_list = []
+					for filename in iglob(self.graph_path+'seperate_log_csv/'+name+'/*-tag-'+tag+'.csv'):
 
-					# Name:
-					df = pd.read_csv(filename, delimiter=',')
-					df = df.set_index('step')
-					df = df.rename(columns={df.columns[-1]:name})	
-					df = df.rename(columns={df.columns[0]:self.index_name})	
-
-
-					# Index:
-					df.columns     = df.columns.str.replace('_',' ')
-					df.index.names = [self.index_name]
-
-					# drop unnamed:
-					df = df.drop(columns=[df.columns[0]])
-
-					# Add column for type:
-					if any(type_string in name for type_string in self.name_type_list):
-						type_string = name.split('_')[-1]
-						df['type']  = type_string
-					else:
-						type_string = filename.split(self.type_first_split)[-1]
-						type_string = type_string.split(self.type_second_split)[0]
-						type_string = type_string.split('_')[-1]
-						df['type']  = type_string
-
-					# Add column for run number:
-					run = name_list.count(type_string)
-					df['run']  = run
-					#print(run)
-					#print(filename)
+						# Name:
+						df = pd.read_csv(filename, delimiter=',')
+						df = df.set_index('step')
+						df = df.rename(columns={df.columns[-1]:name})	
+						df = df.rename(columns={df.columns[0]:self.index_name})	
 
 
-					# Calculate learning time:
-					learn_time_dict_list.append(self.calc_learn_time(df[df.columns[-4]], tag, name, run))
-					df = df.drop(columns=[df.columns[-4]])
-					
-					#df.name = filename
-					df_list.append(df)
-					name_list.append(type_string)
+						# Index:
+						df.columns     = df.columns.str.replace('_',' ')
+						df.index.names = [self.index_name]
 
-				# Save longform table:
-				concat_df = pd.concat(df_list)
-				concat_df.to_csv(self.graph_path+'basic_longform_csv/'+name+'/'+name+'_'+tag+'.csv')
+						# drop unnamed:
+						df = df.drop(columns=[df.columns[0]])
 
-				#except Exception as e:
-				#	print(e)
+						# Add column for type:
+						if any(type_string in name for type_string in self.name_type_list):
+							type_string = name.split('_')[-1]
+							df['type']  = type_string
+						else:
+							type_string = filename.split(self.type_first_split)[-1]
+							type_string = type_string.split(self.type_second_split)[0]
+							type_string = type_string.split('_')[-1]
+							df['type']  = type_string
+
+						# Add column for run number:
+						run = name_list.count(type_string)
+						df['run']  = run
+						#print(run)
+						#print(filename)
+
+
+						# Calculate learning time:
+						learn_time_dict_list.append(self.calc_learn_time(df[df.columns[-4]], tag, name, run))
+						df = df.drop(columns=[df.columns[-4]])
+						
+						#df.name = filename
+						df_list.append(df)
+						name_list.append(type_string)
+
+					# Save longform table:
+					concat_df = pd.concat(df_list)
+					concat_df.to_csv(self.graph_path+'basic_longform_csv/'+name+'/'+name+'_'+tag+'.csv')
+
+				except Exception as e:
+					print(e)
 			
 			# Save learning time table:
 			learn_time_df = pd.DataFrame(learn_time_dict_list)
@@ -252,16 +296,16 @@ class GraphMaker:
 			for tag in self.tag_list:
 				df_list = []
 				for name in self.merge_dict[key]:
-					#try:
-					path = self.graph_path+'basic_longform_csv/'+name+'/'+name+'_'+tag+'.csv'
-					print('Merge to',key,'from',path)
-					df = pd.read_csv(path, delimiter=',', index_col=self.index_name)
-					df = df.rename(columns={df.columns[-3]:key})
-					df.columns = df.columns.str.replace('_',' ')
-					df_list.append(df)
-					print(df)
-					#except Exception as e:
-					#	print(e)
+					try:
+						path = self.graph_path+'basic_longform_csv/'+name+'/'+name+'_'+tag+'.csv'
+						print('Merge to',key,'from',path)
+						df = pd.read_csv(path, delimiter=',', index_col=self.index_name)
+						df = df.rename(columns={df.columns[-3]:key})
+						df.columns = df.columns.str.replace('_',' ')
+						df_list.append(df)
+						print(df)
+					except Exception as e:
+						print(e)
 
 				concat_df = pd.concat(df_list)
 				concat_df.to_csv(self.graph_path+'final_longform_csv/'+key+'/'+key+'_'+tag+'.csv')
@@ -301,7 +345,7 @@ class GraphMaker:
 
 
 	def usual_prep_and_graph_creation(self):
-		self.logs_to_csv()
+		#self.logs_to_csv()
 		self.create_basic_longforms()
 		self.merge_longforms()
 		self.create_graphs()
@@ -326,180 +370,4 @@ def main():
 
 if __name__ == '__main__':
 	main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def load_tensorboard_logs(D_PATH, log_from, partial_name):
-	
-	graph_path = '../'+D_PATH+log_from+'-plots/'+partial_name
-	log_path = '../'+D_PATH+log_from+'-logs/'
-	make_dir(graph_path)
-
-	try:
-		for folder_path in iglob(log_path+'*'+partial_name+'*'):
-			print('path:',folder_path)
-			name = folder_path.split('\\')[-1]
-			#name = folder_path.split('/')[-1]
-			ea = event_accumulator.EventAccumulator(folder_path)
-			ea.Reload()
-
-			for tag in ea.Tags()['scalars']:
-				pd.DataFrame(ea.Scalars(tag)).to_csv(graph_path+'/'+name+'-tag-'+tag+'.csv')
-	
-	except Exception as e:
-		print('Exception:', e)
-		print('Could not open any log with path:',graph_path)
-
-
-
-def create_longform_dataset(path,tag,column_name_first_split,column_name_second_split,index_name='epoch'):
-
-	df_list   = []
-	name_list = []
-	for filename in iglob(path+'*-tag-'+tag+'.csv'):
-
-		# Name:
-		df       = pd.read_csv(filename, delimiter=',')
-		filename = filename.split(column_name_first_split)[-1]
-		filename = filename.split(column_name_second_split)[0]
-		splitted = filename.split('_')
-
-		name = ''
-		for part in splitted[:-1]:
-			name += part+' '
-
-		df       = df.rename(columns={df.columns[-1]:name})	
-		df       = df.rename(columns={df.columns[0]:index_name})	
-		
-		# Index:
-		df             = df.set_index('step')
-		df.columns     = df.columns.str.replace('_',' ')
-		df.index.names = [index_name]
-
-		# Drop wall time and unnamed:
-		df = df.drop(columns=[df.columns[-2]])
-		#df = df.drop(columns=[df.columns[0]])
-
-		# Add column for type:
-		type_string = splitted[-1]
-		df['type']  = type_string
-
-		# Add column for run number:
-		run = name_list.count(filename)
-		df['run']  = run
-		
-		#df.name = filename
-		df_list.append(df)
-		name_list.append(filename)
-
-	concat_df = pd.concat(df_list)
-	print(concat_df)
-	return concat_df
-
-
-def wahrsager_plot(path,tag,standart_df=None):
-	
-	try:
-		# Get merged dataframe of the runs:
-		concat_df = create_longform_dataset(path,tag,'test_','_val-size','epoch')
-	
-		# Add standart run to compare:
-		if isinstance(standart_df, pd.DataFrame):
-			standart_df       = standart_df.rename(columns={'value':'standart'})
-			df_dict[filename] = standart_df	
-
-		# Create and save graph:
-		simple_plot(concat_df, path, tag, ylabel=tag)
-	
-	except Exception as e:
-		print('Exception:', e)
-		print('Could not create graph for',tag,'with path:',path)
-
-def simple_plot(df, path, tag, ylabel='', graph_name=None):
-
-	if graph_name != None:
-		plt.title(graph_name)
-
-	sns.set_theme(style="whitegrid")
-	'''
-	for key in df_dict:
-		df = df_dict[key]
-		print(df_dict[key])
-		sns.lineplot(data=df, dashes=False, label=df.columns[-1])
-	'''
-		#ax = sns.lien(x=df.columns[0], y=df.columns[1], data=df)
-	
-	sns.lineplot(data=df, dashes=False, x=df.columns[0], y=df.columns[1], hue="type")#, label=df.columns[-1])
-	
-	#ax.set(xlabel=df.index.names[0], ylabel=ylabel)
-	plt.xlabel(df.index.names[0])
-	plt.ylabel(ylabel)
-	plt.savefig(path+df.columns[1].replace(' ','_')+tag+'.png')
-	plt.close()
-	print('Saved graph to:',path+df.columns[1].replace(' ','_')+tag+'.png')
-
-
-
-
-def wahrsager_graphs(D_PATH='_BIG_D/'):
-
-	partial_name_list = ['standart','learning_rate','dropout']
-	
-	partial_name_list_standart_compare = [
-		'sigmoid','lstm_layers','hidden_layers','past_periods',
-		'rolling_mean','rolling_max','max_label_seq','mean_label_seq','test_seq']
-
-	tag_list = ['loss','mae','val_loss','val_mae']
-
-	'''
-	for partial_name in partial_name_list:
-		load_tensorboard_logs(D_PATH, log_from='lstm', partial_name=partial_name)
-	for partial_name in partial_name_list_standart_compare:
-		load_tensorboard_logs(D_PATH, log_from='lstm', partial_name=partial_name)
-	'''
-	
-	for partial_name in partial_name_list:
-		graph_path = '../'+D_PATH+'lstm-plots/'+partial_name
-		for tag in tag_list:
-			wahrsager_plot(graph_path+'/',tag)
-	'''
-	for partial_name in partial_name_list_standart_compare:
-		graph_path = '../'+D_PATH+'lstm-plots/'+partial_name
-		for tag in tag_list:
-			standart_df = pd.read_csv(glob('../'+D_PATH+'lstm-plots/standart/*-tag-'+tag+'.csv')[0])
-			wahrsager_plot(graph_path+'/', tag, standart_df=standart_df)
-	'''
-
-
-
-#wahrsager_graphs()
-
-
-
-
-
-
-
-
 
