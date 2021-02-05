@@ -75,7 +75,7 @@ class wahrsager:
                 
                 # Trainings-Parameter
                 val_data_size     = 2000,
-                num_epochs        = 10,
+                num_epochs        = 1000,
                 ):
 
         self.lstm_dataset      = lstm_dataset
@@ -189,13 +189,13 @@ class wahrsager:
 
         else:
             try:
-                print(glob.glob(self.D_PATH+'lstm-models/*'+self.TYPE+'*.h5')[-1])
-                model = load_model(glob.glob(self.D_PATH+'lstm-models/*'+self.TYPE+'*.h5')[-1])
+                print(glob.glob(self.D_PATH+'lstm-models/'+self.TYPE+'*.h5')[-1])
+                model = load_model(glob.glob(self.D_PATH+'lstm-models/'+self.TYPE+'*.h5')[-1])
                 print('Using last model created for TYPE='+self.TYPE+':',glob.glob(self.D_PATH+'lstm-models/*'+self.TYPE+'*.h5')[-1])
                 prediction = model.predict(self.training_data).reshape(np.shape(self.label_data))
             except Exception as e:
                 print(e)
-                wait_to_continue('No valid model found for TYPE='+self.TYPE+'. Press enter to train a new model.')
+                #wait_to_continue('No valid model found for TYPE='+self.TYPE+'. Press enter to train a new model.')
                 prediction = self.train()
 
         if self.PLOTTING == True:
