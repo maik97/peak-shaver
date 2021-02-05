@@ -1,6 +1,7 @@
 import os
 import time
 import numpy as np
+import keras
 
 import tensorflow as tf
 #import keras
@@ -27,12 +28,13 @@ def try_training_on_gpu():
     '''
     Checks if Keras can use a GPU and switch to GPU usage if possible
     '''
-    try:
-        config = tf.ConfigProto(device_count = {'GPU': 1 , 'CPU': 56} ) 
-        sess = tf.Session(config=config) 
-        keras.backend.set_session(sess)
-    except:
-        print('Keras could not setup a GPU session. CPU will be used instead.')
+    #try:
+    config = tf.ConfigProto(device_count = {'GPU': 1 , 'CPU': 56} )
+    config.gpu_options.per_process_gpu_memory_fraction = 0.1
+    sess = tf.Session(config=config) 
+    keras.backend.set_session(sess)
+    #except:
+    #    print('Keras could not setup a GPU session. CPU will be used instead.')
 
 def temp_line_print(text):
     '''
