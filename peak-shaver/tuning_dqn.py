@@ -12,7 +12,7 @@ from main.common_env import common_env
 from main.agent_deep_q import DQN
 
 
-def run_agent(num_runs=3, name='',gamma=.85, lr=0.001, tau=0.125, update_num=100, 
+def run_agent(num_runs=3, name='',gamma=.85, lr=0.001, tau=0.125, update_num=250, 
               epsilon_decay=0.999996, input_list=['norm_total_power','normal','seq_max'],
               hidden_size=518):
     
@@ -97,7 +97,7 @@ def run_agent(num_runs=3, name='',gamma=.85, lr=0.001, tau=0.125, update_num=100
 def parameter_tuning():
 
     run_agent(name='standart')
-
+    '''
     # Learning rate:
     lr_list = [0.0001,0.001,0.1,0.25,0.5]
     for lr in lr_list:
@@ -114,7 +114,7 @@ def parameter_tuning():
         run_agent(name='tau_{}'.format(tau), tau=tau)
 
     # update_num:
-    update_num_list = [50,200]
+    update_num_list = [100,500,1000]
     for update_num in update_num_list:
         run_agent(name='update_num_{}'.format(update_num), update_num=update_num)
 
@@ -134,5 +134,5 @@ def parameter_tuning():
         run_agent(name='hidden_size_{}'.format(hidden_size), hidden_size=hidden_size)
 
     # zusätlich vlt discrete, und alle lstms als inputs mal durchprobieren
-
+    '''
 parameter_tuning()
