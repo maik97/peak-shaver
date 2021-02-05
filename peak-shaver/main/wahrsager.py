@@ -148,7 +148,8 @@ class wahrsager:
                   epochs          = self.num_epochs,
                   verbose         = 1,
                   validation_data = (self.training_data[-self.val_data_size:], self.label_data[-self.val_data_size:]),
-                  callbacks       = [tensorboard]
+                  callbacks       = [tensorboard],
+                  batch_size      = 256
                   )
         
         # Speichern:
