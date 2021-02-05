@@ -89,10 +89,10 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
         OBS_TYPE       = 'contin',
         # Define heuristic usage:
         AGENT_TYPE     = 'heuristic',
-        val_split      = 0)
+        val_split      = 0.6)
 
     # Use the complete dataset (no validation split):
-    env.use_all_data()
+    #env.use_all_data()
 
     # Setup Agent
     agent = heurisitc(
@@ -130,7 +130,7 @@ def test_battery_activations(HEURISTIC_TYPE,threshold_dem=60):
 
 def main():
 
-    use_heuristic('Perfekt-Pred', test_name='Tresholds', threshold_dem=32)
+    use_heuristic('Perfekt-Pred', test_name='Tresholds', threshold_dem=32,deactivate_SMS=True, deactivate_LION=True)
 
 
     # General test with max performance threshhold:

@@ -63,6 +63,7 @@ def dataset_and_logger(NAME='test', preprocess_all=False):
 		df            = df[num_past_periods*2:-num_past_periods]
 		df['normal']  = normal_predictions
 		df['seq_max'] = max_seq(seq_predictions)
+		power_dem_df  = power_dem_df[num_past_periods*2:-num_past_periods]
 
 		# Initilize logging:
 		logger = Logger(NAME,D_PATH)

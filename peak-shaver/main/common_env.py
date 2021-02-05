@@ -53,7 +53,7 @@ class common_env(gym.Env):
             max_ziel             = 50,
             min_ziel             = 25,
             measure_intervall    = 15,
-            val_split            = 0.1,
+            val_split            = 0,
             ):
         
         super(common_env, self).__init__()
@@ -61,20 +61,25 @@ class common_env(gym.Env):
 
         # Parameter Datensatz und Logging:
         self.og_df = df
+        self.og_power_dem_df = power_dem_df
+        print(len(self.og_df))
+        print(len(self.og_power_dem_df))
         if val_split != 0:
             self.df = df[:-int(val_split*len(df))]
+            self.power_dem_df = power_dem_df[:-int(val_split*len(df))]
         else:
             self.df = df
+            self.power_dem_df = power_dem_df
         print('')
         print('Length of train data:',len(self.df))
         print('Length of val data:', len(self.og_df) - len(self.df))
+        print(len(self.power_dem_df))
         print('')
 
-        self.power_dem_arr         = power_dem_df.to_numpy()
-        self.rolling_power_dem     = power_dem_df.rolling(int(measure_intervall/PERIODEN_DAUER)).mean().fillna(0).to_numpy()
         self.input_list            = input_list
         self.AGENT_TYPE            = AGENT_TYPE
         self.netzverbrauch_deque   = deque(maxlen=int(measure_intervall/PERIODEN_DAUER))
+        self.measure_intervall     = measure_intervall
 
         # Parameter Environment:
         self.max_SMS_SoC           = max_SMS_SoC  * 60 # umrechnung von kwh in kwmin
@@ -119,23 +124,9 @@ class common_env(gym.Env):
         else:
             raise Exception("OBS_TYPE not understood. OBS_TYPE must be: 'discrete', 'contin'")
 
-        # Init fixe Parameter
-        self.max_power_dem         = np.max(self.power_dem_arr)
-        self.max_rolling_power_dem = np.max(self.rolling_power_dem)
-        self.mean_power_dem        = np.mean(self.power_dem_arr)
-        self.sum_power_dem         = np.sum(self.df['norm_total_power']*self.max_power_dem)
-        self.steps_per_episode     = len(self.df['norm_total_power'])
-        print('\nMaximum Power-Demand:', round(self.max_power_dem,2))
-        print('Maximum Power-Demand (15min):', round(self.max_rolling_power_dem,2))
-        print('Mean Power-Demand:',      round(self.mean_power_dem,2))
-        print('Sum of Power-Demand',     round(self.sum_power_dem,2))
-        print('Steps pro Episode:',      round(self.steps_per_episode,2))
-
-
         # Init Rewards
         self.reward_maker          = reward_maker
         self.reward_range          = self.reward_maker.get_reward_range() #als (MIN_REWARD, MAX_REWARD)
-        self.reward_maker.pass_env(self.PERIODEN_DAUER, self.steps_per_episode, self.max_power_dem, self.mean_power_dem, self.sum_power_dem, self.max_rolling_power_dem)
         
         self.deactivate_SMS        = self.reward_maker.__dict__['deactivate_SMS']
         self.deactivate_LION       = self.reward_maker.__dict__['deactivate_LION']
@@ -163,13 +154,47 @@ class common_env(gym.Env):
         self.steps_per_week        = 10080 / self.PERIODEN_DAUER # min_pro_woche/Periodendauer
         self.steps_per_day         = 1440  / self.PERIODEN_DAUER # min_pro_trag/Periodendauer
 
+        self.calc_parameter_dataset()
+
+        #Stromkosten: 28554.73
+        #Peak-Kosten: 8539.1
+        #Gesamtkosten: 37093.83
+
+    def calc_parameter_dataset(self):
+        self.power_dem_arr         = self.power_dem_df.to_numpy().copy()
+        self.rolling_power_dem     = self.power_dem_df.rolling(int(self.measure_intervall/self.PERIODEN_DAUER)).mean().fillna(0).to_numpy().copy()
+        print(len(self.power_dem_arr))
+        self.max_power_dem         = np.max(self.power_dem_arr)
+        self.max_rolling_power_dem = np.max(self.rolling_power_dem)
+        self.mean_power_dem        = np.mean(self.power_dem_arr)
+        self.sum_power_dem         = np.sum(self.df['norm_total_power']*self.max_power_dem)
+        self.steps_per_episode     = len(self.df['norm_total_power'])
+        print('\nMaximum Power-Demand:', round(self.max_power_dem,2))
+        print('Maximum Power-Demand (15min):', round(self.max_rolling_power_dem,2))
+        print('Mean Power-Demand:',      round(self.mean_power_dem,2))
+        print('Sum of Power-Demand',     round(self.sum_power_dem,2))
+        print('Steps pro Episode:',      round(self.steps_per_episode,2))
+        print(self.sum_power_dem-np.sum(self.power_dem_arr))
+        print(np.max(self.df['norm_total_power']*self.max_power_dem))
+        #print(self.power_dem_df-self.df['norm_total_power']*self.max_power_dem)
+        print(self.power_dem_df)
+        print(self.df['norm_total_power']*self.max_power_dem)
+        self.reward_maker.pass_env(self.PERIODEN_DAUER, self.steps_per_episode, self.max_power_dem, self.mean_power_dem, self.sum_power_dem, self.max_rolling_power_dem)
+
 
     def use_only_val_data(self):
-        self.df = df[int(val_split*len(self.og_df)):]
+        print('Using only val-data')
+        self.df = self.og_df[int(val_split*len(self.og_df)):]
+        self.power_dem_df = self.og_power_dem_df[int(val_split*len(self.og_df)):]
+        self.calc_parameter_dataset()
+
 
 
     def use_all_data(self):
+        print('Using training and val-data')
         self.df = self.og_df
+        self.power_dem_df = self.og_power_dem_df
+        self.calc_parameter_dataset()
 
 
     def check_max_peak(self, past_max_peak):

@@ -40,10 +40,10 @@ def run_agent(num_runs=3, name='',gamma=.85, lr=0.001, tau=0.125, update_num=100
             # Parameter to calculate costs:
             cost_per_kwh            = 0.2255,
             LION_Anschaffungs_Preis = 34100,
-            LION_max_Ladezyklen     = 1000,
-            SMS_Anschaffungs_Preis  = 115000/3,
-            SMS_max_Nutzungsjahre   = 20,
-            Leistungspreis          = 102)
+            LION_max_Ladezyklen     = 6000,
+            SMS_Anschaffungs_Preis  = 55000,#115000/3,
+            SMS_max_Nutzungsjahre   = 25,
+            Leistungspreis          = 102,)
 
 
         # Setup common_env
@@ -54,8 +54,12 @@ def run_agent(num_runs=3, name='',gamma=.85, lr=0.001, tau=0.125, update_num=100
             # Datset Inputs for the states:
             input_list     = input_list,
             # Batters stats:
-            max_SMS_SoC    = 12/3,
-            max_LION_SoC   = 54,
+            max_SMS_SoC        = 25,
+            max_LION_SoC       = 54,
+            LION_max_entladung = 50,
+            SMS_max_entladung  = 100,
+            SMS_entladerate    = 0.72,
+            LION_entladerate   = 0.00008,
             # Period length in minutes:
             PERIODEN_DAUER = period_min,
             # DQN inputs can be conti and must be discrete:

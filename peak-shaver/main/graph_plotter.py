@@ -89,8 +89,8 @@ class GraphMaker:
 		self.graph_path = 'agent-plots/heuristic/'
 		self.log_path   = 'agent-logs/'
 
-		self.test_name_list = ['Fine-Tresholds']#['Compare_Approches','Tresholds','Configurations']
-		self.heur_name_list = ['Perfekt-Pred']#,'LSTM-Pred','Practical']
+		self.test_name_list = ['Compare_Approches','Tresholds','Configurations']
+		self.heur_name_list = ['Perfekt-Pred','LSTM-Pred','Practical']
 
 		self.all_names = []
 		for test_name in self.test_name_list:
@@ -98,11 +98,11 @@ class GraphMaker:
 				self.all_names.append(test_name+'_'+heur_name)
 
 		self.merge_dict = {}
-		#self.merge_dict['Compare_Approches'] = []
+		self.merge_dict['Compare_Approches'] = []
 		for heur_name in self.heur_name_list:
-			#self.merge_dict['Compare_Approches'].append('Compare_Approches_'+heur_name)
-			self.merge_dict['Fine-Tresholds_'+heur_name] = ['Fine-Tresholds_'+heur_name]
-			#self.merge_dict['Configurations_'+heur_name] = ['Configurations_'+heur_name]
+			self.merge_dict['Compare_Approches'].append('Compare_Approches_'+heur_name)
+			self.merge_dict['Tresholds_'+heur_name] = ['Tresholds_'+heur_name]
+			self.merge_dict['Configurations_'+heur_name] = ['Configurations_'+heur_name]
 				
 		self.use_tags(['sum_cost_saving'])
 
@@ -110,11 +110,10 @@ class GraphMaker:
 		self.type_second_split = '_t-stamp'
 
 		self.index_name = 'step'
-		'''
+
 		self.name_type_list = []
 		for name in self.merge_dict['Compare_Approches']:
 			self.name_type_list.append(name)
-		'''
 
 
 	def setup_agents(self):
