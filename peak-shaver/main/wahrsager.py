@@ -149,7 +149,7 @@ class wahrsager:
                   verbose         = 1,
                   validation_data = (self.training_data[-self.val_data_size:], self.label_data[-self.val_data_size:]),
                   callbacks       = [tensorboard],
-                  batch_size      = 256
+                  batch_size      = 2000
                   )
         
         # Speichern:
