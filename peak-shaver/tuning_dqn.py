@@ -95,44 +95,44 @@ def run_agent(num_runs=3, name='',gamma=.85, lr=0.001, tau=0.125, update_num=250
         testing(agent)
 
 def parameter_tuning():
-
-    run_agent(name='standart')
     '''
+    run_agent(name='standart')
+    
     # Learning rate:
     lr_list = [0.0001,0.001,0.1,0.25,0.5]
     for lr in lr_list:
         run_agent(name='learning_rate_{}'.format(lr), lr=lr)
-
+    
     # Gamma:
     gamma_list = [0.7,0.9]
     for gamma in gamma_list:
         run_agent(name='gamma_{}'.format(gamma), gamma=gamma)
-
+    
     # Tau:
     tau_list = [0.075,0.1,0.15]
     for tau in tau_list:
         run_agent(name='tau_{}'.format(tau), tau=tau)
-
+    
     # update_num:
     update_num_list = [100,500,1000]
     for update_num in update_num_list:
         run_agent(name='update_num_{}'.format(update_num), update_num=update_num)
-
+    
     # epsilon_decay:
     epsilon_decay_list = ['linear']
     for epsilon_decay in epsilon_decay_list:
         run_agent(name='epsilon_decay_{}'.format(epsilon_decay), epsilon_decay=epsilon_decay)
-
+    
     # input_list:
     input_list_list = [['norm_total_power','normal'],['norm_total_power','seq_max'],['norm_total_power']]
     for input_list in input_list_list:
         run_agent(name='input_list_{}'.format(input_list), input_list=input_list)
-
+    '''
     # hidden_size:
     hidden_size_list = [128,256,1028]
     for hidden_size in hidden_size_list:
         run_agent(name='hidden_size_{}'.format(hidden_size), hidden_size=hidden_size)
 
     # zusätlich vlt discrete, und alle lstms als inputs mal durchprobieren
-    '''
+    
 parameter_tuning()
