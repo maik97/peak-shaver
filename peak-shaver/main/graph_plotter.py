@@ -118,7 +118,7 @@ class GraphMaker:
 
 	def setup_agents(self):
 
-		self.graph_path = 'agent-plots/heuristic/'
+		self.graph_path = 'agent-plots/agents/'
 		self.log_path   = 'agent-logs/'
 
 		self.agents_list = ['Q-Table','DQN','DQN+MS','DQN+LSTM']#,'PPO2']
@@ -136,12 +136,12 @@ class GraphMaker:
 			}
 
 		self.all_names = []
-		for agent_name in self.param_dict.keys:
+		for agent_name in self.param_dict:
 			for param_name in self.param_dict[agent_name]:
 				self.all_names.append(agent_name+'_'+param_name)
 
 		self.merge_dict = {}
-		for agent_name in self.param_dict.keys:
+		for agent_name in self.param_dict:
 			if self.param_dict[agent_name][0] == 'standart':
 				for param_name in self.param_dict[agent_name]:
 					self.merge_dict[agent_name+'_'+param_name] = ['standart',param_name]
@@ -189,7 +189,7 @@ class GraphMaker:
 					#os.chdir(working_dir)
 					
 					if self.custom_tags == False:
-						self.tag_list.append(tag)
+						self.tag_list.append(tag_str)
 						#self.csv_path_list.append(csv_path)
 			
 			#except Exception as e:
@@ -344,7 +344,7 @@ class GraphMaker:
 
 
 	def usual_prep_and_graph_creation(self):
-		#self.logs_to_csv()
+		self.logs_to_csv()
 		self.create_basic_longforms()
 		self.merge_longforms()
 		self.create_graphs()
@@ -360,12 +360,15 @@ def main():
 	#graph_maker.setup_wahrsager()
 	#graph_maker.usual_prep_and_graph_creation()
 
-	graph_maker.setup_heuristic()
-	graph_maker.usual_prep_and_graph_creation()
+	#graph_maker.setup_heuristic()
+	#graph_maker.usual_prep_and_graph_creation()
 
 	#graph_maker.setup_heuristic()
 	#graph_maker.heuristic_logs_to_csv()
 	#graph_maker.create_graphs()
+
+	graph_maker.setup_agents()
+	graph_maker.usual_prep_and_graph_creation()
 
 if __name__ == '__main__':
 	main()
