@@ -127,12 +127,12 @@ class GraphMaker:
 			'Q-Table': ['standart','learning_rate','gamma','tau',
 						'update_num','epsilon_decay','input_list'],
 
-			'DQN': ['standart','learning_rate','gamma','tau',
-							'update_num','epsilon_decay','input_list', 'hidden_size'],
-
-			'DQN+MULITSTEP': ['horizon'],
-
-			'DQN+LSTM': ['standart','input_sequence','lstm_size']
+			#'DQN': ['standart','learning_rate','gamma','tau',
+			#				'update_num','epsilon_decay','input_list', 'hidden_size'],
+			#
+			#'DQN+MULITSTEP': ['horizon'],
+			#
+			#'DQN+LSTM': ['standart','input_sequence','lstm_size']
 			}
 
 		self.all_names = []
@@ -144,10 +144,10 @@ class GraphMaker:
 		for agent_name in self.param_dict:
 			if self.param_dict[agent_name][0] == 'standart':
 				for param_name in self.param_dict[agent_name]:
-					self.merge_dict[agent_name+'_'+param_name] = ['standart',param_name]
+					self.merge_dict[agent_name+'_'+param_name] = [agent_name+'_standart',agent_name+'_'+param_name]
 			else:
 				for param_name in self.param_dict[agent_name]:
-					self.merge_dict[agent_name+'_'+param_name] = [param_name]
+					self.merge_dict[agent_name+'_'+param_name] = [agent_name+'_'+param_name]
 
 		self.type_first_split  = 'agent_'
 		self.type_second_split = '_t-stamp'
@@ -155,6 +155,19 @@ class GraphMaker:
 		self.index_name = 'step'
 
 		self.name_type_list = ['None']
+
+		self.tag_list = [#'discrete-action',
+			#'real-GEC',
+			#'target-GEC',
+			#'SoC-SMS',
+			#'SoC-LION',
+			#'max-peak-day',
+			'Loss',
+			#'Epsilon',
+			#'max-peak-week',
+			'max-peak-epoch',
+			'sum_savings_epoch',
+			'sum_reward_epoch']
 
 
 	def logs_to_csv(self):
@@ -164,37 +177,37 @@ class GraphMaker:
 
 			make_dir(self.graph_path+'seperate_log_csv/'+name)
 		
-			#try:
-			for folder_path in iglob(self.log_path+'*'+name+'*'):
-				print('path:',folder_path)
-				csv_name = folder_path.split('\\')[-1]
-				#name = folder_path.split('/')[-1]
-				ea = event_accumulator.EventAccumulator(folder_path)
-				ea.Reload()
+			try:
+				for folder_path in iglob(self.log_path+'*'+name+'*'):
+					print('path:',folder_path)
+					csv_name = folder_path.split('\\')[-1]
+					#name = folder_path.split('/')[-1]
+					ea = event_accumulator.EventAccumulator(folder_path)
+					ea.Reload()
 
-				#self.csv_path_list = []
-				if self.custom_tags == False:
-					self.tag_list = []
-
-				for tag in ea.Tags()['scalars']:
-					tag_str = tag.replace(':','').split(' ')[-1]
-					print(tag_str)
-					#os.chdir(self.graph_path+'seperate_log_csv/'+name+'/')
-					csv_path = self.graph_path+'seperate_log_csv/'+name+'/'+csv_name+'-tag-'+tag_str+'.csv'
-
-					#print(pd.DataFrame(ea.Scalars(tag)))
-					pd.DataFrame(ea.Scalars(tag)).to_csv(csv_path)
-					#print(test)
-					#test.to_csv(csv_name+'-tag-'+tag_str+'.csv')
-					#os.chdir(working_dir)
-					
+					#self.csv_path_list = []
 					if self.custom_tags == False:
-						self.tag_list.append(tag_str)
-						#self.csv_path_list.append(csv_path)
+						self.tag_list = []
+
+					for tag in ea.Tags()['scalars']:
+						tag_str = tag.replace(':','').split(' ')[-1]
+						print(tag_str)
+						#os.chdir(self.graph_path+'seperate_log_csv/'+name+'/')
+						csv_path = self.graph_path+'seperate_log_csv/'+name+'/'+csv_name+'-tag-'+tag_str+'.csv'
+
+						#print(pd.DataFrame(ea.Scalars(tag)))
+						pd.DataFrame(ea.Scalars(tag)).to_csv(csv_path)
+						#print(test)
+						#test.to_csv(csv_name+'-tag-'+tag_str+'.csv')
+						#os.chdir(working_dir)
+						
+						if self.custom_tags == False:
+							self.tag_list.append(tag_str)
+							#self.csv_path_list.append(csv_path)
 			
-			#except Exception as e:
-			#	print('Exception:', e)
-			#	print('Could not open any log with path:',self.log_path,'that includes',name)
+			except Exception as e:
+				print('Exception:', e)
+				print('Could not open any log with path:',self.log_path,'that includes',name)
 
 	
 	def create_basic_longforms(self):
@@ -292,6 +305,7 @@ class GraphMaker:
 
 			make_dir(self.graph_path+'final_longform_csv/'+key)
 
+			#try:
 			for tag in self.tag_list:
 				df_list = []
 				for name in self.merge_dict[key]:
@@ -308,7 +322,8 @@ class GraphMaker:
 
 				concat_df = pd.concat(df_list)
 				concat_df.to_csv(self.graph_path+'final_longform_csv/'+key+'/'+key+'_'+tag+'.csv')
-
+			#except Exception as e:
+			#		print(e)
 
 	def create_graphs(self, plot_type='simple'):
 		print(self.tag_list)
@@ -324,28 +339,31 @@ class GraphMaker:
 
 		for tag in self.tag_list:
 
-			path = self.graph_path+'final_longform_csv/'+name+'/'+name+'_'+tag
-			df = pd.read_csv(path+'.csv')
-			#df = df.drop(columns=[df.columns[0]])
-			print(df)
+			try:
+				path = self.graph_path+'final_longform_csv/'+name+'/'+name+'_'+tag
+				df = pd.read_csv(path+'.csv')
+				#df = df.drop(columns=[df.columns[0]])
+				print(df)
 
-			
-			if self.graph_name == True:
-				plt.title(name.replace('_',' '))
-			
-			sns.lineplot(data=df, dashes=False, x=df.columns[0], y=df.columns[1], hue="type", palette=self.sns_palette)#, label=df.columns[-1])
-			
-			plt.xlabel(df.index.names[0])
-			plt.ylabel(tag)
-			plt.savefig(self.graph_path+'graphs/'+name+'/'+name+'_'+tag+'.png')
-			plt.close()
+				
+				if self.graph_name == True:
+					plt.title(name.replace('_',' '))
+				
+				sns.lineplot(data=df, dashes=False, x=df.columns[0], y=df.columns[1], hue="type", palette=self.sns_palette)#, label=df.columns[-1])
+				
+				plt.xlabel(df.index.names[0])
+				plt.ylabel(tag)
+				plt.savefig(self.graph_path+'graphs/'+name+'/'+name+'_'+tag+'.png')
+				plt.close()
 
-			print('Saved graph to:',self.graph_path+'graphs/'+name+'/'+name+'_'+tag+'.png')
-
+				print('Saved graph to:',self.graph_path+'graphs/'+name+'/'+name+'_'+tag+'.png')
+			
+			except Exception as e:
+				print(e)
 
 	def usual_prep_and_graph_creation(self):
-		self.logs_to_csv()
-		self.create_basic_longforms()
+		#self.logs_to_csv()
+		#self.create_basic_longforms()
 		self.merge_longforms()
 		self.create_graphs()
 
