@@ -37,13 +37,14 @@ class GraphMaker:
 	def plot_options(self, style="whitegrid", use_grid=False, graph_name=True):
 
 		self.style       = style
-		self.sns_palette = "Set1"
+		self.sns_palette = "deep"
 		self.graph_name  = graph_name
 
 
 		#sns.set_theme(style=self.style, {'axes.grid' : use_grid})
 		sns.set_style(self.style, {'axes.grid' : use_grid})
 		#sns.color_palette("Spectral", as_cmap=True)
+		#sns.color_palette('Dark2', as_cmap=True)
 
 
 	def use_tags(self,tags):
@@ -124,8 +125,8 @@ class GraphMaker:
 		self.agents_list = ['Q-Table','DQN','DQN+MS','DQN+LSTM']#,'PPO2']
 
 		self.param_dict = {
-			'Q-Table': ['standart','learning_rate','gamma','tau',
-						'update_num','epsilon_decay','input_list'],
+			#'Q-Table': ['standart','learning_rate','gamma','tau',
+			#			'update_num','epsilon_decay','input_list'],
 
 			#'DQN': ['standart','learning_rate','gamma','tau',
 			#				'update_num','epsilon_decay','input_list', 'hidden_size'],
@@ -133,6 +134,7 @@ class GraphMaker:
 			#'DQN+MULITSTEP': ['horizon'],
 			#
 			#'DQN+LSTM': ['standart','input_sequence','lstm_size']
+			'Q-Table': ['lstm_inputs'],
 			}
 
 		self.all_names = []
@@ -152,7 +154,7 @@ class GraphMaker:
 		self.type_first_split  = 'agent_'
 		self.type_second_split = '_t-stamp'
 
-		self.index_name = 'step'
+		self.index_name = 'epoch'
 
 		self.name_type_list = ['None']
 
@@ -162,12 +164,13 @@ class GraphMaker:
 			#'SoC-SMS',
 			#'SoC-LION',
 			#'max-peak-day',
-			'Loss',
+			#'Loss',
 			#'Epsilon',
 			#'max-peak-week',
-			'max-peak-epoch',
+			#'max-peak-epoch',
 			'sum_savings_epoch',
-			'sum_reward_epoch']
+			#'sum_reward_epoch'
+			]
 
 
 	def logs_to_csv(self):
@@ -231,6 +234,8 @@ class GraphMaker:
 						df = df.set_index('step')
 						df = df.rename(columns={df.columns[-1]:name})	
 						df = df.rename(columns={df.columns[0]:self.index_name})	
+
+						df[name] = df[name].rolling(10).mean()
 
 
 						# Index:
@@ -345,25 +350,51 @@ class GraphMaker:
 				#df = df.drop(columns=[df.columns[0]])
 				print(df)
 
-				
+				'''
 				if self.graph_name == True:
 					plt.title(name.replace('_',' '))
 				
 				sns.lineplot(data=df, dashes=False, x=df.columns[0], y=df.columns[1], hue="type", palette=self.sns_palette)#, label=df.columns[-1])
 				
-				plt.xlabel(df.index.names[0])
+				#plt.xlabel(df.index.names[0])
+				plt.xlabel('epoch')
 				plt.ylabel(tag)
+
+				#plt.legend(bbox_to_anchor=(1.01, 1),borderaxespad=0)
+				plt.legend(bbox_to_anchor=(1.02, 1),loc='right')
+
+				#plt.savefig(self.graph_path+'graphs/'+name+'/'+name+'_'+tag+'.png')
+				plt.close()
+				'''
+				fig, ax1 = plt.subplots(1,1)
+
+				g = sns.lineplot(data=df, dashes=False, x=df.columns[0], y=df.columns[1], hue="type", palette=self.sns_palette, ax=ax1)#, label=df.columns[-1])
+
+				'''
+				box = g.get_position()
+				g.set_position([box.x0, box.y0, box.width * 0.85, box.height]) # resize position
+
+				# Put a legend to the right side
+				g.legend(loc='center right', bbox_to_anchor=(1.33, 0.5), ncol=1)
+				'''
+				if self.graph_name == True:
+					plt.title(name.replace('_',' '))
+
+				plt.ylabel(tag)
+				plt.xlabel(self.index_name)
+				
+				#plt.show()
 				plt.savefig(self.graph_path+'graphs/'+name+'/'+name+'_'+tag+'.png')
 				plt.close()
-
+				
 				print('Saved graph to:',self.graph_path+'graphs/'+name+'/'+name+'_'+tag+'.png')
 			
 			except Exception as e:
 				print(e)
 
 	def usual_prep_and_graph_creation(self):
-		#self.logs_to_csv()
-		#self.create_basic_longforms()
+		self.logs_to_csv()
+		self.create_basic_longforms()
 		self.merge_longforms()
 		self.create_graphs()
 
