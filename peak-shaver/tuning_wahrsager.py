@@ -222,6 +222,7 @@ def test_seq():
             #PLOTTING = True,
             ).train()
 
+'''
 standart_settings()
 #test_learning_rate()
 #test_dropout()
@@ -254,7 +255,60 @@ try:
     test_seq()
 except Exception as e:
     print(e)
+'''
+
+def final_normal():
+    '''Creates standart results to compare the tests'''
+
+    print('Testing final_normal()')
+    lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=24)
+    normal_predictions = wahrsager(lstm_dataset, power_dem_df,
+        TYPE = 'NORMAL', 
+        NAME ='_test_standart',
+        #PLOTTING = True,
+        # Model-Parameter:
+        num_outputs       = 1,
+        dropout           = 0.1,
+        recurrent_dropout = 0.1,
+        num_hidden        = 3,
+        lstm_size         = 256,
+        first_hidden_size = 256,
+        neuron_num_change = 0.5,
+        activation_hidden = 'relu',
+        activation_end    = 'relu',
+        lr                = 0.001,
+        # Trainings-Parameter
+        val_data_size     = 2000,
+        num_epochs        = 1000,
+        ).train()
+
+def final_seq():
+    '''Creates standart results to compare the tests'''
+
+    print('Testing final_seq()')
+    lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=24)
+    normal_predictions = wahrsager(lstm_dataset, power_dem_df,
+        TYPE = 'MAX_LABEL_SEQ', 
+        NAME ='_test_standart',
+        #PLOTTING = True,
+        # Model-Parameter:
+        num_outputs       = 24,
+        dropout           = 0.1,
+        recurrent_dropout = 0.1,
+        num_hidden        = 3,
+        lstm_size         = 256,
+        first_hidden_size = 256,
+        neuron_num_change = 0.5,
+        activation_hidden = 'relu',
+        activation_end    = 'relu',
+        lr                = 0.001,
+        # Trainings-Parameter
+        val_data_size     = 2000,
+        num_epochs        = 1000,
+        ).train()
 
 
 
-
+for i in range(3):
+	#final_normal()
+	final_seq()
