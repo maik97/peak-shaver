@@ -12,7 +12,7 @@ from main.common_env import common_env
 from main.agent_deep_q import DQN
 
 
-def run_agent(num_runs=3, name='', horizon=12):
+def run_agent(num_runs=1, name='', horizon=12):
 
     for i in range(num_runs):
         # Naming the agent:
@@ -26,7 +26,7 @@ def run_agent(num_runs=3, name='', horizon=12):
         # Number of warm-up steps:
         num_warmup_steps = 100
         # Train every x number of steps:
-        update_num       = 50
+        update_num       = 500
         # Number of epochs and steps:
         epochs           = 100
 
@@ -44,10 +44,10 @@ def run_agent(num_runs=3, name='', horizon=12):
             # Parameter to calculate costs:
             cost_per_kwh            = 0.2255,
             LION_Anschaffungs_Preis = 34100,
-            LION_max_Ladezyklen     = 1000,
-            SMS_Anschaffungs_Preis  = 115000/3,
-            SMS_max_Nutzungsjahre   = 20,
-            Leistungspreis          = 102)
+            LION_max_Ladezyklen     = 6000,
+            SMS_Anschaffungs_Preis  = 55000,#115000/3,
+            SMS_max_Nutzungsjahre   = 25,
+            Leistungspreis          = 102,)
 
 
         # Setup common_env
@@ -56,10 +56,14 @@ def run_agent(num_runs=3, name='', horizon=12):
             df             = df,
             power_dem_df   = power_dem_df,
             # Datset Inputs for the states:
-            input_list     = ['norm_total_power','normal','seq_max'],
+            input_list     = ['norm_total_power','seq_max'],
             # Batters stats:
-            max_SMS_SoC    = 12/3,
-            max_LION_SoC   = 54,
+            max_SMS_SoC        = 25,
+            max_LION_SoC       = 54,
+            LION_max_entladung = 50,
+            SMS_max_entladung  = 100,
+            SMS_entladerate    = 0.72,
+            LION_entladerate   = 0.00008,
             # Period length in minutes:
             PERIODEN_DAUER = period_min,
             # DQN inputs can be conti and must be discrete:
@@ -75,16 +79,17 @@ def run_agent(num_runs=3, name='', horizon=12):
         agent = DQN(
             env            = env,
             memory_len     = update_num+horizon,
-            gamma          = 0.85,
+            gamma          = 0.9,
             epsilon        = 0.99,
             epsilon_min    = 0.1,
-            epsilon_decay  = 0.999996,
-            lr             = 0.5,
-            tau            = 0.125,
+            epsilon_decay  = 'linear',
+            lr             = 0.1,
+            tau            = 0.15,
             # Training parameter:
             activation     = 'relu',
             loss           = 'mean_squared_error',
-            model_type     = 'dense')
+            model_type     = 'dense',
+            hidden_size    = 128)
 
 
         # Train:
