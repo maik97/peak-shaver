@@ -89,7 +89,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
         OBS_TYPE       = 'contin',
         # Define heuristic usage:
         AGENT_TYPE     = 'heuristic',
-        val_split      = 0.6)
+        val_split      = 0)
 
     # Use the complete dataset (no validation split):
     #env.use_all_data()
@@ -101,26 +101,27 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
         threshold_dem  = threshold_dem)
 
 
-    return agent.calculate(epochs=epochs)
+    return agent.calculate(epochs=epochs,LSTM_column='normal')
 
 
 def test_threshold_for_all_heuristics():
     # Find maximum performance of battery configuration:
-    threshold_dem = use_heuristic('Single-Value-Heuristic', test_name='find_threshold', epochs=15, threshold_dem=50)
-    
+    #threshold_dem = use_heuristic('Single-Value', test_name='find_threshold', epochs=15, threshold_dem=50)
+    threshold_dem = 40
     # Test all heuristic:
     use_heuristic('Perfekt-Pred', test_name='Compare_Approches', threshold_dem=threshold_dem)
     use_heuristic('LSTM-Pred', test_name='Compare_Approches', threshold_dem=threshold_dem)
     use_heuristic('Practical', test_name='Compare_Approches', threshold_dem=threshold_dem)
+    #use_heuristic('LSTM-SEQ-Pred', test_name='Compare_Approches', threshold_dem=threshold_dem)
 
 
-def test_for_different_thresholds(HEURISTIC_TYPE,threshold_list=[10,20,30,40,50,60,70,80,90]):
+def test_for_different_thresholds(HEURISTIC_TYPE,threshold_list=[20,25,30,40,50,60]):
     # Test different threshold values
     for threshold in threshold_list:
         use_heuristic(HEURISTIC_TYPE, test_name='Tresholds', threshold_dem=threshold)
 
 
-def test_battery_activations(HEURISTIC_TYPE,threshold_dem=60):
+def test_battery_activations(HEURISTIC_TYPE,threshold_dem=40):
     # Test battery-configurations:
     use_heuristic(HEURISTIC_TYPE, test_name='Configurations', threshold_dem=threshold_dem)
     use_heuristic(HEURISTIC_TYPE, test_name='Configurations', threshold_dem=threshold_dem, deactivate_SMS=True,)
@@ -128,21 +129,26 @@ def test_battery_activations(HEURISTIC_TYPE,threshold_dem=60):
     use_heuristic(HEURISTIC_TYPE, test_name='Configurations', threshold_dem=threshold_dem, deactivate_SMS=True, deactivate_LION=True)
 
 
+def test_lstm_types(threshold_dem=40):
+    use_heuristic('LSTM-Pred', test_name='Predictions', threshold_dem=threshold_dem, LSTM_column='normal')
+    use_heuristic('LSTM-Pred', test_name='Predictions', threshold_dem=threshold_dem, LSTM_column='MAX_LABEL_SEQ')
+    
+
 def main():
 
-    use_heuristic('Perfekt-Pred', test_name='Tresholds', threshold_dem=32,deactivate_SMS=True, deactivate_LION=True)
-
+    #use_heuristic('LSTM-Pred', test_name='lstm-max', threshold_dem=40)
+    #use_heuristic('Practical', test_name='lstm-max', threshold_dem=40)
 
     # General test with max performance threshhold:
-    #test_threshold_for_all_heuristics()
+    test_threshold_for_all_heuristics()
+    #test_battery_activations('Perfekt-Pred',threshold_dem=40)
     
     # Test the three main heuristics with different thresholds and with different battery activations:
-    #for HEURISTIC_TYPE in ['Perfekt-Pred','LSTM-Pred','Practical']:
-        #test_for_different_thresholds(HEURISTIC_TYPE)
-        #test_battery_activations(HEURISTIC_TYPE)
+    for HEURISTIC_TYPE in ['Perfekt-Pred','LSTM-Pred','Practical']:
+        test_for_different_thresholds(HEURISTIC_TYPE)
+        test_battery_activations(HEURISTIC_TYPE)
         #use_heuristic(HEURISTIC_TYPE, test_name='test_rewards', threshold_dem=100, deactivate_SMS=True, deactivate_LION=True)
     
-
 
 if __name__ == "__main__":
     main()
