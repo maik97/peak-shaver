@@ -60,11 +60,12 @@ class GraphMaker:
 		#self.compare_df_path = self.graph_path+'standard/'
 
 		self.dont_merge = ['standard','learning_rate','dropout','final']
-		
-		self.to_merge = [
-			'sigmoid','lstm_layers','hidden_layers',
+
+		self.to_merge = ['activation',
+			'lstm_layers','hidden_layers',
 			'past_periods','rolling_mean','rolling_max',
-			'max_label_seq','mean_label_seq','test_seq']
+			'max_label_seq','mean_label_seq','test_seq'
+			]
 
 		self.all_names = self.dont_merge + self.to_merge
 
@@ -122,18 +123,27 @@ class GraphMaker:
 		self.graph_path = 'agent-plots/agents/'
 		self.log_path   = 'agent-logs/'
 
-		self.agents_list = ['Q-Table','DQN','DQN+MS','DQN+LSTM']#,'PPO2']
+		self.agents_list = ['Compare_Agents','Q-Table','DQN','DQN+MS','DQN+LSTM']#,'PPO2']
 
 		self.param_dict = {
+
+			'Compare_Agents': [#'Q-Table',
+								#'DQN',
+								'PPO2',
+								#'DQN+LSTM'
+								]
+			
 			#'Q-Table': ['standard','learning_rate','gamma','tau',
 			#			'update_num','epsilon_decay','input_list'],
+
 			#'DQN': ['standard','learning_rate','gamma','tau',
-			#		'update_num','epsilon_decay', 'hidden_size'],
-			#
-			'DQN+MS': ['horizon'],
-			#
-			#'DQN+LSTM': ['standard','input_sequence','lstm_size'],
-			#'DQN': ['lstm-list']
+			#				'update_num','epsilon_decay','input_list', 'hidden_size'],
+			
+			#'DQN+MS': ['horizon'],
+			
+			#'DQN+LSTM': ['standard','input_sequence','lstm_size']
+			#'Q-Table': ['lstm_inputs'],
+
 			}
 
 		self.all_names = []
@@ -150,12 +160,20 @@ class GraphMaker:
 				for param_name in self.param_dict[agent_name]:
 					self.merge_dict[agent_name+'_'+param_name] = [agent_name+'_'+param_name]
 
+		self.merge_dict['Compare_Agents'] =  ['Compare_Agents_Q-Table',
+												'Compare_Agents_DQN',
+												'Compare_Agents_PPO2',
+												'Compare_Agents_DQN+LSTM'
+												]
+
 		self.type_first_split  = 'agent_'
 		self.type_second_split = '_t-stamp'
 
 		self.index_name = 'epoch'
 
-		self.name_type_list = ['None']
+		self.name_type_list = []
+		for name in self.merge_dict['Compare_Agents']:
+			self.name_type_list.append(name)
 
 		self.custom_tags = True
 		self.tag_list = [#'discrete-action',
@@ -192,22 +210,26 @@ class GraphMaker:
 					if self.custom_tags == False:
 						self.tag_list = []
 
+					#for tag in self.tag_list:
 					for tag in ea.Tags()['scalars']:
-						tag_str = tag.replace(':','').split(' ')[-1]
-						print(tag_str)
-						#os.chdir(self.graph_path+'seperate_log_csv/'+name+'/')
-						csv_path = self.graph_path+'seperate_log_csv/'+name+'/'+csv_name+'-tag-'+tag_str+'.csv'
+						try:
+							tag_str = tag.replace(':','').split(' ')[-1]
+							print(tag_str)
+							#os.chdir(self.graph_path+'seperate_log_csv/'+name+'/')
+							csv_path = self.graph_path+'seperate_log_csv/'+name+'/'+csv_name+'-tag-'+tag_str+'.csv'
 
-						#print(pd.DataFrame(ea.Scalars(tag)))
-						pd.DataFrame(ea.Scalars(tag)).to_csv(csv_path)
-						#print(test)
-						#test.to_csv(csv_name+'-tag-'+tag_str+'.csv')
-						#os.chdir(working_dir)
-						
-						if self.custom_tags == False:
-							self.tag_list.append(tag_str)
-							#self.csv_path_list.append(csv_path)
-			
+							#print(pd.DataFrame(ea.Scalars(tag)))
+							pd.DataFrame(ea.Scalars(tag)).to_csv(csv_path)
+							#print(test)
+							#test.to_csv(csv_name+'-tag-'+tag_str+'.csv')
+							#os.chdir(working_dir)
+							
+							if self.custom_tags == False:
+								self.tag_list.append(tag_str)
+								#self.csv_path_list.append(csv_path)
+
+						except Exception as e:
+							print('Exception:', e)
 			except Exception as e:
 				print('Exception:', e)
 				print('Could not open any log with path:',self.log_path,'that includes',name)
