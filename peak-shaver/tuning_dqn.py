@@ -27,7 +27,7 @@ def run_agent(num_runs=3, name='',gamma=.85, lr=0.001, tau=0.125, update_num=250
         # Number of warm-up steps:
         num_warmup_steps = 100
         # Number of epochs and steps:
-        epochs           = 100
+        epochs           = 1000
 
 
         # Setup reward_maker
@@ -127,12 +127,15 @@ def parameter_tuning():
     input_list_list = [['norm_total_power','normal'],['norm_total_power','seq_max'],['norm_total_power']]
     for input_list in input_list_list:
         run_agent(name='input_list_{}'.format(input_list), input_list=input_list)
-    '''
+    
     # hidden_size:
     hidden_size_list = [128,256,1028]
     for hidden_size in hidden_size_list:
         run_agent(name='hidden_size_{}'.format(hidden_size), hidden_size=hidden_size)
-
+	'''
     # zusätlich vlt discrete, und alle lstms als inputs mal durchprobieren
     
+    run_agent(name='final',num_runs=1,gamma=.9, lr=0.1, tau=0.15, update_num=500, 
+              epsilon_decay='linear', input_list=['norm_total_power','seq_max'],
+              hidden_size=128)
 parameter_tuning()
