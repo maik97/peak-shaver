@@ -265,6 +265,7 @@ def training(agent, epochs=1000, update_num=1000, num_warmup_steps=100, epoch_sa
     env       = agent.__dict__['env']
     epoch_len = len(env.__dict__['df'])
 
+
     agent.init_agent_status(epochs,epoch_len)
 
     print('Warmup-Steps per Episode:', num_warmup_steps)
@@ -311,8 +312,10 @@ def training(agent, epochs=1000, update_num=1000, num_warmup_steps=100, epoch_sa
             if done:
                 break
 
-        if e % epoch_save_intervall == 0:
+        if e % epoch_save_intervall == 50:
             agent.save_agent(e)
+
+    agent.save_agent(e)
 
 
 def testing(agent, epochs=1, random_start=False, SoC_full=True, use_stable_b=False, env=None):
@@ -350,6 +353,8 @@ def testing(agent, epochs=1, random_start=False, SoC_full=True, use_stable_b=Fal
             else:
                 action, _states = agent.predict(cur_state)
                 new_state, reward, done, _ = env.step(action)
+
+            env.__dict__['LOGGER'].log_scalar('testing-reward',  reward, step, done)
 
 
             cur_state = new_state
