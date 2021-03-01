@@ -14,7 +14,7 @@ from main.reward_maker import reward_maker
 from main.common_env import common_env
 
 
-def run_agent(name='', n_steps=2500):
+def run_agent(name='', learning_rate=0.00025, gamma=0.99, n_steps=2500, ent_coef=0.01, vf_coef=0.5, cliprange=0.2):
     # Naming the agent:
     now    = datetime.now()
     NAME   = 'agent_PPO2_'+name+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
@@ -37,10 +37,10 @@ def run_agent(name='', n_steps=2500):
         # Parameter to calculate costs:
         cost_per_kwh            = 0.2255,
         LION_Anschaffungs_Preis = 34100,
-        LION_max_Ladezyklen     = 1000,
-        SMS_Anschaffungs_Preis  = 115000/3,
-        SMS_max_Nutzungsjahre   = 20,
-        Leistungspreis          = 102)
+        LION_max_Ladezyklen     = 6000,
+        SMS_Anschaffungs_Preis  = 55000,#115000/3,
+        SMS_max_Nutzungsjahre   = 25,
+        Leistungspreis          = 102,)
 
     # Setup common_env
     env = common_env(
@@ -48,10 +48,14 @@ def run_agent(name='', n_steps=2500):
         df             = df,
         power_dem_df   = power_dem_df,
         # Datset Inputs for the states:
-        input_list     = ['norm_total_power','normal','seq_max'],
+        input_list     = ['norm_total_power','seq_max'],
         # Batters stats:
-        max_SMS_SoC    = 12/3,
-        max_LION_SoC   = 54,
+        max_SMS_SoC        = 25,
+        max_LION_SoC       = 54,
+        LION_max_entladung = 50,
+        SMS_max_entladung  = 100,
+        SMS_entladerate    = 0.72,
+        LION_entladerate   = 0.00008,
         # Period length in minutes:
         PERIODEN_DAUER = period_min,
         # PPO can use conti values:
@@ -59,7 +63,8 @@ def run_agent(name='', n_steps=2500):
         OBS_TYPE       = 'contin',
         # Tells the environment to make standart GYM outputs, 
         # so agents from stable-baselines (or any other RL-library that uses gym) can be used
-        AGENT_TYPE     = 'standart_gym')
+        AGENT_TYPE     = 'standart_gym',
+        val_split      = 0.1)
 
     # Create vectorised environment:
     dummy_env = DummyVecEnv([lambda: env])
@@ -69,7 +74,8 @@ def run_agent(name='', n_steps=2500):
                                              name_prefix=NAME)
 
     # Setup Model:
-    model = PPO2(MlpPolicy, dummy_env, verbose=1, tensorboard_log=cms.__dict__['D_PATH']+'agent-logs/', n_steps=2500)
+    model = PPO2(MlpPolicy, dummy_env, verbose=1, tensorboard_log=cms.__dict__['D_PATH']+'agent-logs/',
+                learning_rate=learning_rate, gamma=gamma, n_steps=n_steps, ent_coef=ent_coef, vf_coef=vf_coef, cliprange=cliprange)
     #model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=DATENSATZ_PATH+'LOGS/agent_logging',callback=checkpoint_callback, n_steps=2500)
     
     # Train:
@@ -81,42 +87,50 @@ def run_agent(name='', n_steps=2500):
     testing(model, use_stable_b=True, env=env)
 
 
-run_agent()
+#run_agent()
 
 
 def parameter_tuning():
 
-    # Learning rate:
-    n_steps_list = []
-    for n_steps in n_steps_list:
-        run_agent(name='n_steps_{}'.format(n_steps), n_steps=n_steps)
+    for i in range(3):
+        '''
+        run_agent(name='standard')
+        
+        # Learning rate:
+        learning_rate_list = [0.003,0.00001]
+        for learning_rate in learning_rate_list:
+            run_agent(name='learning_rate_{}'.format(learning_rate), learning_rate=learning_rate)
+        
+        # gamma:
+        gamma_list = [0.8,0.9997]
+        for gamma in gamma_list:
+            run_agent(name='gamma_{}'.format(gamma), gamma=gamma)
+        
+        # n_steps:
+        n_steps_list = [1000,5000]
+        for n_steps in n_steps_list:
+            run_agent(name='n_steps_{}'.format(n_steps), n_steps=n_steps)
+        
+        # ent_coef:
+        ent_coef_list = [0,0.1]
+        for ent_coef in ent_coef_list:
+            run_agent(name='ent_coef_{}'.format(ent_coef), ent_coef=ent_coef)
+        
+        # vf_coef:
+        vf_coef_list = [0.75,1]
+        for vf_coef in vf_coef_list:
+            run_agent(name='vf_coef_{}'.format(vf_coef), vf_coef=vf_coef)
+        '''
+        # cliprange:
+        cliprange_list = [0.1,0.3]
+        for cliprange in cliprange_list:
+            run_agent(name='cliprange_{}'.format(cliprange), cliprange=cliprange)
+        '''
+        
+        # lstm_inputs:
+        lstm_inputs_list = []
+        for lstm_inputs in lstm_inputs_list:
+            run_agent(name='lstm_inputs_{}'.format(lstm_inputs), input_list=lstm_inputs)
+        '''
 
-    # Gamma:
-    gamma_list = []
-    for gamma in gamma_list:
-        run_agent(name='gamma_{}'.format(gamma), gamma=gamma)
-
-    # Tau:
-    tau_list = []
-    for tau in tau_list:
-        run_agent(name='tau_{}'.format(tau), tau=tau)
-
-    # update_num:
-    update_num_list = []
-    for update_num in update_num_list:
-        run_agent(name='update_num_{}'.format(update_num), update_num=update_num)
-
-    # epsilon_decay:
-    epsilon_decay_list = []
-    for epsilon_decay in epsilon_decay_list:
-        run_agent(name='epsilon_decay_{}'.format(epsilon_decay), epsilon_decay=epsilon_decay)
-
-    # input_list:
-    input_list_list = []
-    for input_list in input_list_list:
-        run_agent(name='input_list_{}'.format(input_list), input_list=input_list)
-
-    # hidden_size:
-    hidden_size_list = []
-    for hidden_size in hidden_size_list:
-        run_agent(name='hidden_size_{}'.format(hidden_size), hidden_size=hidden_size)
+parameter_tuning()
