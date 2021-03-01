@@ -56,8 +56,8 @@ class Q_Learner:
             elif load_table == None:
                 self.Q_table        = Q_table # each dimension ∈ [0,0.05,...,1] with standart settings
             else:
-                with h5py.File(D_PATH+'agent-models/'+load_table, 'r') as hf:
-                    self.Q_table = hf[:][:]
+                with h5py.File(self.D_PATH+'agent-models/'+load_table, 'r') as hf:
+                    self.Q_table = hf[list(hf.keys())[0]][:]
         else:
             self.Q_table = np.zeros([self.env.__dict__['discrete_space']]*(self.env.__dict__['input_dim']+1))
 
@@ -106,7 +106,7 @@ class Q_Learner:
         '''
         # Calculate new epsilon:
         if self.epsilon_decay == 'linear':
-            self.epsilon = self.epsilon_og*(self.env.__dict__['sum_steps']/self.agent_status.__dict__['max_steps'])
+            self.epsilon = 1-(self.epsilon_og*(self.env.__dict__['sum_steps']/self.agent_status.__dict__['max_steps']))
         else:
             self.epsilon *= self.epsilon_decay
         self.epsilon = max(self.epsilon_min, self.epsilon)
@@ -171,7 +171,7 @@ class Q_Learner:
             Q_target = self.Q_table [state_and_action]
             loss = (self.lr * (reward + (Q_future * self.gamma) - Q_target))
             self.Q_table[state_and_action] += loss
-            loss_list.append(loss) 
+            loss_list.append(loss)
 
         # Prepare agent status to log and print:
         name         = self.env.__dict__['NAME']

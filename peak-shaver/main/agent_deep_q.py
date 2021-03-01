@@ -179,15 +179,11 @@ class DQN:
             state (array): Current state at the step
 
         Returns:
-            action, epsilon (tuple):
-            
-            action (integer): Action that was chosen by the agent
-            
-            epsilon (float): Current (decayed) epsilon
+            integer: Action that was chosen by the agent
         '''
         # Calculate new epsilon:
         if self.epsilon_decay == 'linear':
-            self.epsilon = self.epsilon_og*(self.env.__dict__['sum_steps']/self.agent_status.__dict__['max_steps'])
+            self.epsilon = 1-(self.epsilon_og*(self.env.__dict__['sum_steps']/self.agent_status.__dict__['max_steps']))
         else:
             self.epsilon *= self.epsilon_decay
         self.epsilon = max(self.epsilon_min, self.epsilon)
@@ -326,7 +322,7 @@ class DQN:
         
         # Training:
         loss         = self.model.train_on_batch(state_batch,target_batch)
-        
+        self.target_train()
         # Print status
         self.agent_status.print_agent_status(name, epoch, total_steps, batch_size, self.epsilon, loss) 
         
