@@ -57,9 +57,9 @@ class GraphMaker:
 
 		self.graph_path      = 'lstm-plots/'
 		self.log_path        = 'lstm-logs/'
-		#self.compare_df_path = self.graph_path+'standart/'
+		#self.compare_df_path = self.graph_path+'standard/'
 
-		self.dont_merge = ['standart','learning_rate','dropout','final']
+		self.dont_merge = ['standard','learning_rate','dropout','final']
 		
 		self.to_merge = [
 			'sigmoid','lstm_layers','hidden_layers',
@@ -70,7 +70,7 @@ class GraphMaker:
 
 		self.merge_dict = {}
 		for name in self.to_merge:
-			self.merge_dict[name] = ['standart',name]
+			self.merge_dict[name] = ['standard',name]
 
 		for name in self.dont_merge:
 			self.merge_dict[name] = [name]
@@ -125,16 +125,15 @@ class GraphMaker:
 		self.agents_list = ['Q-Table','DQN','DQN+MS','DQN+LSTM']#,'PPO2']
 
 		self.param_dict = {
-			#'Q-Table': ['standart','learning_rate','gamma','tau',
+			#'Q-Table': ['standard','learning_rate','gamma','tau',
 			#			'update_num','epsilon_decay','input_list'],
-
-			#'DQN': ['standart','learning_rate','gamma','tau',
-			#				'update_num','epsilon_decay','input_list', 'hidden_size'],
+			#'DQN': ['standard','learning_rate','gamma','tau',
+			#		'update_num','epsilon_decay', 'hidden_size'],
 			#
-			#'DQN+MULITSTEP': ['horizon'],
+			'DQN+MS': ['horizon'],
 			#
-			#'DQN+LSTM': ['standart','input_sequence','lstm_size']
-			'Q-Table': ['lstm_inputs'],
+			#'DQN+LSTM': ['standard','input_sequence','lstm_size'],
+			#'DQN': ['lstm-list']
 			}
 
 		self.all_names = []
@@ -144,9 +143,9 @@ class GraphMaker:
 
 		self.merge_dict = {}
 		for agent_name in self.param_dict:
-			if self.param_dict[agent_name][0] == 'standart':
+			if self.param_dict[agent_name][0] == 'standard':
 				for param_name in self.param_dict[agent_name]:
-					self.merge_dict[agent_name+'_'+param_name] = [agent_name+'_standart',agent_name+'_'+param_name]
+					self.merge_dict[agent_name+'_'+param_name] = [agent_name+'_standard',agent_name+'_'+param_name]
 			else:
 				for param_name in self.param_dict[agent_name]:
 					self.merge_dict[agent_name+'_'+param_name] = [agent_name+'_'+param_name]
@@ -158,6 +157,7 @@ class GraphMaker:
 
 		self.name_type_list = ['None']
 
+		self.custom_tags = True
 		self.tag_list = [#'discrete-action',
 			#'real-GEC',
 			#'target-GEC',
@@ -310,25 +310,25 @@ class GraphMaker:
 
 			make_dir(self.graph_path+'final_longform_csv/'+key)
 
-			#try:
-			for tag in self.tag_list:
-				df_list = []
-				for name in self.merge_dict[key]:
-					try:
-						path = self.graph_path+'basic_longform_csv/'+name+'/'+name+'_'+tag+'.csv'
-						print('Merge to',key,'from',path)
-						df = pd.read_csv(path, delimiter=',', index_col=self.index_name)
-						df = df.rename(columns={df.columns[-3]:key})
-						df.columns = df.columns.str.replace('_',' ')
-						df_list.append(df)
-						print(df)
-					except Exception as e:
-						print(e)
+			try:
+				for tag in self.tag_list:
+					df_list = []
+					for name in self.merge_dict[key]:
+						try:
+							path = self.graph_path+'basic_longform_csv/'+name+'/'+name+'_'+tag+'.csv'
+							print('Merge to',key,'from',path)
+							df = pd.read_csv(path, delimiter=',', index_col=self.index_name)
+							df = df.rename(columns={df.columns[-3]:key})
+							df.columns = df.columns.str.replace('_',' ')
+							df_list.append(df)
+							print(df)
+						except Exception as e:
+							print(e)
 
-				concat_df = pd.concat(df_list)
-				concat_df.to_csv(self.graph_path+'final_longform_csv/'+key+'/'+key+'_'+tag+'.csv')
-			#except Exception as e:
-			#		print(e)
+					concat_df = pd.concat(df_list)
+					concat_df.to_csv(self.graph_path+'final_longform_csv/'+key+'/'+key+'_'+tag+'.csv')
+			except Exception as e:
+					print(e)
 
 	def create_graphs(self, plot_type='simple'):
 		print(self.tag_list)
@@ -393,7 +393,7 @@ class GraphMaker:
 				print(e)
 
 	def usual_prep_and_graph_creation(self):
-		self.logs_to_csv()
+		#self.logs_to_csv()
 		self.create_basic_longforms()
 		self.merge_longforms()
 		self.create_graphs()
