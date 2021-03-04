@@ -278,8 +278,9 @@ def training(agent, epochs=1000, update_num=1000, num_warmup_steps=100, epoch_sa
         else:
             cur_state = env.reset()
 
-        update_counter   = 0
-        warmup_counter   = 0
+        update_counter      = 0
+        target_update_count = 0
+        warmup_counter      = 0
 
         while warmup_counter < num_warmup_steps:
             action                          = agent.act(cur_state, random_mode=True )
@@ -308,6 +309,20 @@ def training(agent, epochs=1000, update_num=1000, num_warmup_steps=100, epoch_sa
             if update_counter == update_num or done == True:
                 agent.replay(training_num)
                 update_counter = 0
+
+            if hasattr(agent, 'target_update_num'):
+                if agent.__dict__['target_update_num'] == None:
+                    if update_counter == 0:
+                        agent.target_train()
+                        #print('target_update')
+                else:
+                    target_update_count += 1
+                    if target_update_count == agent.__dict__['target_update_num'] or done == True:
+                        agent.target_train()
+                        target_update_count = 0
+                        #print('target_update',agent.__dict__['target_update_num'])
+
+
 
             if done:
                 break
