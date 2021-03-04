@@ -149,7 +149,7 @@ class wahrsager:
                   verbose         = 1,
                   validation_data = (self.training_data[-self.val_data_size:], self.label_data[-self.val_data_size:]),
                   callbacks       = [tensorboard],
-                  batch_size      = 2000
+                  batch_size      = 3000
                   )
         
         # Speichern:
@@ -161,7 +161,7 @@ class wahrsager:
         prediction = model.predict(self.training_data).reshape(np.shape(self.label_data))
 
         if self.PLOTTING == True:
-            if self.num_outputs > 1:
+            if self.TYPE == 'SEQ':
                 self.plot_pred_multiple(prediction,self.label_data)
             else:
                 self.plot_pred_single(prediction,self.label_data)
@@ -322,12 +322,14 @@ class wahrsager:
         print(prediction_df)
         prediction_df.to_csv(self.D_PATH+'/lstm-outputs/'+self.TYPE+self.NAME+self.VERSION+'.csv')
 
-
         print('Maximaler Absoluter Fehler:',  np.max(prediction_df['Absoluter Fehler'].to_numpy()))
         print('Mittelwert Absoluter Fehler:', np.mean(prediction_df['Absoluter Fehler'].to_numpy()))
 
         # Plotte Dataframe
-        #prediction_df.plot()
+        prediction_df.plot()
+        plt.savefig(self.D_PATH+'/lstm-outputs/'+self.TYPE+self.NAME+self.VERSION+'.png')
+        plt.close()
+
         #plt.show()
 
     
@@ -350,12 +352,15 @@ class wahrsager:
                 })
 
             print(prediction_df)
+            prediction_df.to_csv(self.D_PATH+'/lstm-outputs/'+self.TYPE+self.NAME+self.VERSION+'_'+str(i)+'.csv')
 
             print('Maximaler Absoluter Fehler:',  np.max(prediction_df['Absoluter Fehler'].to_numpy()))
             print('Mittelwert Absoluter Fehler:', np.mean(prediction_df['Absoluter Fehler'].to_numpy()))
 
             # Plotte Dataframe
-            #prediction_df.plot()
+            prediction_df.plot()
+            plt.savefig(self.D_PATH+'/lstm-outputs/'+self.TYPE+self.NAME+self.VERSION+'_'+str(i)+'.png')
+            plt.close()
             #plt.show()
 
 def add_lstm_predictions(self,df,predictions,custom_column_name=None, label_sequence='MEAN'):

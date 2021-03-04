@@ -30,7 +30,7 @@ def try_training_on_gpu():
     '''
     #try:
     config = tf.ConfigProto(device_count = {'GPU': 1 , 'CPU': 56} )
-    config.gpu_options.per_process_gpu_memory_fraction = 0.1
+    #config.gpu_options.per_process_gpu_memory_fraction = 0.45
     sess = tf.Session(config=config) 
     keras.backend.set_session(sess)
     #except:
