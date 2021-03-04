@@ -27,7 +27,7 @@ def run_agent(name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000, load_table=
     # Number of warm-up steps:
     num_warmup_steps = 100
     # Number of epochs and steps:
-    epochs           = 1
+    epochs           = 100
 
 
     # Setup reward_maker
@@ -65,7 +65,7 @@ def run_agent(name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000, load_table=
         ACTION_TYPE    = 'discrete',
         OBS_TYPE       = 'discrete',
         # Set number of discrete values:
-        discrete_space = 22,
+        discrete_space = 44,
         # Size of validation data:
         val_split      = 0.1)
 
@@ -83,18 +83,18 @@ def run_agent(name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000, load_table=
         load_table     = load_table)
 
     # Train:
-    #training(agent, epochs, update_num, num_warmup_steps)
+    training(agent, epochs, update_num, num_warmup_steps)
 
     # Test with dataset that includes val-data:
-    env.use_all_data()
-    testing(agent)
+    #env.use_all_data()
+    #testing(agent)
 
-run_agent(name='testing')
+#run_agent(name='testing')
 
 def parameter_tuning(num_runs=3):
 
     for i in range(num_runs):
-
+        
         run_agent(name='standart')
         
         # Learning rate:
@@ -123,13 +123,15 @@ def parameter_tuning(num_runs=3):
             run_agent(name='epsilon_decay_{}'.format(epsilon_decay), epsilon_decay=epsilon_decay)
         
         # input_list:
-        input_list_list = [['norm_total_power','normal'],['norm_total_power','seq_max'],['norm_total_power']]
-        i = 0
-        for input_list in input_list_list:
-            run_agent(name='input_list_{}'.format(i), input_list=input_list)
+        lstm_inputs_list = [['norm_total_power'],['norm_total_power','normal'],['norm_total_power','seq_max']]
+        i = 1
+        for lstm_inputs in lstm_inputs_list:
+            run_agent(name='lstm_inputs_test-{}'.format(i), input_list=lstm_inputs)
             i += 1
         
         run_agent(name='final',gamma=.9, lr=0.1, tau=0.15, update_num=100, 
                   epsilon_decay='linear', input_list=['norm_total_power','seq_max'])
 
-#parameter_tuning()
+        '''
+
+parameter_tuning(1)
