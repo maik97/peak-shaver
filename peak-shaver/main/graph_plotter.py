@@ -59,12 +59,12 @@ class GraphMaker:
 		self.log_path        = 'lstm-logs/'
 		#self.compare_df_path = self.graph_path+'standard/'
 
-		self.dont_merge = ['standard','learning_rate','dropout','final']
+		self.dont_merge = ['standard','learning_rate']# ,'dropout','final']
 
-		self.to_merge = ['activation',
+		self.to_merge = ['activation', 'dropout',
 			'lstm_layers','hidden_layers',
-			'past_periods','rolling_mean','rolling_max',
-			'max_label_seq','mean_label_seq','test_seq'
+			'past_periods','mean','max',
+			'max_label_seq','mean_label_seq','seq'
 			]
 
 		self.all_names = self.dont_merge + self.to_merge
@@ -428,18 +428,14 @@ def main():
 
 	graph_maker.plot_options()
 	
-	#graph_maker.setup_wahrsager()
-	#graph_maker.usual_prep_and_graph_creation()
-
-	#graph_maker.setup_heuristic()
-	#graph_maker.usual_prep_and_graph_creation()
-
-	#graph_maker.setup_heuristic()
-	#graph_maker.heuristic_logs_to_csv()
-	#graph_maker.create_graphs()
-
-	graph_maker.setup_agents()
+	graph_maker.setup_wahrsager()
 	graph_maker.usual_prep_and_graph_creation()
+
+	#graph_maker.setup_heuristic()
+	#graph_maker.usual_prep_and_graph_creation()
+
+	#graph_maker.setup_agents()
+	#graph_maker.usual_prep_and_graph_creation()
 
 if __name__ == '__main__':
 	main()
