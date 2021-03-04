@@ -38,7 +38,7 @@ class DQN:
     """
     def __init__(self, env, memory_len, input_sequence=1, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125,
                  activation='relu', loss='mean_squared_error', model_type='dense', use_model=None, pre_trained_model=None,
-                 hidden_layers=2, hidden_size=518, lstm_size=128):
+                 hidden_layers=2, hidden_size=518, lstm_size=128, target_update_num=None):
 
         self.env            = env
         
@@ -53,6 +53,8 @@ class DQN:
         self.epsilon_decay  = epsilon_decay # string:'linear' or float
         self.epsilon_og     = epsilon
         self.tau            = tau
+
+        self.target_update_num = target_update_num
 
         # Check horizon lenght and create memory deque object:
         self.horizon = self.env.__dict__['reward_maker'].__dict__['R_HORIZON']
@@ -322,7 +324,7 @@ class DQN:
         
         # Training:
         loss         = self.model.train_on_batch(state_batch,target_batch)
-        self.target_train()
+        #self.target_train()
         # Print status
         self.agent_status.print_agent_status(name, epoch, total_steps, batch_size, self.epsilon, loss) 
         
