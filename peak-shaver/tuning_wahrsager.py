@@ -38,7 +38,7 @@ def parameter_tuning(num_runs=3):
 
     for i in range(num_runs):
         
-        run_wahrsager('_test_standart')
+        run_wahrsager('_test_standard')
 
         learning_rate_list = [0.0001,0.001,0.01] 
         for learning_rate in learning_rate_list:
