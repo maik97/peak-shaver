@@ -12,9 +12,9 @@ from main.common_env import common_env
 from main.agent_deep_q import DQN
 
 
-def run_agent(name='',gamma=.85, lr=0.001, tau=0.125, update_num=250, 
+def run_agent(name='',gamma=.85, lr=0.001, tau=0.125, update_num=1000, #250
               epsilon_decay=0.999996, input_list=['norm_total_power','normal','seq_max'],
-              hidden_size=518, pre_trained_model=None):
+              hidden_size=128, pre_trained_model=None, target_update_num=None):
     
     # Naming the agent:
     now  = datetime.now()
@@ -26,7 +26,7 @@ def run_agent(name='',gamma=.85, lr=0.001, tau=0.125, update_num=250,
     # Number of warm-up steps:
     num_warmup_steps = 100
     # Number of epochs and steps:
-    epochs           = 1
+    epochs           = 100
 
 
     # Setup reward_maker
@@ -69,7 +69,7 @@ def run_agent(name='',gamma=.85, lr=0.001, tau=0.125, update_num=250,
         # Size of validation data:
         val_split      = 0.1)
 
-
+    '''
     # Setup Agent:
     agent = DQN(
         env            = env,
@@ -85,20 +85,37 @@ def run_agent(name='',gamma=.85, lr=0.001, tau=0.125, update_num=250,
         loss           = 'mean_squared_error',
         hidden_size    = hidden_size,
         pre_trained_model=pre_trained_model)
-
+    '''
+    # Setup Agent:
+    agent = DQN(
+        env            = env,
+        memory_len     = update_num,
+        # Training parameter:
+        gamma          = gamma,
+        epsilon        = 0,
+        epsilon_min    = 0,
+        epsilon_decay  = 0,
+        lr             = lr,
+        tau            = tau,
+        activation     = 'relu',
+        loss           = 'mean_squared_error',
+        hidden_size    = hidden_size,
+        pre_trained_model=pre_trained_model,
+        target_update_num=target_update_num)
 
     # Train:
-    #training(agent, epochs, update_num, num_warmup_steps)
+    training(agent, epochs, update_num, num_warmup_steps)
 
     # Test with dataset that includes val-data:
     env.use_all_data()
     testing(agent)
 
-run_agent(name='testing',input_list=['norm_total_power','seq_max'])
+#run_agent(name='testing',input_list=['norm_total_power','seq_max'])
 
 def parameter_tuning(num_runs=3):
     
     for i in range(num_runs):
+        '''
         run_agent(name='standart')
         
         # Learning rate:
@@ -125,18 +142,19 @@ def parameter_tuning(num_runs=3):
         epsilon_decay_list = ['linear']
         for epsilon_decay in epsilon_decay_list:
             run_agent(name='epsilon_decay_{}'.format(epsilon_decay), epsilon_decay=epsilon_decay)
-        
+        '''
         # input_list:
-        input_list_list = [['norm_total_power','normal'],['norm_total_power','seq_max'],['norm_total_power']]
-        for input_list in input_list_list:
-            run_agent(name='input_list_{}'.format(input_list), input_list=input_list)
-        
+        lstm_inputs_list = [['norm_total_power','normal'],['norm_total_power','seq_max']]
+        i = 1
+        for lstm_inputs in lstm_inputs_list:
+            run_agent(name='lstm_inputs_test-{}'.format(i), input_list=lstm_inputs, target_update_num=10000)
+            i += 1
+        '''
         # hidden_size:
         hidden_size_list = [128,256,1028]
         for hidden_size in hidden_size_list:
             run_agent(name='hidden_size_{}'.format(hidden_size), hidden_size=hidden_size)
         
         # zusätlich vlt discrete, und alle lstms als inputs mal durchprobieren
-    
-#parameter_tuning()
->>>>>>> 17f2dea237e36cbe985295d9182feb5618157997
+        '''
+parameter_tuning()
