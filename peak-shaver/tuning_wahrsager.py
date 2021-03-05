@@ -66,11 +66,11 @@ def parameter_tuning(num_runs=3):
 
         mean_list = [6,12,24] 
         for mean_ in mean_list:
-            run_wahrsager('_test_mean_{}'.format(mean_), num_past_periods=mean_)
+            run_wahrsager('_test_mean_{}'.format(mean_), TYPE='MEAN', num_past_periods=mean_)
 
         max_list = [6,12,24] 
         for max_ in max_list:
-            run_wahrsager('_test_max_{}'.format(max_), num_past_periods=max_)
+            run_wahrsager('_test_max_{}'.format(max_), TYPE='MAX' num_past_periods=max_)
         
         max_label_seq_list = [6,12,24]
         for max_label_seq in max_label_seq_list:
