@@ -369,7 +369,7 @@ def testing(agent, epochs=1, random_start=False, SoC_full=True, use_stable_b=Fal
                 action, _states = agent.predict(cur_state)
                 new_state, reward, done, _ = env.step(action)
 
-            env.__dict__['LOGGER'].log_scalar('testing-reward',  reward, step, done)
+            env.__dict__['LOGGER'].log_scalar('testing-reward',  reward, step, True)
 
 
             cur_state = new_state
