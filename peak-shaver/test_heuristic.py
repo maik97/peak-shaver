@@ -13,7 +13,7 @@ The first approach can also have the goal to minimize the sum of cost instead of
 '''
 from datetime import datetime
 
-from common_settings import dataset_and_logger
+from common_settings import dataset_and_logger, load_specific_sets, load_logger
 from main.common_func import max_seq, mean_seq, training, testing
 from main.reward_maker import reward_maker
 from main.common_env import common_env
@@ -23,7 +23,8 @@ from main.agent_heuristic import heurisitc
 
 
 def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
-                 threshold_dem=50, deactivate_SMS=False, deactivate_LION=False):
+                 threshold_dem=50, deactivate_SMS=False, deactivate_LION=False,
+                 num_past_periods=24,num_outputs=24,TYPE_LIST=['NORMAL'],seq_transform=['MAX']):
 
     # Naming the agent:
     now = datetime.now()
@@ -44,7 +45,8 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
 
     
     # Import dataset and logger based on the common settings
-    df, power_dem_df, logger, period_min = dataset_and_logger(NAME)
+    df, power_dem_df, input_list = load_specific_sets(num_past_periods, num_outputs, TYPE_LIST, seq_transform)
+    logger, period_min           = load_logger(NAME, only_per_episode=False)
 
 
     # Setup reward_maker
@@ -74,7 +76,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
         df             = df,
         power_dem_df   = power_dem_df,
         # Datset Inputs for the states:
-        input_list     = ['norm_total_power','normal','seq_max'],
+        input_list     = input_list,
         # Batters stats:
         max_SMS_SoC        = 25,
         max_LION_SoC       = 54,
@@ -101,7 +103,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
         threshold_dem  = threshold_dem)
 
 
-    return agent.calculate(epochs=epochs,LSTM_column='normal')
+    return agent.calculate(epochs=epochs,LSTM_column=TYPE_LIST[0])
 
 
 def test_threshold_for_all_heuristics():
@@ -129,9 +131,16 @@ def test_battery_activations(HEURISTIC_TYPE,threshold_dem=40):
     use_heuristic(HEURISTIC_TYPE, test_name='Configurations', threshold_dem=threshold_dem, deactivate_SMS=True, deactivate_LION=True)
 
 
-def test_lstm_types(threshold_dem=40):
-    use_heuristic('LSTM-Pred', test_name='Predictions', threshold_dem=threshold_dem, LSTM_column='normal')
-    use_heuristic('LSTM-Pred', test_name='Predictions', threshold_dem=threshold_dem, LSTM_column='MAX_LABEL_SEQ')
+def test_lstm_types(threshold_dem=40,num_past_periods=24,num_outputs=24):
+    #seq_transform=['MAX']
+    name = 'Pred-'+num_past_periods+'-'+num_outputs+'_'
+    use_heuristic('LSTM-Pred', test_name=name+'NORMAL', TYPE_LIST=['NORMAL'], threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
+    use_heuristic('LSTM-Pred', test_name=name+'MAX', TYPE_LIST=['MAX'], threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
+    use_heuristic('LSTM-Pred', test_name=name+'MEAN', TYPE_LIST=['MEAN'], threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
+    use_heuristic('LSTM-Pred', test_name=name+'MAX-LABEL-SEQ', TYPE_LIST=['MAX_LABEL_SEQ'], threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
+    use_heuristic('LSTM-Pred', test_name=name+'MEAN-LABEL-SEQ', TYPE_LIST=['MEAN_LABEL_SEQ'], threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
+    use_heuristic('LSTM-Pred', test_name=name+'SEQ-MAX', TYPE_LIST=['SEQ'], seq_transform=['MAX'],threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
+    use_heuristic('LSTM-Pred', test_name=name+'SEQ-MEAN', TYPE_LIST=['SEQ'], seq_transform=['MEAN'] threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
     
 
 def main():
@@ -149,6 +158,11 @@ def main():
         test_battery_activations(HEURISTIC_TYPE)
         #use_heuristic(HEURISTIC_TYPE, test_name='test_rewards', threshold_dem=100, deactivate_SMS=True, deactivate_LION=True)
     
+    for num in [6,12,24]:
+        test_lstm_types(threshold_dem=40,num_past_periods=num,num_outputs=num)
+    
+    for num in [6,12]
+        test_lstm_types(threshold_dem=40,num_past_periods=24,num_outputs=num)
 
 if __name__ == "__main__":
     main()
