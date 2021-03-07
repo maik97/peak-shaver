@@ -75,7 +75,7 @@ def load_specific_sets(num_past_periods=24,num_outputs=24,TYPE_LIST=['NORMAL','S
 
 		else:
 			predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE).pred()[:-num_outputs]
-			df[TYPE]    = normal_predictions
+			df[TYPE]    = predictions
 			input_list.append(TYPE)
 
 		return df, power_dem_df, input_list
