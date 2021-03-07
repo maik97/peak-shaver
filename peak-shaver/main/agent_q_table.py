@@ -29,11 +29,10 @@ class Q_Learner:
         epsilon_min (float): Minimal percent of random actions, value between 0 and 1
         epsilon_decay (float): Factor by which epsilon decays, value between 0 and 1. Can also be set to `linear` when you want epsilon to decrease over all steps (In this case ``epsilon_min`` will not be used).
         lr (float): Sets the learning rate of the RL-Agent
-        tau (float): Factor for copying weights from model network to target network
         Q_table (array or list): Will be intepreted as a Q-Table when passing an array (all values should be initially set to zero) or will create a Q-Table when passing a list (list must be the shape for the Q-Table). If `None` is passed the Q-Table will be created automatically.
         load_table (string): Name of an existing Q-Table in `[D_PATH]/agent-models`. Loads a pre-trained table (Note that the table must be in .h5 format).
     """
-    def __init__(self, env, memory_len, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125, Q_table=None, load_table=None):
+    def __init__(self, env, memory_len, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, Q_table=None, load_table=None):
 
 
         self.env            = env
@@ -47,7 +46,6 @@ class Q_Learner:
         self.epsilon_decay  = epsilon_decay # string:'linear' or float
         self.epsilon_og     = epsilon
         self.lr             = lr
-        self.tau            = tau
 
         # Create or load Q-Table:
         if Q_table != None or load_table != None:
