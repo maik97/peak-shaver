@@ -12,15 +12,15 @@ from main.common_env import common_env
 from main.agent_deep_q import DQN
 
 
-def run_agent(name='',gamma=.85, lr=0.001, tau=0.125, update_num=1000, #250
-              epsilon_decay=0.999996, input_list=['norm_total_power','normal','seq_max'],
-              hidden_size=128, pre_trained_model=None, target_update_num=None):
+def run_agent(name='',gamma=.9, lr=0.1, tau=0.15, update_num=500, #250
+              epsilon_decay='linear', input_list=['norm_total_power','seq_max'],
+              hidden_size=256, pre_trained_model=None, target_update_num=None):
     
     # Naming the agent:
     now  = datetime.now()
     NAME = 'agent_DQN_'+name+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
 
-    # Import dataset and logger based on the common settings
+    # Import dataset and logger based from the common settings
     df, power_dem_df, logger, period_min = dataset_and_logger(NAME)
 
     # Number of warm-up steps:
@@ -61,7 +61,7 @@ def run_agent(name='',gamma=.85, lr=0.001, tau=0.125, update_num=1000, #250
         LION_entladerate   = 0.00008,
         # Period length in minutes:
         PERIODEN_DAUER = period_min,
-        # DQN inputs can be conti and must be discrete:
+        # DQN inputs can be conti and outputs must be discrete:
         ACTION_TYPE    = 'discrete',
         OBS_TYPE       = 'contin',
         # Set number of discrete values:
@@ -69,7 +69,6 @@ def run_agent(name='',gamma=.85, lr=0.001, tau=0.125, update_num=1000, #250
         # Size of validation data:
         val_split      = 0.1)
 
-    '''
     # Setup Agent:
     agent = DQN(
         env            = env,
@@ -79,22 +78,6 @@ def run_agent(name='',gamma=.85, lr=0.001, tau=0.125, update_num=1000, #250
         epsilon        = 0.99,
         epsilon_min    = 0.1,
         epsilon_decay  = epsilon_decay,
-        lr             = lr,
-        tau            = tau,
-        activation     = 'relu',
-        loss           = 'mean_squared_error',
-        hidden_size    = hidden_size,
-        pre_trained_model=pre_trained_model)
-    '''
-    # Setup Agent:
-    agent = DQN(
-        env            = env,
-        memory_len     = update_num,
-        # Training parameter:
-        gamma          = gamma,
-        epsilon        = 0,
-        epsilon_min    = 0,
-        epsilon_decay  = 0,
         lr             = lr,
         tau            = tau,
         activation     = 'relu',
@@ -110,51 +93,57 @@ def run_agent(name='',gamma=.85, lr=0.001, tau=0.125, update_num=1000, #250
     env.use_all_data()
     testing(agent)
 
-#run_agent(name='testing',input_list=['norm_total_power','seq_max'])
 
 def parameter_tuning(num_runs=3):
     
     for i in range(num_runs):
-        '''
+        
         run_agent(name='standart')
+
+        # input_list:
+        lstm_inputs_list = [['norm_total_power'],['norm_total_power','normal'],
+                            ['norm_total_power','seq_max'], ['norm_total_power','normal','seq_max']]
+        i = 1
+        for lstm_inputs in lstm_inputs_list:
+            run_agent(name='lstm_inputs_test-{}'.format(i), input_list=lstm_inputs)
+            i += 1
         
         # Learning rate:
-        lr_list = [0.1]#[0.0001,0.001,0.1,0.25,0.5]
+        lr_list = [0.001,0.01,0.25]
         for lr in lr_list:
             run_agent(name='learning_rate_{}'.format(lr), lr=lr)
         
         # Gamma:
-        gamma_list = [0.9]#[0.7,0.9]
+        gamma_list = [0.8,0.99]
         for gamma in gamma_list:
             run_agent(name='gamma_{}'.format(gamma), gamma=gamma)
         
         # Tau:
-        tau_list = [0.15]#[0.075,0.1,0.15]
+        tau_list = [0.1,0.2]
         for tau in tau_list:
             run_agent(name='tau_{}'.format(tau), tau=tau)
         
         # update_num:
-        update_num_list = [100,500,1000]
+        update_num_list = [250,1000]
         for update_num in update_num_list:
             run_agent(name='update_num_{}'.format(update_num), update_num=update_num)
         
         # epsilon_decay:
-        epsilon_decay_list = ['linear']
+        epsilon_decay_list = [0.999996]
         for epsilon_decay in epsilon_decay_list:
             run_agent(name='epsilon_decay_{}'.format(epsilon_decay), epsilon_decay=epsilon_decay)
-        '''
-        # input_list:
-        lstm_inputs_list = [['norm_total_power','normal'],['norm_total_power','seq_max']]
-        i = 1
-        for lstm_inputs in lstm_inputs_list:
-            run_agent(name='lstm_inputs_test-{}'.format(i), input_list=lstm_inputs, target_update_num=10000)
-            i += 1
-        '''
+    
+        
         # hidden_size:
-        hidden_size_list = [128,256,1028]
+        hidden_size_list = [128,518]
         for hidden_size in hidden_size_list:
             run_agent(name='hidden_size_{}'.format(hidden_size), hidden_size=hidden_size)
+
+
+        target_update_list = [2500,5000,10000]
+        for target_update in target_update_list:
+            run_agent(name='target_update_{}'.format(target_update), target_update_num=target_update)
         
         # zusätlich vlt discrete, und alle lstms als inputs mal durchprobieren
-        '''
+        
 parameter_tuning()
