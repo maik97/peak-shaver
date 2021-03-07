@@ -37,7 +37,7 @@ def run_wahrsager(NAME,TYPE='NORMAL',num_outputs=1, dropout=0.1, num_hidden=3,ls
 def parameter_tuning(num_runs=3):
 
     for i in range(num_runs):
-        
+        '''
         run_wahrsager('_test_standard')
 
         learning_rate_list = [0.0001,0.001,0.01] 
@@ -83,6 +83,11 @@ def parameter_tuning(num_runs=3):
         seq_list = [6,12,24]
         for seq in seq_list:
             run_wahrsager('_test_seq_{}'.format(seq), TYPE='SEQ', num_outputs=seq)
+
+        '''
+        hidden_layers_list = [1,2]
+        for hidden_layers in hidden_layers_list:
+            run_wahrsager('_test-lstm_512_hidden_layers_{}'.format(hidden_layers), num_hidden=hidden_layers,lstm_size=512)
 
 
 
