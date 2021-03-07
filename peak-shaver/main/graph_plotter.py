@@ -49,10 +49,12 @@ class GraphMaker:
 
 	def setup_wahrsager(self):
 
+		self.rolling_mean = 10
+
 		self.graph_path      = 'lstm-plots/'
 		self.log_path        = 'lstm-logs/'
 
-		self.dont_merge = ['standard','learning_rate']# ,'dropout','final']
+		self.dont_merge = ['standard','learning_rate','lstm_512_hidden_layers']# ,'dropout','final']
 
 		self.to_merge = ['activation', 'dropout',
 			'lstm_layers','hidden_layers',
@@ -78,6 +80,8 @@ class GraphMaker:
 
 
 	def setup_heuristic(self):
+
+		self.rolling_mean = 1
 
 		self.graph_path = 'agent-plots/heuristic/'
 		self.log_path   = 'agent-logs/'
@@ -123,6 +127,8 @@ class GraphMaker:
 
 
 	def setup_agents(self):
+
+		self.rolling_mean = 10
 
 		self.graph_path = 'agent-plots/agents/'
 		self.log_path   = 'agent-logs/'
@@ -248,10 +254,11 @@ class GraphMaker:
 		index_list = []
 		max_list   = []
 		mean_list  = []
-		for csv in iglob('/lstm-outputs/*.csv'):
+		for csv in iglob('lstm-outputs/*.csv'):
+			print(csv)
 			csv_name = csv.split('\\')[-1]
 
-			df = pd.read_csv(csv, delimiter=',')
+			df = pd.read_csv(csv, delimiter=',', index_col=[0])
 			df = df.rename(columns={df.columns[0]:'prediction'})	
 			df = df.rename(columns={df.columns[1]:'real value'})	
 			df = df.rename(columns={df.columns[2]:'absoulte error'})	
@@ -264,6 +271,8 @@ class GraphMaker:
 			mean_list.append(np.mean(df['absoulte error'].to_numpy()))
 
 			df.plot()
+			plt.ylabel('energy demand in kw')
+			plt.xlabel('step')
 			plt.savefig(path+'/'+csv_name+'.png')
 			plt.close()
 
@@ -271,7 +280,7 @@ class GraphMaker:
 			'run':        index_list,
 			'max_error':  max_list,
 			'mean_error': mean_list,
-			},index_col='run')
+			})
 		print(error_df)
 		error_df.to_csv(self.graph_path+'output_graphs/lstm_error.csv')
 
@@ -297,7 +306,8 @@ class GraphMaker:
 						df = df.rename(columns={df.columns[-1]:name})	
 						df = df.rename(columns={df.columns[0]:self.index_name})	
 
-						df[name] = df[name].rolling(10).mean()
+						if self.rolling_mean != 1:
+							df[name] = df[name].rolling(10).mean()
 
 
 						# Index:
@@ -452,7 +462,7 @@ class GraphMaker:
 				print(e)
 
 	def usual_prep_and_graph_creation(self):
-		#self.logs_to_csv()
+		self.logs_to_csv()
 		self.create_basic_longforms()
 		self.merge_longforms()
 		self.create_graphs()
@@ -467,14 +477,15 @@ def main():
 
 	graph_maker.plot_options()
 	
+	
 	graph_maker.setup_wahrsager()
-	graph_maker.usual_prep_and_graph_creation()
+	#graph_maker.plot_lstm_output()
 
 	#graph_maker.setup_heuristic()
-	#graph_maker.usual_prep_and_graph_creation()
 
 	#graph_maker.setup_agents()
-	#graph_maker.usual_prep_and_graph_creation()
+
+	graph_maker.usual_prep_and_graph_creation()
 
 if __name__ == '__main__':
 	main()
