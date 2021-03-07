@@ -14,8 +14,8 @@ from main.common_env import common_env
 from main.agent_q_table import Q_Learner
 
 
-def run_agent(name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000, load_table=None,
-              epsilon_decay=0.999996, input_list=['norm_total_power','normal','seq_max']):
+def run_agent(name='',gamma=.9, lr=0.1, update_num=100, load_table=None,
+              epsilon_decay='linear', input_list=['norm_total_power','seq_max']):
     
     # Naming the agent:
     now    = datetime.now()
@@ -79,17 +79,15 @@ def run_agent(name='',gamma=.85, lr=0.5, tau=0.125, update_num=1000, load_table=
         epsilon_min    = 0.1,
         epsilon_decay  = epsilon_decay,
         lr             = lr,
-        tau            = tau,
         load_table     = load_table)
 
     # Train:
     training(agent, epochs, update_num, num_warmup_steps)
 
     # Test with dataset that includes val-data:
-    #env.use_all_data()
-    #testing(agent)
+    env.use_all_data()
+    testing(agent)
 
-#run_agent(name='testing')
 
 def parameter_tuning(num_runs=3):
 
@@ -98,40 +96,32 @@ def parameter_tuning(num_runs=3):
         run_agent(name='standart')
         
         # Learning rate:
-        lr_list = [0.25]#[0.1,0.25,0.75,1]
+        lr_list = [0.001,0.01,0.25]
         for lr in lr_list:
             run_agent(name='learning_rate_{}'.format(lr), lr=lr, num_runs=1)
         
         # Gamma:
-        gamma_list = [0.5]#[0.1,0.5,0.7,0.9,1]
+        gamma_list = [0.8,0.99]
         for gamma in gamma_list:
             run_agent(name='gamma_{}'.format(gamma), gamma=gamma)
         
-        # Tau:
-        tau_list = [0.05,0.075,0.1,0.15]
-        for tau in tau_list:
-            run_agent(name='tau_{}'.format(tau), tau=tau)
-        
         # update_num:
-        update_num_list = [100,500,1000]
+        update_num_list = [250,500,1000]
         for update_num in update_num_list:
             run_agent(name='update_num_{}'.format(update_num), update_num=update_num)
         
         # epsilon_decay:
-        epsilon_decay_list = ['linear']
+        epsilon_decay_list = [0.999996]
         for epsilon_decay in epsilon_decay_list:
             run_agent(name='epsilon_decay_{}'.format(epsilon_decay), epsilon_decay=epsilon_decay)
         
         # input_list:
-        lstm_inputs_list = [['norm_total_power'],['norm_total_power','normal'],['norm_total_power','seq_max']]
+        lstm_inputs_list = [['norm_total_power'],['norm_total_power','normal'],
+                            ['norm_total_power','seq_max'], ['norm_total_power','normal','seq_max']]
         i = 1
         for lstm_inputs in lstm_inputs_list:
             run_agent(name='lstm_inputs_test-{}'.format(i), input_list=lstm_inputs)
             i += 1
         
-        run_agent(name='final',gamma=.9, lr=0.1, tau=0.15, update_num=100, 
-                  epsilon_decay='linear', input_list=['norm_total_power','seq_max'])
-
-        '''
 
 parameter_tuning(1)
