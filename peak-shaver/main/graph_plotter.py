@@ -28,7 +28,6 @@ class GraphMaker:
 	def __init__(self, D_PATH):
 
 		self.D_PATH      = D_PATH
-		self.name_dict   = {}
 		self.custom_tags = False
 
 		os.chdir('../'+D_PATH)
@@ -39,12 +38,7 @@ class GraphMaker:
 		self.style       = style
 		self.sns_palette = "deep"
 		self.graph_name  = graph_name
-
-
-		#sns.set_theme(style=self.style, {'axes.grid' : use_grid})
 		sns.set_style(self.style, {'axes.grid' : use_grid})
-		#sns.color_palette("Spectral", as_cmap=True)
-		#sns.color_palette('Dark2', as_cmap=True)
 
 
 	def use_tags(self,tags):
@@ -57,7 +51,6 @@ class GraphMaker:
 
 		self.graph_path      = 'lstm-plots/'
 		self.log_path        = 'lstm-logs/'
-		#self.compare_df_path = self.graph_path+'standard/'
 
 		self.dont_merge = ['standard','learning_rate']# ,'dropout','final']
 
@@ -86,8 +79,6 @@ class GraphMaker:
 
 	def setup_heuristic(self):
 
-		# 'heuristic_'+test_name+'_'+HEURISTIC_TYPE+'_'+str(round(threshold_dem))+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
-
 		self.graph_path = 'agent-plots/heuristic/'
 		self.log_path   = 'agent-logs/'
 
@@ -105,7 +96,16 @@ class GraphMaker:
 			self.merge_dict['Compare_Approches'].append('Compare_Approches_'+heur_name)
 			self.merge_dict['Tresholds_'+heur_name] = ['Tresholds_'+heur_name]
 			self.merge_dict['Configurations_'+heur_name] = ['Configurations_'+heur_name]
-				
+		
+
+		lstm_name_list = ['NORMAL','MAX','MEAN','MAX-LABEL-SEQ','MEAN-LABEL-SEQ','SEQ-MAX','SEQ-MEAN']
+		lstm_test_list = ['LSTM-Pred-6-6','LSTM-Pred-12-12','LSTM-Pred-24-24','LSTM-Pred-24-6','LSTM-Pred-24-12']
+		for lstm_test in lstm_test_list:
+			self.merge_dict[lstm_test] = []
+			for lstm_name in lstm_name_list:
+				self.merge_dict[lstm_test].append(lstm_test+'_'+lstm_name)
+				self.all_names.append(lstm_test+'_'+lstm_nam)
+
 		self.use_tags(['sum_cost_saving'])
 
 		self.type_first_split  = 'heuristic_'
@@ -116,6 +116,10 @@ class GraphMaker:
 		self.name_type_list = []
 		for name in self.merge_dict['Compare_Approches']:
 			self.name_type_list.append(name)
+
+		for lstm_test in lstm_test_list:
+			for name in self.merge_dict[lstm_test]:
+				self.name_type_list.extend(name)
 
 
 	def setup_agents(self):
@@ -234,7 +238,43 @@ class GraphMaker:
 				print('Exception:', e)
 				print('Could not open any log with path:',self.log_path,'that includes',name)
 
-	
+
+	def plot_lstm_output(self):
+
+		path = self.graph_path+'output_graphs/all_runs'
+		make_dir(path)
+
+
+		index_list = []
+		max_list   = []
+		mean_list  = []
+		for csv in iglob('/lstm-outputs/*.csv'):
+			csv_name = csv.split('\\')[-1]
+
+			df = pd.read_csv(csv, delimiter=',')
+			df = df.rename(columns={df.columns[0]:'prediction'})	
+			df = df.rename(columns={df.columns[1]:'real value'})	
+			df = df.rename(columns={df.columns[2]:'absoulte error'})	
+			df = df.rename(columns={df.columns[3]:'squared error'})	
+
+			print(df)
+
+			index_list.append(csv_name)
+			max_list.append(np.max(df['absoulte error'].to_numpy()))
+			mean_list.append(np.mean(df['absoulte error'].to_numpy()))
+
+			df.plot()
+			plt.savefig(path+'/'+csv_name+'.png')
+			plt.close()
+
+		error_df = pd.DataFrame({
+			'run':        index_list,
+			'max_error':  max_list,
+			'mean_error': mean_list,
+			},index_col='run')
+		print(error_df)
+		error_df.to_csv(self.graph_path+'output_graphs/lstm_error.csv')
+
 	def create_basic_longforms(self):
 
 		for name in self.all_names:
@@ -280,9 +320,6 @@ class GraphMaker:
 						# Add column for run number:
 						run = name_list.count(type_string)
 						df['run']  = run
-						#print(run)
-						#print(filename)
-
 
 						# Calculate learning time:
 						learn_time_dict_list.append(self.calc_learn_time(df[df.columns[-4]], tag, name, run))
@@ -419,6 +456,8 @@ class GraphMaker:
 		self.create_basic_longforms()
 		self.merge_longforms()
 		self.create_graphs()
+
+
 
 
 
