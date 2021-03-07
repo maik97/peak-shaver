@@ -40,7 +40,64 @@ def basic_dataset():
 	return df, power_dem_df, main_dataset
 
 
-def dataset_and_logger(NAME='test', preprocess_all=False):
+def load_specific_sets(num_past_periods=24,num_outputs=24,TYPE_LIST=['NORMAL','SEQ'],seq_transform=['MAX']):
+
+	df, power_dem_df, main_dataset = basic_dataset()
+
+	# Load the LSTM input dataset:
+	lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=num_past_periods)
+
+	df           = df[num_past_periods*2:-num_outputs]
+	power_dem_df = power_dem_df[num_past_periods*2:-num_outputs]
+	# Slice-Explanation:
+	# first num_past_periods: possible rolling operation generates first values as nan
+	# second num_past_periods: first input sequence can only be used for the last timestep of the sequence
+	# num_outputs: the last label-steps cant be used as training data since there are no labels to train left
+
+	input_list = ['norm_total_power']
+
+	for TYPE in TYPE_LIST:
+
+		if TYPE == 'SEQ':
+			seq_predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE, num_outputs=num_outputs).pred()
+
+			for transform in seq_transform:
+				if transform == 'MAX':
+					df['SEQ_MAX'] = max_seq(seq_predictions)
+					input_list.append('SEQ_MAX')
+
+				elif transform == 'MEAN':
+					df['SEQ_MEAN'] = mean_seq(seq_predictions)
+					input_list.append('SEQ_MEAN')
+
+				else:
+					raise Exception("Unsupported sequence transformation: {}, use 'MAX' or 'MEAN'".format(transform))
+
+		else:
+			predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE).pred()[:-num_outputs]
+			df[TYPE]    = normal_predictions
+			input_list.append(TYPE)
+
+		return df, power_dem_df, input_list
+
+
+def load_logger(NAME='test',only_per_episode=True):
+	# Initilize logging:
+	logger = Logger(NAME,D_PATH,only_per_episode=only_per_episode)
+	return logger, period_min
+
+
+def dataset_and_logger(NAME='test'):
+
+	df, power_dem_df, input_list = load_specific_sets()
+
+	# Initilize logging:
+	logger = Logger(NAME,D_PATH,only_per_episode=True)
+
+	return df, power_dem_df, logger, period_min
+
+
+def dataset_and_logger_old(NAME='test', preprocess_all=False):
 
 	df, power_dem_df, main_dataset = basic_dataset()
 
@@ -66,13 +123,13 @@ def dataset_and_logger(NAME='test', preprocess_all=False):
 		power_dem_df  = power_dem_df[num_past_periods*2:-num_past_periods]
 
 		# Initilize logging:
-		logger = Logger(NAME,D_PATH)
+		logger = Logger(NAME,D_PATH,only_per_episode=True)
 
 		return df, power_dem_df, logger, period_min
 
 
 def main():
-	dataset_and_logger(preprocess_all=True)
+	dataset_and_logger_old(preprocess_all=True)
 
 
 if __name__ == '__main__':
