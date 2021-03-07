@@ -58,16 +58,16 @@ class wahrsager:
                 total_power,
                 # Allgemeine Parameter
                 TYPE              = 'MEAN',
-                NAME              = '_wahrsager',
+                NAME              = 'final',
                 PLOTTING          = False,
                 
                 # Model-Parameter
                 num_outputs       = 1,
                 dropout           = 0.1,
                 recurrent_dropout = 0.1,
-                num_hidden        = 3,
-                lstm_size         = 128,
-                first_hidden_size = 128,
+                num_hidden        = 2,
+                lstm_size         = 512,
+                first_hidden_size = 512,
                 neuron_num_change = 0.5,
                 activation_hidden = 'relu',
                 activation_end    = 'relu',
@@ -139,7 +139,7 @@ class wahrsager:
             model_name = use_model
             model = load_model(self.D_PATH+'lstm-models/'+model_name+'.h5')
         else:
-            model_name = self.TYPE+self.NAME
+            model_name = self.TYPE+'-'+str(len(self.training_data[0]))+'-'+str(self.num_outputs)+self.NAME
             model = self.lstm_model()
 
         tensorboard = TensorBoard(log_dir=self.D_PATH+'lstm-logs/'+model_name+'_val-size-{}_epochs-{}_'.format(self.val_data_size,self.num_epochs)+self.VERSION)
@@ -190,7 +190,8 @@ class wahrsager:
         else:
             try:
                 print(glob.glob(self.D_PATH+'lstm-models/'+self.TYPE+'*.h5')[-1])
-                model = load_model(glob.glob(self.D_PATH+'lstm-models/'+self.TYPE+'*.h5')[-1])
+                model_name = self.TYPE+'-'+str(len(self.training_data[0]))+'-'+str(self.num_outputs)
+                model = load_model(glob.glob(self.D_PATH+'lstm-models/'+model_name+'*.h5')[-1])
                 print('Using last model created for TYPE='+self.TYPE+':',glob.glob(self.D_PATH+'lstm-models/*'+self.TYPE+'*.h5')[-1])
                 prediction = model.predict(self.training_data).reshape(np.shape(self.label_data))
             except Exception as e:
