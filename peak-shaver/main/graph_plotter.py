@@ -54,13 +54,13 @@ class GraphMaker:
 		self.graph_path      = 'lstm-plots/'
 		self.log_path        = 'lstm-logs/'
 
-		self.dont_merge = ['standard','learning_rate','lstm_512_hidden_layers']# ,'dropout','final']
+		self.dont_merge = ['lstm_512_hidden_layers']#'standard','learning_rate','lstm_512_hidden_layers']# ,'dropout','final']
 
-		self.to_merge = ['activation', 'dropout',
-			'lstm_layers','hidden_layers',
-			'past_periods','mean','max',
-			'max_label_seq','mean_label_seq','seq'
-			]
+		self.to_merge = []#'activation', 'dropout',
+			#'lstm_layers','hidden_layers',
+			#'past_periods','mean','max',
+			#'max_label_seq','mean_label_seq','seq'
+			#]
 
 		self.all_names = self.dont_merge + self.to_merge
 
