@@ -85,7 +85,7 @@ def parameter_tuning(num_runs=3):
             run_wahrsager('_test_seq_{}'.format(seq), TYPE='SEQ', num_outputs=seq)
 
         '''
-        hidden_layers_list = [1,2]
+        hidden_layers_list = [3]
         for hidden_layers in hidden_layers_list:
             run_wahrsager('_test-lstm_512_hidden_layers_{}'.format(hidden_layers), num_hidden=hidden_layers,lstm_size=512)
 
