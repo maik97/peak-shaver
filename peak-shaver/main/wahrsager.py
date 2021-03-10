@@ -57,15 +57,15 @@ class wahrsager:
                 lstm_dataset,
                 total_power,
                 # Allgemeine Parameter
-                TYPE              = 'MEAN',
-                NAME              = 'final',
+                TYPE              = 'NORMAL',
+                NAME              = '_test_final',
                 PLOTTING          = False,
                 
                 # Model-Parameter
                 num_outputs       = 1,
                 dropout           = 0.1,
                 recurrent_dropout = 0.1,
-                num_hidden        = 2,
+                num_hidden        = 3,
                 lstm_size         = 512,
                 first_hidden_size = 512,
                 neuron_num_change = 0.5,
