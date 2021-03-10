@@ -59,6 +59,7 @@ def load_specific_sets(num_past_periods=24,num_outputs=24,TYPE_LIST=['NORMAL','S
 	for TYPE in TYPE_LIST:
 
 		if TYPE == 'SEQ':
+			print(len(df))
 			seq_predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE, num_outputs=num_outputs).pred()
 
 			for transform in seq_transform:
@@ -73,10 +74,19 @@ def load_specific_sets(num_past_periods=24,num_outputs=24,TYPE_LIST=['NORMAL','S
 				else:
 					raise Exception("Unsupported sequence transformation: {}, use 'MAX' or 'MEAN'".format(transform))
 
-		else:
-			predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE).pred()[:-num_outputs]
+		elif TYPE == 'MAX_LABEL_SEQ' or TYPE == 'MEAN_LABEL_SEQ':
+			predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE).pred()[:-num_outputs+1]
+			print(len(df))
+			print(len(predictions))
 			df[TYPE]    = predictions
 			input_list.append(TYPE)
+		else:
+			predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE).pred()[:-num_outputs]
+			print(len(df))
+			print(len(predictions))
+			df[TYPE]    = predictions
+			input_list.append(TYPE)
+
 
 		return df, power_dem_df, input_list
 
