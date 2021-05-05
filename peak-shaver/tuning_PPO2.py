@@ -1,7 +1,7 @@
 '''
 Example of an Agent that uses PPO2 provided by stable baselines
 '''
-from stable_baselines.common.policies import MlpPolicy
+from stable_baselines.common.policies import MlpPolicy, MlpLstmPolicy
 from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.common.callbacks import CheckpointCallback
 from stable_baselines import PPO2
@@ -14,7 +14,7 @@ from main.reward_maker import reward_maker
 from main.common_env import common_env
 
 
-def run_agent(name='', learning_rate=0.00025, gamma=0.99, n_steps=2500, ent_coef=0.01, vf_coef=0.5, cliprange=0.2):
+def run_agent(name='', learning_rate=0.00025, gamma=0.99, n_steps=2500, ent_coef=0.01, vf_coef=0.5, cliprange=0.2,input_list=['norm_total_power','normal','seq_max'],norm=None):
     # Naming the agent:
     now    = datetime.now()
     NAME   = 'agent_PPO2_'+name+'_t-stamp'+now.strftime("_%d-%m-%Y_%H-%M-%S")
@@ -40,7 +40,8 @@ def run_agent(name='', learning_rate=0.00025, gamma=0.99, n_steps=2500, ent_coef
         LION_max_Ladezyklen     = 6000,
         SMS_Anschaffungs_Preis  = 55000,#115000/3,
         SMS_max_Nutzungsjahre   = 25,
-        Leistungspreis          = 102,)
+        Leistungspreis          = 102,
+        norm_range              = norm)
 
     # Setup common_env
     env = common_env(
@@ -48,7 +49,7 @@ def run_agent(name='', learning_rate=0.00025, gamma=0.99, n_steps=2500, ent_coef
         df             = df,
         power_dem_df   = power_dem_df,
         # Datset Inputs for the states:
-        input_list     = ['norm_total_power','seq_max'],
+        input_list     = input_list,
         # Batters stats:
         max_SMS_SoC        = 25,
         max_LION_SoC       = 54,
@@ -75,7 +76,7 @@ def run_agent(name='', learning_rate=0.00025, gamma=0.99, n_steps=2500, ent_coef
 
     # Setup Model:
     model = PPO2(MlpPolicy, dummy_env, verbose=1, tensorboard_log=cms.__dict__['D_PATH']+'agent-logs/',
-                learning_rate=learning_rate, gamma=gamma, n_steps=n_steps, ent_coef=ent_coef, vf_coef=vf_coef, cliprange=cliprange)
+                learning_rate=learning_rate, gamma=gamma, n_steps=n_steps, ent_coef=ent_coef, vf_coef=vf_coef, cliprange=cliprange)#, nminibatches=1)
     #model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=DATENSATZ_PATH+'LOGS/agent_logging',callback=checkpoint_callback, n_steps=2500)
     
     # Train:
@@ -83,8 +84,9 @@ def run_agent(name='', learning_rate=0.00025, gamma=0.99, n_steps=2500, ent_coef
     model.save(cms.__dict__['D_PATH']+"agent-models/"+NAME)
     
     # Test with dataset that includes val-data:
-    env.use_all_data()
-    testing(model, use_stable_b=True, env=env)
+    #env.use_all_data()
+    #dummy_env = DummyVecEnv([lambda: env])
+    #testing(model, use_stable_b=True, env=env)
 
 
 #run_agent()
@@ -92,7 +94,13 @@ def run_agent(name='', learning_rate=0.00025, gamma=0.99, n_steps=2500, ent_coef
 
 def parameter_tuning():
 
-    for i in range(3):
+    for i in range(1):
+        
+        # Learning rate:
+        norm_list = [100,500,1000,2000,4000]
+        for norm in norm_list:
+            run_agent(name='norm{}'.format(norm), norm=norm)
+        #run_agent(name='lstm_policy')
         '''
         run_agent(name='standard')
         
@@ -120,15 +128,16 @@ def parameter_tuning():
         vf_coef_list = [0.75,1]
         for vf_coef in vf_coef_list:
             run_agent(name='vf_coef_{}'.format(vf_coef), vf_coef=vf_coef)
-        '''
+        
         # cliprange:
         cliprange_list = [0.1,0.3]
         for cliprange in cliprange_list:
             run_agent(name='cliprange_{}'.format(cliprange), cliprange=cliprange)
-        '''
+        
         
         # lstm_inputs:
-        lstm_inputs_list = []
+        lstm_inputs_list = [['norm_total_power'],['norm_total_power','normal'],
+                            ['norm_total_power','seq_max'], ['norm_total_power','normal','seq_max']]
         for lstm_inputs in lstm_inputs_list:
             run_agent(name='lstm_inputs_{}'.format(lstm_inputs), input_list=lstm_inputs)
         '''

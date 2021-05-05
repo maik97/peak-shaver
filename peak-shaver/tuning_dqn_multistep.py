@@ -12,7 +12,7 @@ from main.common_env import common_env
 from main.agent_deep_q import DQN
 
 
-def run_agent(name='', horizon=12, pre_trained_model=None):
+def run_agent(name='', horizon=24, pre_trained_model=None):
 
     # Naming the agent:
     now    = datetime.now()
@@ -25,9 +25,9 @@ def run_agent(name='', horizon=12, pre_trained_model=None):
     # Number of warm-up steps:
     num_warmup_steps = 100
     # Train every x number of steps:
-    update_num       = 50
+    update_num       = 500
     # Number of epochs and steps:
-    epochs           = 100
+    epochs           = 250
 
 
     # Setup reward_maker
@@ -78,17 +78,19 @@ def run_agent(name='', horizon=12, pre_trained_model=None):
     agent = DQN(
         env            = env,
         memory_len     = update_num+horizon,
-        gamma          = 0.85,
+        gamma          = 0.9,#0.85,
         epsilon        = 0.99,
         epsilon_min    = 0.1,
-        epsilon_decay  = 0.999996,
-        lr             = 0.5,
-        tau            = 0.125,
+        epsilon_decay  = 'linear',#0.999996,
+        lr             = 0.1,#0.5,
+        tau            = 0.15,#0.125,
         # Training parameter:
         activation     = 'relu',
         loss           = 'mean_squared_error',
         model_type     = 'dense',
-        pre_trained_model = pre_trained_model)
+        hidden_size    = 256,
+        pre_trained_model = pre_trained_model,
+        target_update_num = None)
 
 
     # Train:
@@ -98,9 +100,10 @@ def run_agent(name='', horizon=12, pre_trained_model=None):
     env.use_all_data()
     testing(agent)
 
+run_agent(name='Compare_Agents')
+run_agent(name='Compare_Agents')
 
 def parameter_tuning(num_runs=3):
->>>>>>> 17f2dea237e36cbe985295d9182feb5618157997
     
     for i in range(num_runs):
         # horizon:
@@ -109,4 +112,4 @@ def parameter_tuning(num_runs=3):
             run_agent(name='horizon_{}'.format(horizon), horizon=horizon)
 
 
-parameter_tuning()
+#parameter_tuning()

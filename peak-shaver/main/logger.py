@@ -19,7 +19,7 @@ class Logger(object):
         only_per_episode (bool): If `True` logs will only be saved once per episode instead of every step. This can save space since the log files can get pretty big for training processes with millions of steps.
     """
 
-    def __init__(self, NAME, D_PATH, only_per_episode=False):
+    def __init__(self, NAME, D_PATH, only_per_episode=True):
 
         self.NAME             = NAME
         self.D_PATH           = D_PATH
@@ -58,7 +58,13 @@ class Logger(object):
         Returns:
             float: Mean scalar-value of one episode
         '''
-        value = np.mean(self.dict_scalars[tag])
+        try:
+            value = np.mean(self.dict_scalars[tag])
+        except:
+            #value = self.dict_scalars[tag]
+            value = 0
+        #if value == None:
+        #    value = 0
         self.dict_scalars[tag] = []
         return value
 

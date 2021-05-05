@@ -103,7 +103,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
         threshold_dem  = threshold_dem)
 
 
-    return agent.calculate(epochs=epochs,LSTM_column=TYPE_LIST[0])
+    return agent.calculate(epochs=epochs,LSTM_column=input_list[-1])
 
 
 def test_threshold_for_all_heuristics():
@@ -144,6 +144,9 @@ def test_lstm_types(threshold_dem=40,num_past_periods=24,num_outputs=24):
     
 
 def main():
+    threshold_dem = use_heuristic('Single-Value', test_name='find_threshold', epochs=15, threshold_dem=50)
+    threshold_dem = use_heuristic('Single-Value', test_name='final', epochs=1, threshold_dem=threshold_dem)
+
 
     #use_heuristic('LSTM-Pred', test_name='lstm-max', threshold_dem=40)
     #use_heuristic('Practical', test_name='lstm-max', threshold_dem=40)
@@ -157,12 +160,12 @@ def main():
         #test_for_different_thresholds(HEURISTIC_TYPE)
         #test_battery_activations(HEURISTIC_TYPE)
         #use_heuristic(HEURISTIC_TYPE, test_name='test_rewards', threshold_dem=100, deactivate_SMS=True, deactivate_LION=True)
-    
+    ''''
     for num in [6,12,24]:
         test_lstm_types(threshold_dem=40,num_past_periods=num,num_outputs=num)
     
     for num in [6,12]:
         test_lstm_types(threshold_dem=40,num_past_periods=24,num_outputs=num)
-
+	'''
 if __name__ == "__main__":
     main()

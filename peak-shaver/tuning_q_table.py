@@ -15,7 +15,7 @@ from main.agent_q_table import Q_Learner
 
 
 def run_agent(name='',gamma=.9, lr=0.1, update_num=100, load_table=None,
-              epsilon_decay='linear', input_list=['norm_total_power','seq_max']):
+              epsilon_decay='linear', input_list=['norm_total_power','normal','seq_max']):
     
     # Naming the agent:
     now    = datetime.now()
@@ -65,7 +65,7 @@ def run_agent(name='',gamma=.9, lr=0.1, update_num=100, load_table=None,
         ACTION_TYPE    = 'discrete',
         OBS_TYPE       = 'discrete',
         # Set number of discrete values:
-        discrete_space = 44,
+        discrete_space = 22,
         # Size of validation data:
         val_split      = 0.1)
 
@@ -92,13 +92,14 @@ def run_agent(name='',gamma=.9, lr=0.1, update_num=100, load_table=None,
 def parameter_tuning(num_runs=3):
 
     for i in range(num_runs):
-        
-        run_agent(name='standart')
+        run_agent(name='lstm_inputs_test-5',input_list=['norm_total_power','mean'])
+        '''
+        run_agent(name='Compare_Agents')
         
         # Learning rate:
         lr_list = [0.001,0.01,0.25]
         for lr in lr_list:
-            run_agent(name='learning_rate_{}'.format(lr), lr=lr, num_runs=1)
+            run_agent(name='learning_rate_{}'.format(lr), lr=lr)
         
         # Gamma:
         gamma_list = [0.8,0.99]
@@ -123,5 +124,5 @@ def parameter_tuning(num_runs=3):
             run_agent(name='lstm_inputs_test-{}'.format(i), input_list=lstm_inputs)
             i += 1
         
-
-parameter_tuning(1)
+        '''
+parameter_tuning()

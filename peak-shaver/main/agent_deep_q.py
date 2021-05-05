@@ -56,6 +56,9 @@ class DQN:
 
         self.target_update_num = target_update_num
 
+        # Check GPU:
+        try_training_on_gpu()
+
         # Check horizon lenght and create memory deque object:
         self.horizon = self.env.__dict__['reward_maker'].__dict__['R_HORIZON']
         if isinstance(self.horizon, int) == True:
@@ -84,12 +87,10 @@ class DQN:
                 raise Exception("model_type='"+model_type+"' not understood. Use 'dense', 'lstm' or pass your own compiled keras model with own_model.")
         else:
             self.model = load_model(self.D_PATH+'agent-models/'+pre_trained_model)
+            self.target_model = clone_model(self.model)
 
         # Pass logger object:
         self.LOGGER = self.env.__dict__['LOGGER']
-
-        # Check GPU:
-        try_training_on_gpu()
 
         # Check action type:
         if self.env.__dict__['ACTION_TYPE'] != 'discrete':
@@ -184,15 +185,16 @@ class DQN:
             integer: Action that was chosen by the agent
         '''
         # Calculate new epsilon:
-        if self.epsilon_decay == 'linear':
-            self.epsilon = 1-(self.epsilon_og*(self.env.__dict__['sum_steps']/self.agent_status.__dict__['max_steps']))
-        else:
-            self.epsilon *= self.epsilon_decay
-        self.epsilon = max(self.epsilon_min, self.epsilon)
+        if test_mode == False:
+            if self.epsilon_decay == 'linear':
+                self.epsilon = 1-(self.epsilon_og*(self.env.__dict__['sum_steps']/self.agent_status.__dict__['max_steps']))
+            else:
+                self.epsilon *= self.epsilon_decay
+            self.epsilon = max(self.epsilon_min, self.epsilon)
         
         # Random decision if action will be random:
         if np.random.random() < self.epsilon or random_mode == True:
-            if test_mode == False:
+            if test_mode == False or random_mode == True:
                 return self.env.action_space.sample()
         
         # If action is not random:
@@ -292,7 +294,8 @@ class DQN:
             else:
                 state, action, reward, new_state, done, step_counter_episode = self.sequence_states_for_replay(i)
 
-            target = self.target_model.predict(state)
+            #target = self.target_model.predict(state)
+            target = self.model.predict(state)
             
             # Check for multi-step rewards:
             if reward == None:
@@ -348,7 +351,7 @@ class DQN:
         Args:
             e (integer): Takes the epoch-number in which the model is saved
         '''
-        self.model.save(self.D_PATH+'agent-models/'+self.model_type+self.NAME+'_{}'.format(e))
+        self.model.save(self.D_PATH+'agent-models/'+self.model_type+self.NAME+'_{}.h5'.format(e))
 
 
     def discrete_input_space(state_dim_size, state):

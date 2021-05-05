@@ -30,7 +30,7 @@ def try_training_on_gpu():
     '''
     #try:
     config = tf.ConfigProto(device_count = {'GPU': 1 , 'CPU': 56} )
-    #config.gpu_options.per_process_gpu_memory_fraction = 0.45
+    config.gpu_options.per_process_gpu_memory_fraction = 0.35
     sess = tf.Session(config=config) 
     keras.backend.set_session(sess)
     #except:
@@ -245,7 +245,7 @@ class AgentStatus:
         if loss != None:
             print('# Loss:', round(loss,5))
 
-        self.timer.print_progress('# Progress:',total_steps,self.max_steps)
+        self.timer.print_progress('# Progress',total_steps,self.max_steps)
         self.timer.print_el_time('# Elapsed time:')
         self.timer.print_eta('# Estimated time remaining:',total_steps,self.max_steps)
 
@@ -283,7 +283,7 @@ def training(agent, epochs=1000, update_num=1000, num_warmup_steps=100, epoch_sa
         warmup_counter      = 0
 
         while warmup_counter < num_warmup_steps:
-            action                          = agent.act(cur_state, random_mode=True )
+            action                          = agent.act(cur_state, random_mode=True)
             new_state, reward, done, sce, _ = env.step(action)
             new_state                       = new_state
             agent.remember(cur_state, action, reward, new_state, done, sce)
@@ -356,11 +356,18 @@ def testing(agent, epochs=1, random_start=False, SoC_full=True, use_stable_b=Fal
     else:
         cur_state = env.reset()
 
+    warmup_counter = 0
     for e in range(epochs):
+        sum_reward = 0
         for step in range(epoch_len):
 
             if use_stable_b == False:
-                action                          = agent.act(cur_state, test_mode=True)
+                if warmup_counter < agent.__dict__['input_sequence']:
+                    action                      = agent.act(cur_state, random_mode=True, test_mode=True)
+                    warmup_counter += 1
+                else:
+                    action                      = agent.act(cur_state, test_mode=True)
+
                 new_state, reward, done, sce, _ = env.step(action)
                 new_state                       = new_state
                 agent.remember(cur_state, action, reward, new_state, done, sce)
@@ -369,7 +376,9 @@ def testing(agent, epochs=1, random_start=False, SoC_full=True, use_stable_b=Fal
                 action, _states = agent.predict(cur_state)
                 new_state, reward, done, _ = env.step(action)
 
-            env.__dict__['LOGGER'].log_scalar('testing-reward',  reward, step, True)
+            #env.__dict__['LOGGER'].log_scalar('testing-reward',  reward, step, True)
+            sum_reward += reward
+            env.__dict__['LOGGER'].log_scalar('testing-reward',  sum_reward, step, True)
 
 
             cur_state = new_state

@@ -11,7 +11,7 @@ from main.common_env import common_env
 # Import the DQN agent: 
 from main.agent_deep_q import DQN
 
-def run_agent(name='', input_sequence=12, lstm_size=128, pre_trained_model=None):
+def run_agent(name='', input_sequence=24, lstm_size=256, pre_trained_model=None):
 
 
     # Naming the agent:
@@ -77,12 +77,12 @@ def run_agent(name='', input_sequence=12, lstm_size=128, pre_trained_model=None)
         memory_len     = update_num,
         # Training parameter:
         input_sequence = input_sequence,
-        gamma          = 0.85,
+        gamma          = 0.9,#0.85,
         epsilon        = 0.99,
         epsilon_min    = 0.1,
-        epsilon_decay  = 0.999996,
-        lr             = 0.5,
-        tau            = 0.125,
+        epsilon_decay  = 'linear',#0.999996,
+        lr             = 0.1,#0.5,
+        tau            = 0.15,#0.125,
         activation     = 'relu',
         loss           = 'mean_squared_error',
         hidden_size    = 256,
@@ -90,7 +90,8 @@ def run_agent(name='', input_sequence=12, lstm_size=128, pre_trained_model=None)
         model_type     = 'lstm',
         # LSTM size can be set:
         lstm_size      = lstm_size,
-        pre_trained_model=pre_trained_model)
+        pre_trained_model=pre_trained_model,
+        target_update_num=None)
 
 
     # Train:
@@ -100,12 +101,14 @@ def run_agent(name='', input_sequence=12, lstm_size=128, pre_trained_model=None)
     env.use_all_data()
     testing(agent)
 
-run_agent(name='testing')
+run_agent('testing',pre_trained_model='lstmagent_DQN+LSTM_Compare_Agents_t-stamp_26-04-2021_14-00-41_249')
+exit()
 
 def parameter_tuning(num_runs=3):
 
-    for i in range(num_runs)
-
+    for i in range(num_runs):
+        run_agent(name='Compare_Agents')
+        '''
         # input_sequence:
         input_sequence_list = [6,12,24]
         for input_sequence in input_sequence_list:
@@ -115,9 +118,5 @@ def parameter_tuning(num_runs=3):
         lstm_size_list = [64,128,256]
         for lstm_size in lstm_size_list:
             run_agent(name='lstm_size_{}'.format(lstm_size), lstm_size=lstm_size)
-
-
-
-
-def testing():
->>>>>>> 17f2dea237e36cbe985295d9182feb5618157997
+        '''
+parameter_tuning()

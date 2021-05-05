@@ -41,6 +41,7 @@ class reward_maker():
             logging_list            = [None], #['exact_costs','costs_focus','single_step','sum_exact_costs','sum_costs_focus','sum_single_step','step_reward']
             deactivate_SMS          = False,
             deactivate_LION         = False,
+            norm_range              = None,
             ):
 
         self.LOGGER                  = LOGGER
@@ -58,6 +59,7 @@ class reward_maker():
         self.logging_list            = logging_list
         self.deactivate_SMS          = deactivate_SMS
         self.deactivate_LION         = deactivate_LION
+        self.norm_range              = norm_range
 
         if self.R_TYPE == 'savings_focus' and self.COST_TYPE != 'yearly_costs':
             print('COST_TYPE is', self.COST_TYPE, "but should be 'yearly_costs', when R_TYPE is 'savings_focus'")
@@ -286,6 +288,9 @@ class reward_maker():
 
 
         self.cost_LOGGER(exact_costs, yearly_costs, cost_saving)
+
+        if self.norm_range != None:
+            step_reward = step_reward/self.norm_range
 
         return step_reward
 
