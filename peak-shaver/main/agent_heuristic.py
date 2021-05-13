@@ -284,7 +284,7 @@ class heurisitc:
             for step in range(epoch_len):
 
                 action                               = self.act(SMS_PRIO=0)# 0 heißt Prio ist aktiv
-                new_state, reward, done, max_peak, _ = self.env.step(action)         
+                new_state, reward, done, max_peak, _ = self.env.step(action)        
                 self.printer(step, epoch_len)
                 if done:
                     break
@@ -293,13 +293,13 @@ class heurisitc:
             if self.HEURISTIC_TYPE == 'Single-Value':
                 neu_global_zielverbrauch = self.global_single_value_for_max_peak(max_peak)
             elif self.HEURISTIC_TYPE == 'Single-Value-Reward':
-                neu_global_zielverbrauch = self.global_single_value_for_reward(self.env.__dict__[reward_maker].get_sum_reward())
+                neu_global_zielverbrauch = self.global_single_value_for_reward(self.env.__dict__['reward_maker'].__dict__['sum_cost_saving'])
 
             print('cost savings:',self.env.__dict__['reward_maker'].__dict__['sum_cost_saving'])
 
 
         # Return new SECG if necessary for chosen heuristic:
         if self.HEURISTIC_TYPE == 'Single-Value' or self.HEURISTIC_TYPE == 'Single-Value-Reward':
-            return neu_global_zielverbrauch
+            return neu_global_zielverbrauch, self.env.__dict__['reward_maker'].__dict__['sum_cost_saving']
 
 
