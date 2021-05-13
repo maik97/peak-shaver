@@ -24,7 +24,8 @@ from main.agent_heuristic import heurisitc
 
 def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
                  threshold_dem=50, deactivate_SMS=False, deactivate_LION=False,
-                 num_past_periods=24,num_outputs=24,TYPE_LIST=['NORMAL'],seq_transform=['MAX']):
+                 num_past_periods=12,num_outputs=12,TYPE_LIST=['NORMAL'],seq_transform=['MAX'],
+                 max_SMS_SoC=25,max_LION_SoC=54):
 
     # Naming the agent:
     now = datetime.now()
@@ -78,8 +79,8 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
         # Datset Inputs for the states:
         input_list     = input_list,
         # Batters stats:
-        max_SMS_SoC        = 25,
-        max_LION_SoC       = 54,
+        max_SMS_SoC        = max_SMS_SoC,#/1.2,
+        max_LION_SoC       = max_LION_SoC,#/1.2,
         LION_max_entladung = 50,
         SMS_max_entladung  = 100,
         SMS_entladerate    = 0.72,
@@ -108,7 +109,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
 
 def test_threshold_for_all_heuristics():
     # Find maximum performance of battery configuration:
-    #threshold_dem = use_heuristic('Single-Value', test_name='find_threshold', epochs=15, threshold_dem=50)
+    #threshold_dem = use_heuristic('Single-Value', test_name='find_threshold', epochs=15, threshold_dem=50)[0]
     threshold_dem = 40
     # Test all heuristic:
     use_heuristic('Perfekt-Pred', test_name='Compare_Approches', threshold_dem=threshold_dem)
@@ -141,7 +142,14 @@ def test_lstm_types(threshold_dem=40,num_past_periods=24,num_outputs=24):
     use_heuristic('LSTM-Pred', test_name=name+'MEAN-LABEL-SEQ', TYPE_LIST=['MEAN_LABEL_SEQ'], threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
     use_heuristic('LSTM-Pred', test_name=name+'SEQ-MAX', TYPE_LIST=['SEQ'], seq_transform=['MAX'],threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
     use_heuristic('LSTM-Pred', test_name=name+'SEQ-MEAN', TYPE_LIST=['SEQ'], seq_transform=['MEAN'], threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
-    
+
+def test_max_reward(threshold_dem=50,max_LION_SoC=54,max_SMS_SoC=25,deactivate_SMS=False,deactivate_LION=False):
+    #threshold_dem = use_heuristic('Single-Value-Reward', test_name='find_reward_threshold', epochs=15, threshold_dem=threshold_dem)
+    return use_heuristic(
+    	'Single-Value', test_name='find_threshold', epochs=15, threshold_dem=threshold_dem,
+    	max_LION_SoC=max_LION_SoC,max_SMS_SoC=max_SMS_SoC,
+    	deactivate_SMS=deactivate_SMS,deactivate_LION=deactivate_LION)
+
 
 def main():
     threshold_dem = use_heuristic('Single-Value', test_name='find_threshold', epochs=15, threshold_dem=50)
@@ -160,12 +168,20 @@ def main():
         #test_for_different_thresholds(HEURISTIC_TYPE)
         #test_battery_activations(HEURISTIC_TYPE)
         #use_heuristic(HEURISTIC_TYPE, test_name='test_rewards', threshold_dem=100, deactivate_SMS=True, deactivate_LION=True)
-    ''''
+
+
+
+    list_lion = [test_max_reward(max_LION_SoC=value,deactivate_SMS=True)[1] for value in [10,15,20]]
+
+    list_sms = [test_max_reward(max_SMS_SoC=value,deactivate_LION=True)[1] for value in [10,15,20]]
+
+    '''
     for num in [6,12,24]:
         test_lstm_types(threshold_dem=40,num_past_periods=num,num_outputs=num)
     
     for num in [6,12]:
         test_lstm_types(threshold_dem=40,num_past_periods=24,num_outputs=num)
-	'''
+
+
 if __name__ == "__main__":
     main()
