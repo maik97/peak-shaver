@@ -483,8 +483,8 @@ class common_env(gym.Env):
         self.current_step = random.randint(0, self.steps_per_episode - 1)
         
         # Zufällige Akku-SoC zum Start:
-        self.SMS_SoC  = random.randint(0.5*self.max_SMS_SoC,  self.max_SMS_SoC)
-        self.LION_SoC = random.randint(0.5*self.max_LION_SoC, self.max_LION_SoC)
+        self.SMS_SoC  = random.uniform(0.5*self.max_SMS_SoC,  self.max_SMS_SoC)
+        self.LION_SoC = random.uniform(0.5*self.max_LION_SoC, self.max_LION_SoC)
 
         # Reset Reward-Maker
         self.reward_maker.reset()
@@ -504,8 +504,8 @@ class common_env(gym.Env):
             self.SMS_SoC  = self.max_SMS_SoC
             self.LION_SoC = self.max_LION_SoC
         else:
-            self.SMS_SoC  = random.randint(0.5*self.max_SMS_SoC,  self.max_SMS_SoC)
-            self.LION_SoC = random.randint(0.5*self.max_LION_SoC, self.max_LION_SoC)
+            self.SMS_SoC  = random.uniform(0.5*self.max_SMS_SoC,  self.max_SMS_SoC)
+            self.LION_SoC = random.uniform(0.5*self.max_LION_SoC, self.max_LION_SoC)
 
         if SoC != None:
             self.LION_SoC = min(SoC*self.PERIODEN_DAUER,self.max_LION_SoC)

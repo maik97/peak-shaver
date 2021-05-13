@@ -181,6 +181,7 @@ def main():
     
     for num in [6,12]:
         test_lstm_types(threshold_dem=40,num_past_periods=24,num_outputs=num)
+    '''
 
 
 if __name__ == "__main__":
