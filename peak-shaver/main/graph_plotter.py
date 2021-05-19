@@ -714,19 +714,19 @@ def heursitic_plot():
 
 def main():
 
-	#wahrsager_plot()
-	#learn_time_lstm()
+	wahrsager_plot()
+	learn_time_lstm()
 	
-	#agent_parameter()
-	#agent_lstm_inputs()
+	agent_parameter()
+	agent_lstm_inputs()
 	agent_compare()
-	#agent_final()
+	agent_final()
 	
-	#heursitic_plot()
+	heursitic_plot()
 
-	#compare_agent_heurisitc()
+	compare_agent_heurisitc()
 
-	#learn_time_agents()
+	learn_time_agents()
 	
 
 if __name__ == '__main__':
