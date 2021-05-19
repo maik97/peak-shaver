@@ -355,7 +355,7 @@ class GraphMaker:
 			df.plot()
 			plt.ylabel('energy demand in kw')
 			plt.xlabel('step')
-			plt.savefig(path+'/'+csv_name+'.png')
+			plt.savefig(path+'/'+csv_name+'.svg')
 			plt.close()
 
 		error_df = pd.DataFrame({
@@ -547,7 +547,7 @@ class GraphMaker:
 				
 				#plt.show()
 				if save_path == None:
-					save_path = self.graph_path+'graphs/'+name+'/'+name+'_'+tag+'_'+str(self.rolling_mean)+'.png'
+					save_path = self.graph_path+'graphs/'+name+'/'+name+'_'+tag+'_'+str(self.rolling_mean)+'.svg'
 				
 				plt.savefig(save_path)
 				plt.close()
