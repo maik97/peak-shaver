@@ -102,7 +102,7 @@ plt.plot(Liste,SMS,color="blue", label="SMS")
 plt.legend(loc='upper right')
 plt.gca().invert_xaxis()
 plt.xlabel("maximale Leistungsentnahme (kW)",fontsize=16)
-plt.ylabel("möglicher Gewinn (€)",fontsize=16)
+plt.ylabel("mögliche Erspanis pro Jahr (€)",fontsize=16)
 
 plt.show()
 
