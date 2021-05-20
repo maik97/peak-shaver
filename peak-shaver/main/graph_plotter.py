@@ -61,13 +61,13 @@ class GraphMaker:
 		self.graph_path      = 'lstm-plots/'
 		self.log_path        = 'lstm-logs/'
 
-		self.dont_merge = ['lstm_512_hidden_layers']#'standard','learning_rate','lstm_512_hidden_layers']# ,'dropout','final']
+		self.dont_merge = ['standard','final']#'lstm_512_hidden_layers'
 
-		self.to_merge = []#'activation', 'dropout',
-			#'lstm_layers','hidden_layers',
-			#'past_periods','mean','max',
-			#'max_label_seq','mean_label_seq','seq'
-			#]
+		self.to_merge = ['activation', 'dropout','learning_rate' ,'dropout',
+			'lstm_layers','hidden_layers',
+			'past_periods','mean','max',
+			'max_label_seq','mean_label_seq','seq'
+			]
 
 		self.all_names = self.dont_merge + self.to_merge
 
@@ -84,6 +84,8 @@ class GraphMaker:
 		self.index_name = 'epoch'
 
 		self.name_type_list = ['None']
+
+		self.tag_list = ['loss']
 
 
 	def setup_heuristic(self):
@@ -164,14 +166,14 @@ class GraphMaker:
 
 		if mode == 'parameter':
 			self.param_dict = {
-				'Q-Table': ['standard','learning_rate','gamma','update_num','epsilon_decay'],
+				#'Q-Table': ['standard','learning_rate','gamma','update_num','epsilon_decay'],
 
 				'DQN': ['standard','target_update','learning_rate','gamma','tau',
 					'update_num','epsilon_decay', 'hidden_size'],
 
-				'DQN+MS': ['horizon'],
+				#'DQN+MS': ['horizon'],
 
-				'DQN+LSTM': ['input_sequence','lstm_size'],
+				#'DQN+LSTM': ['input_sequence','lstm_size'],
 
 				#'PPO2': ['standard','learning_rate','gamma','n_steps','ent_coef','vf_coef','cliprange'],#,'lstm_policy'
 			}
@@ -210,7 +212,8 @@ class GraphMaker:
 		elif mode == 'final':
 			#self.init_final()
 			if self.index_name == 'Step':
-				self.tag_list = ['discrete-action','Real_LE_in_kW','Target_LE_in_kW','SoC_SMS_in_kWh','SoC_LION_in_kWh','Max_Peak_in_kW','Savings_in_Euro']
+				self.tag_list = ['Savings_in_Euro']#,'discrete-action','Real_LE_in_kW','Target_LE_in_kW','SoC_SMS_in_kWh','SoC_LION_in_kWh','Max_Peak_in_kW','Savings_in_Euro']
+
 			elif self.index_name == 'Tag':
 				self.tag_list = ['Max_Peak_in_kW']
 
@@ -243,7 +246,7 @@ class GraphMaker:
 
 		self.merge_dict['Compare_Agents'] = ['Compare_Agents_Q-Table',
 											'Compare_Agents_DQN',
-											'Compare_Agents_PPO2',
+											#'Compare_Agents_PPO2',
 											'Compare_Agents_DQN+LSTM',
 											'Compare_Agents_DQN+MS'
 											]
@@ -557,7 +560,7 @@ class GraphMaker:
 				print(e)
 
 	def usual_prep_and_graph_creation(self):
-		self.logs_to_csv()
+		#self.logs_to_csv()
 		self.create_basic_longforms()
 		self.merge_longforms()
 		self.create_graphs()
@@ -651,7 +654,7 @@ def compare_agent_heurisitc(D_PATH='_BIG_D/'):
 	print(concat_df)
 
 	
-	graph_maker.simple_plot(name='Vergleich Heuristik und DQN', df=concat_df, save_path='agent-plots/vergleich_agent_heuristic')
+	graph_maker.simple_plot(name='Vergleich Heuristik und DQN', df=concat_df, save_path='agent-plots/vergleich_agent_heuristic.svg')
 	
 
 
@@ -670,18 +673,18 @@ def agent_parameter():
 def agent_lstm_inputs():
 	graph_maker = GraphMaker('_BIG_D/')
 
-	graph_maker.plot_options(x_label='Epoch',y_label='Summe der Ersparnisse in Euro',rolling_mean=2)
+	graph_maker.plot_options(x_label='Epoch',y_label='Summe der Ersparnisse in Euro',rolling_mean=10)
 	graph_maker.setup_agents(mode='lstm_inputs',tag_list=['sum_savings_epoch'])
 	graph_maker.usual_prep_and_graph_creation()
 
-	graph_maker.plot_options(x_label='Step',y_label='Loss',rolling_mean=2)
+	graph_maker.plot_options(x_label='Step',y_label='Loss',rolling_mean=10)
 	graph_maker.setup_agents(mode='lstm_inputs',tag_list=['Loss'])
 	graph_maker.usual_prep_and_graph_creation()
 
 
 def agent_compare():
 	graph_maker = GraphMaker('_BIG_D/')
-	graph_maker.plot_options(x_label='Epoch',y_label='Summe der Ersparnisse in Euro',rolling_mean=10,title='Vergleich Agents')
+	graph_maker.plot_options(x_label='Epoch',y_label='Summe der Ersparnisse in Euro',rolling_mean=5,title='Vergleich Agents')
 	graph_maker.setup_agents(mode='compare',tag_list=['sum_savings_epoch'])
 	graph_maker.usual_prep_and_graph_creation()
 	
@@ -700,9 +703,10 @@ def agent_final():
 
 def wahrsager_plot():
 	graph_maker = GraphMaker('_BIG_D/')
-	graph_maker.plot_options(x_label='Epoch')
+	graph_maker.plot_options(x_label='Epoch',rolling_mean=10)
 	graph_maker.setup_wahrsager()
-	graph_maker.plot_lstm_output()
+	graph_maker.usual_prep_and_graph_creation()
+	#graph_maker.plot_lstm_output()
 
 
 def heursitic_plot():
@@ -715,18 +719,18 @@ def heursitic_plot():
 def main():
 
 	wahrsager_plot()
-	learn_time_lstm()
+	#learn_time_lstm()
 	
-	agent_parameter()
-	agent_lstm_inputs()
-	agent_compare()
-	agent_final()
+	#agent_parameter()
+	#agent_lstm_inputs()
+	#agent_compare()
+	#agent_final()
 	
-	heursitic_plot()
+	#heursitic_plot()
 
-	compare_agent_heurisitc()
+	#compare_agent_heurisitc()
 
-	learn_time_agents()
+	#learn_time_agents()
 	
 
 if __name__ == '__main__':
