@@ -7,31 +7,29 @@ from gym import spaces
 
 from collections import deque
 
-'''
-############   TO-DO  ############
-
-- extra Reward-Modes-List = ['episode-sum','discounted-reward','soll-ist-diff']
-- sum-cost-saving-per-episode
-- Tabelle rendern lassen
-- heursitik verbessern
-- temp logs!
-'''
 
 class common_env(gym.Env):
-    '''GYM environment to simulate the HIPE-dataset
+    '''Implemented as GYM environment to simulate the HIPE-dataset
 
     Args:
+        reward_maker (object): Takes the used reward_maker object
         df (dataframe): Pandas dataframe of the normalized HIPE-Dataset
         power_dem_df (array): Array of the local power demand, not normalized 
         input_list (list): List of strings, represents the columns of the dataframe that will be used as inputs. Possible column-names are: 'norm_total_power' and 'max_pred_seq'
-        max_SMS_SoC (float): Maximum Capacity of the flying wheel in kwh
-        max_LION_SoC (float): Maximum Capacity of the lithium-ion battery in kwh
+        max_SMS_SoC (int, float): Maximum Capacity of the flying wheel in kWh
+        max_LION_SoC (int, float): Maximum Capacity of the lithium-ion battery in kWh
+        LION_max_entladung (int, float): Maximum Performance of the lithium-ion battery in kW
+        SMS_max_entladung (int, float): Maximum Performance of the flying wheel in kW
+        SMS_entladerate (int, float): Percentage of self discharge per day for the flying wheel
+        LION_entladerate (int, float):Percentage of self discharge per day
         PERIODEN_DAUER (integer): Period-lenght of one step in minutes
         ACTION_TYPE (string): Sets the actions as discrete or continuous inputs. Use  'discrete' or 'contin'.
-        reward_maker (object): Takes the used reward_maker object
+        OBS_TYPE (string): Sets the actions as discrete or continuous inputs. Use  'discrete' or 'contin'.
         AGENT_TYPE (string): Inititates the environment to inputs from either heurtistic, the RL-Agents or from ``stable-baselines``. Use 'heuristic', 'normal' or 'standart_gym'.
+        discrete_space (int): The number of intervals for a discrete value 
         max_ziel (float): Defines the maximum possible SECG (in kw), will only be used when AGENT_TYPE is set to 'normal'.
         min_ziel (float): Defines the minimal possible SECG (in kw), will only be used when AGENT_TYPE is set to 'normal'.
+        val_split (float): Splits the dataset in training and test data by percentage. The percentage determines the size of the test dataset.
 
     '''
 
@@ -161,6 +159,9 @@ class common_env(gym.Env):
         #Gesamtkosten: 37093.83
 
     def calc_parameter_dataset(self):
+        '''
+        Calculates important information about the dateset and prints them
+        '''
         self.power_dem_arr         = self.power_dem_df.to_numpy().copy()
         self.rolling_power_dem     = self.power_dem_df.rolling(int(self.measure_intervall/self.PERIODEN_DAUER)).mean().fillna(0).to_numpy().copy()
         print(len(self.power_dem_arr))
@@ -183,6 +184,9 @@ class common_env(gym.Env):
 
 
     def use_only_val_data(self):
+        '''
+        Use this method if you want use only the test data.
+        '''
         print('Using only val-data')
         self.df = self.og_df[int(val_split*len(self.og_df)):]
         self.power_dem_df = self.og_power_dem_df[int(val_split*len(self.og_df)):]
@@ -191,6 +195,9 @@ class common_env(gym.Env):
 
 
     def use_all_data(self):
+        '''
+        Use this method if you want use trainings and test data
+        '''
         print('Using training and val-data')
         self.df = self.og_df
         self.power_dem_df = self.og_power_dem_df
@@ -198,7 +205,7 @@ class common_env(gym.Env):
 
 
     def check_max_peak(self, past_max_peak):
-        '''Class-Function that checks if there is a new maximum peak for a defined time-period.
+        '''Method that checks if there is a new maximum peak for a defined time-period.
 
         Args:
             past_max_peak (float): The previous maximum peak.
@@ -215,7 +222,7 @@ class common_env(gym.Env):
             return past_max_peak
 
     def check_all_max_peak(self):
-        '''Class-Function that will check at each step if there is a new maximum peak over a defined period of time.
+        '''Method that will check at each step if there is a new maximum peak over a defined period of time.
         Checks for a day, a week and for the whole episode.
 
         Returns:
@@ -234,7 +241,7 @@ class common_env(gym.Env):
         return self.day_max_peak, self.week_max_peak, self.episode_max_peak
 
     def step_counter(self):
-        '''Class-Function that counts the steps in different timeframes.
+        '''Method that counts the steps in different timeframes.
         (sum of steps over all episodes, current step of the dataset, daily, weekly, step of the episode)
         It also passes the maximum peaks from the different recording timefrime to a logging function, which can be traced in Tensorboard.
         '''
@@ -305,7 +312,10 @@ class common_env(gym.Env):
     def get_discrete_outputs(self, action):
         '''
         Determines the SECG and if SMS priority will be used from an discrete action space
-        
+
+        Args:
+            action (object): an action provided by the agent
+
         Returns:
             SECG, SMS_priority (tuple):
 
@@ -336,6 +346,9 @@ class common_env(gym.Env):
     def get_contin_outputs(self, action):
         '''
         Determines the SECG and if SMS priority will be used from an continious action space
+
+        Args:
+            action (object): an action provided by the agent
         
         Returns:
             SECG, SMS_priority (tuple):
@@ -468,6 +481,9 @@ class common_env(gym.Env):
 
         Args:
             step_counter_episode (integer): counted step of the episode
+
+        Returns 
+            list: list of multi step rewards from the reward_maker
         '''
         return self.reward_maker.get_multi_step_reward_list(step_counter_episode)
 
@@ -477,7 +493,7 @@ class common_env(gym.Env):
         Randomizes both state of charges and the current step of the dataset to begin from.
 
         Returns 
-            obs (object): the initial observation
+            array: the initial observation
         '''
         # Wähle zufälligen Step als Start aus:
         self.current_step = random.randint(0, self.steps_per_episode - 1)

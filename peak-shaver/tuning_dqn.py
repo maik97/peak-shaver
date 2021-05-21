@@ -12,9 +12,12 @@ from main.common_env import common_env
 from main.agent_deep_q import DQN
 
 
-def run_agent(name='',gamma=.9, lr=0.1, tau=0.15, update_num=500, #250
+def run_agent(name='',gamma=.9, lr=0.1, tau=0.15, update_num=500,
               epsilon_decay='linear', input_list=['norm_total_power','normal','seq_max'],
               hidden_size=256, pre_trained_model=None, target_update_num=None):
+    '''
+    Trains and tests a DQN based on the passed parameter.
+    '''
     
     # Naming the agent:
     now  = datetime.now()
@@ -26,7 +29,7 @@ def run_agent(name='',gamma=.9, lr=0.1, tau=0.15, update_num=500, #250
     # Number of warm-up steps:
     num_warmup_steps = 100
     # Number of epochs and steps:
-    epochs           = 1
+    epochs           = 100
 
 
     # Setup reward_maker
@@ -87,26 +90,27 @@ def run_agent(name='',gamma=.9, lr=0.1, tau=0.15, update_num=500, #250
         target_update_num=target_update_num)
 
     # Train:
-    #training(agent, epochs, update_num, num_warmup_steps)
+    training(agent, epochs, update_num, num_warmup_steps)
 
     # Test with dataset that includes val-data:
     env.use_all_data()
     testing(agent)
 
-run_agent('testing',pre_trained_model='denseagent_DQN_Compare_Agents_t-stamp_26-04-2021_19-11-21_249.h5')
-exit()
+#run_agent(name='Compare_Agents')
+#run_agent('testing',pre_trained_model='denseagent_DQN_Compare_Agents_t-stamp_26-04-2021_19-11-21_249.h5')
+#exit()
 
 def parameter_tuning(num_runs=3):
     
     for i in range(num_runs):
-        run_agent(name='lstm_inputs_test-5',input_list=['norm_total_power','mean'])
 
-        '''
+        # standard
         run_agent(name='standard')
         
         # input_list:
         lstm_inputs_list = [['norm_total_power'],['norm_total_power','normal'],
-                            ['norm_total_power','seq_max'], ['norm_total_power','normal','seq_max']]
+                            ['norm_total_power','seq_max'], ['norm_total_power','normal','seq_max'],
+                            ['norm_total_power','mean']]
         i = 1
         for lstm_inputs in lstm_inputs_list:
             run_agent(name='lstm_inputs_test-{}'.format(i), input_list=lstm_inputs)
@@ -118,7 +122,7 @@ def parameter_tuning(num_runs=3):
             run_agent(name='learning_rate_{}'.format(lr), lr=lr)
         
         # Gamma:
-        gamma_list = [0.99]#[0.8,0.99]
+        gamma_list = [0.8,0.99]
         for gamma in gamma_list:
             run_agent(name='gamma_{}'.format(gamma), gamma=gamma)
         
@@ -142,11 +146,10 @@ def parameter_tuning(num_runs=3):
         for hidden_size in hidden_size_list:
             run_agent(name='hidden_size_{}'.format(hidden_size), hidden_size=hidden_size)
 
-        
-        target_update_list = [10000]#[2500,5000,10000]
+        # target_update:
+        target_update_list = [2500,5000,10000]
         for target_update in target_update_list:
             run_agent(name='target_update_{}'.format(target_update), target_update_num=target_update)
-        '''
-        # zusätlich vlt discrete, und alle lstms als inputs mal durchprobieren
+
         
 parameter_tuning()

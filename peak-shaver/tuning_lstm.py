@@ -27,7 +27,7 @@ def run_agent(name='', input_sequence=24, lstm_size=256, pre_trained_model=None)
     # Train every x number of steps:
     update_num       = 500
     # Number of epochs and steps:
-    epochs           = 1
+    epochs           = 100
 
 
     # Setup reward_maker
@@ -101,14 +101,14 @@ def run_agent(name='', input_sequence=24, lstm_size=256, pre_trained_model=None)
     env.use_all_data()
     testing(agent)
 
-run_agent('testing',pre_trained_model='lstmagent_DQN+LSTM_Compare_Agents_t-stamp_26-04-2021_14-00-41_249')
-exit()
+#run_agent(name='Compare_Agents')
+#run_agent('testing',pre_trained_model='lstmagent_DQN+LSTM_Compare_Agents_t-stamp_26-04-2021_14-00-41_249')
 
 def parameter_tuning(num_runs=3):
 
     for i in range(num_runs):
-        run_agent(name='Compare_Agents')
-        '''
+        #run_agent(name='Compare_Agents')
+        
         # input_sequence:
         input_sequence_list = [6,12,24]
         for input_sequence in input_sequence_list:
@@ -118,5 +118,5 @@ def parameter_tuning(num_runs=3):
         lstm_size_list = [64,128,256]
         for lstm_size in lstm_size_list:
             run_agent(name='lstm_size_{}'.format(lstm_size), lstm_size=lstm_size)
-        '''
+        
 parameter_tuning()

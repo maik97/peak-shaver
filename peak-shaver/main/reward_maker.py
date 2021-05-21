@@ -75,11 +75,11 @@ class reward_maker():
         Takes Init Parameter from GYM environment for the HIPE dataset, initiates all other necessary parameters and calculates the costs without peak shaving.
         
         Args:
-            PERIODEN_DAUER (int):
-            steps_per_episode (int):
-            max_power_dem (float):
-            mean_power_dem (float):
-            sum_power_dem (float):
+            PERIODEN_DAUER (int): Lenght of one periode in minutes
+            steps_per_episode (int): Number of datapoints in the dataset
+            max_power_dem (float): Maximum power consumption
+            mean_power_dem (float): Mean power consumption
+            sum_power_dem (float): Sum power consumption
         '''
         self.PERIODEN_DAUER    = PERIODEN_DAUER
         self.steps_per_episode = steps_per_episode
@@ -187,12 +187,6 @@ class reward_maker():
                                 "R_HORIZON was set to:", self.R_HORIZON,
                                 "Alternatively use 'single_step' or 'episode', instead of an integer")
 
-    def asfjulfsda(self):
-        cost_power = self.sum_power_dem * self.PERIODEN_DAUER * (self.cost_per_kwh/60) * self.auf_jahr_rechnen
-        #c * steps   #kw * steps           #min pro step         #c / (kw * min)
-
-        cost_peak  = self.max_power_dem * self.Leistungspreis 
-        #c * steps   #kw                  # c / kw * jahr
 
     def cost_function(self, interval_sum_power_dem, sum_LION_nutzung, max_peak_diff, observed_period):
         '''
@@ -363,6 +357,9 @@ class reward_maker():
 
 
     def cost_LOGGER(self, exact_costs, yearly_costs, cost_saving):
+        '''
+        Logs the costs
+        '''
         self.sum_exact_costs  += exact_costs
         self.sum_yearly_costs += yearly_costs
         self.sum_cost_saving  += cost_saving
@@ -383,6 +380,9 @@ class reward_maker():
 
 
     def reward_LOGGER(self, step_reward, sum_steps):
+        '''
+        Logs the rewards
+        '''
         self.sum_step_reward  += step_reward
         self.step_reward       = step_reward
 
@@ -392,6 +392,9 @@ class reward_maker():
 
 
     def get_log(self):
+        '''
+        Passes rewards to the environment
+        '''
         return self.sum_cost_saving, self.sum_step_reward, self.step_reward, self.sum_steps
 
 

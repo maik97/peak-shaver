@@ -35,21 +35,21 @@ class wahrsager:
     LSTM-Implementation to train and predict future energy requirements.
 
     Args:
-        TYPE (string):
-        M_NAME (string):
-        D_PATH (string)
-        PLOTTING (bool):
-        num_outputs (int):
-        dropout (float):
-        recurrent_dropout (float):
-        num_hidden (int):
-        lstm_size (int):
-        first_hidden_size (int):
-        neuron_num_change (float):
-        activation_hidden (string):
-        activation_end (string):
-        val_data_size (int):
-        num_epochs (int):       
+        TYPE (string): LSTM Type
+        NAME (string): Name of the LSTM
+        PLOTTING (bool): Plots the results if `True`
+        num_outputs (int): Number of sequnces
+        dropout (float): Sets the dropout rate for hidden units
+        recurrent_dropout (float): Sets the dropout rate for recurrent units 
+        num_hidden (int): Number of hidden layers
+        lstm_size (int): Number of LSTM Layers
+        first_hidden_size (int): Size of the first hidden layer
+        neuron_num_change (float): Rate by which the hidden layer are getting smaller
+        activation_hidden (string): Activation function for hidden units
+        activation_end (string): Activation function for the output layer
+        lr (float): Sets the learning rate
+        val_data_size (int): Determines the size of the test dataset
+        num_epochs (int): Sets the numberof epochs for the training process
         
     '''
     def __init__(
@@ -306,7 +306,7 @@ class wahrsager:
 
 
     def plot_pred_single(self,prediction,label_data):
-        ''' Plots the predictions for single-value labels and gives some additional information about the error.
+        ''' Plots the predictions for single-value labels and gives some additional information about the error and saves them to `D_PATH+'/lstm-outputs/`
         
         Args:
             prediction (array): Predicted future energy requirements

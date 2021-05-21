@@ -29,7 +29,7 @@ class Q_Learner:
         epsilon_min (float): Minimal percent of random actions, value between 0 and 1
         epsilon_decay (float): Factor by which epsilon decays, value between 0 and 1. Can also be set to `linear` when you want epsilon to decrease over all steps (In this case ``epsilon_min`` will not be used).
         lr (float): Sets the learning rate of the RL-Agent
-        Q_table (array or list): Will be intepreted as a Q-Table when passing an array (all values should be initially set to zero) or will create a Q-Table when passing a list (list must be the shape for the Q-Table). If `None` is passed the Q-Table will be created automatically.
+        Q_table (array, list, None): Will be intepreted as a Q-Table when passing an array (all values should be initially set to zero) or will create a Q-Table when passing a list (list must be the shape for the Q-Table). If `None` is passed the Q-Table will be created automatically.
         load_table (string): Name of an existing Q-Table in `[D_PATH]/agent-models`. Loads a pre-trained table (Note that the table must be in .h5 format).
     """
     def __init__(self, env, memory_len, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, Q_table=None, load_table=None):
@@ -85,15 +85,24 @@ class Q_Learner:
 
 
     def init_agent_status(self, epochs, epoch_len):
+        '''
+        Ininitiates a helper class to make agent status prints
+
+        Args:
+            epochs (int): Number of epochs
+            epoch_len (int): Number of steps per epoch
+        '''
         self.agent_status = AgentStatus(epochs*epoch_len)
 
 
     def act(self, state, random_mode=False, test_mode=False):
         '''
-        Function, in which the agent decides an action, either from greedy-policy or from prediction. Use this function when iterating through each step.
+        Method in which the agent decides an action, either from greedy-policy or from prediction. Use this function when iterating through each step.
         
         Args:
             state (array): Current state at the step
+            random_mode (bool): If set to `True` the action will always be random
+            test_mode (bool): If set to `True` the action will always be chosen by the agent
 
         Returns:
             action, epsilon (tuple):

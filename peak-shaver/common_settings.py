@@ -41,7 +41,7 @@ def basic_dataset():
 	return df, power_dem_df, main_dataset
 
 
-def load_specific_sets(num_past_periods=24,num_outputs=24,TYPE_LIST=['NORMAL','SEQ'],seq_transform=['MAX']):
+def load_specific_sets(num_past_periods=24,num_outputs=24,TYPE_LIST=['NORMAL','SEQ'],seq_transform=['MAX'], no_pred=False):
 
 	df, power_dem_df, main_dataset = basic_dataset()
 
@@ -57,36 +57,37 @@ def load_specific_sets(num_past_periods=24,num_outputs=24,TYPE_LIST=['NORMAL','S
 
 	input_list = ['norm_total_power']
 
-	for TYPE in TYPE_LIST:
+	if not no_pred:
+		for TYPE in TYPE_LIST:
 
-		if TYPE == 'SEQ':
-			print(len(df))
-			seq_predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE, num_outputs=num_outputs).pred()
+			if TYPE == 'SEQ':
+				print(len(df))
+				seq_predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE, num_outputs=num_outputs).pred()
 
-			for transform in seq_transform:
-				if transform == 'MAX':
-					df['SEQ_MAX'] = max_seq(seq_predictions)
-					input_list.append('SEQ_MAX')
+				for transform in seq_transform:
+					if transform == 'MAX':
+						df['SEQ_MAX'] = max_seq(seq_predictions)
+						input_list.append('SEQ_MAX')
 
-				elif transform == 'MEAN':
-					df['SEQ_MEAN'] = mean_seq(seq_predictions)
-					input_list.append('SEQ_MEAN')
+					elif transform == 'MEAN':
+						df['SEQ_MEAN'] = mean_seq(seq_predictions)
+						input_list.append('SEQ_MEAN')
 
-				else:
-					raise Exception("Unsupported sequence transformation: {}, use 'MAX' or 'MEAN'".format(transform))
+					else:
+						raise Exception("Unsupported sequence transformation: {}, use 'MAX' or 'MEAN'".format(transform))
 
-		elif TYPE == 'MAX_LABEL_SEQ' or TYPE == 'MEAN_LABEL_SEQ':
-			predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE).pred()[:-num_outputs+1]
-			print(len(df))
-			print(len(predictions))
-			df[TYPE]    = predictions
-			input_list.append(TYPE)
-		else:
-			predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE).pred()[:-num_outputs]
-			print(len(df))
-			print(len(predictions))
-			df[TYPE]    = predictions
-			input_list.append(TYPE)
+			elif TYPE == 'MAX_LABEL_SEQ' or TYPE == 'MEAN_LABEL_SEQ':
+				predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE).pred()[:-num_outputs+1]
+				print(len(df))
+				print(len(predictions))
+				df[TYPE]    = predictions
+				input_list.append(TYPE)
+			else:
+				predictions = wahrsager(lstm_dataset, power_dem_df, TYPE=TYPE).pred()[:-num_outputs]
+				print(len(df))
+				print(len(predictions))
+				df[TYPE]    = predictions
+				input_list.append(TYPE)
 
 
 		return df, power_dem_df, input_list
