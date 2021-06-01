@@ -643,7 +643,7 @@ def compare_agent_heurisitc(D_PATH='_BIG_D/'):
 	df_dqn = df_dqn.rename(columns={df_dqn.columns[-3]:'sum_saving'})
 	
 	df_heuristic = pd.read_csv('agent-plots/heuristic/basic_longform_csv/final_Single-Value/final_Single-Value_sum_cost_saving.csv', delimiter=',')#,index_col='Step')
-	df_heuristic['type'] = 'Standart Heuristik'
+	df_heuristic['type'] = 'Standard-Heuristik'
 	df_heuristic = df_heuristic.rename(columns={df_heuristic.columns[-3]:'sum_saving'})
 
 
@@ -718,7 +718,7 @@ def heursitic_plot():
 
 def main():
 
-	wahrsager_plot()
+	#wahrsager_plot()
 	#learn_time_lstm()
 	
 	#agent_parameter()
@@ -728,7 +728,7 @@ def main():
 	
 	#heursitic_plot()
 
-	#compare_agent_heurisitc()
+	compare_agent_heurisitc()
 
 	#learn_time_agents()
 	
