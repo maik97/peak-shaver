@@ -22,7 +22,7 @@ class mainDataset:
     Args:
         D_PATH (string): Path that indicates which dataset is used. Use `'_BIG_D/'` for the full dataset and `'_small_d/'` for the small dataset, if you followed the propesed folder structure.
         period_min (int): Sets the time-period for the dataset in minutes
-        full_dataset (bool): Set this to ``True`` if you are using the full dataset and ``false`` otherwis
+        full_dataset (bool): Set this to ``True`` if you are using the full dataset and ``false`` otherwise
     '''
     def __init__(self, D_PATH='_BIG_D/', period_min=5, full_dataset=False):
 

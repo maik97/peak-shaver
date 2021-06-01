@@ -37,6 +37,9 @@ class GraphMaker:
 
 	def plot_options(self, style="whitegrid", use_grid=False, graph_name=True, title=None,
 					x_label='Epoch',y_label=None,rolling_mean=2, legend='auto'):
+		'''
+		Common settings
+		'''
 
 		self.style       = style
 		self.sns_palette = "deep"
@@ -49,6 +52,9 @@ class GraphMaker:
 		self.legend       = legend
 
 	def use_tags(self,tags):
+		'''
+		Specifies the tags of a tensorboard log
+		'''
 
 		self.custom_tags = True
 		self.tag_list    = tags 

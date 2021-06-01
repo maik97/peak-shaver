@@ -28,13 +28,11 @@ def try_training_on_gpu():
     '''
     Checks if Keras can use a GPU and switch to GPU usage if possible
     '''
-    #try:
     config = tf.ConfigProto(device_count = {'GPU': 1 , 'CPU': 56} )
     config.gpu_options.per_process_gpu_memory_fraction = 0.35
     sess = tf.Session(config=config) 
     keras.backend.set_session(sess)
-    #except:
-    #    print('Keras could not setup a GPU session. CPU will be used instead.')
+
 
 def temp_line_print(text):
     '''
@@ -257,6 +255,7 @@ def training(agent, epochs=1000, update_num=1000, num_warmup_steps=100, epoch_sa
     Args:
         epochs (int): Number of epochs
         update_num (int): Interval of steps after which the training process starts
+        num_warmup_steps (int): Number of warmup Steps at th start of each epoch
         epoch_save_intervall (int): Interval of steps after which the agent will be saved
         random_start (bool): If set to `True` the epoch will start at a random point in the dataset
         SoC_full (bool): If set to `True` the batteries will be full at the beginning of an epoch
@@ -338,10 +337,11 @@ def testing(agent, epochs=1, random_start=False, SoC_full=True, use_stable_b=Fal
     General function for the learning purposes, which can be used by all agents except those from ``stable-baselines``
     
     Args:
+        epochs (int): Number of test epochs
         random_start (bool): If set to `True` the epoch will start at a random point in the dataset
         SoC_full (bool): If set to `True` the batteries will be full at the beginning of an epoch
         use_stable_b (bool): Set this to `True` if you are using a model from ``stable-baselines``
-        df (dataframe): Needs to be passed if xou are using ``stable-baselines``
+        env (dataframe): Needs to be passed if you are using ``stable-baselines``
     '''
     if use_stable_b == False:
         env       = agent.__dict__['env']

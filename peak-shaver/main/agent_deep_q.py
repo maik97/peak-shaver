@@ -34,6 +34,7 @@ class DQN:
         hidden_layers (int): Number of hidden layers for the neural network
         hidden_size (int): Size of all hidden layers
         lstm_size (int): Number of LSTM layers, when ``model_type=lstm``
+        target_update_num (int): If set to 'None' the target update will be called after the replay method. Set this to an integer for a specific target update interval.
 
     """
     def __init__(self, env, memory_len, input_sequence=1, gamma=0.85, epsilon=0.8, epsilon_min=0.1, epsilon_decay=0.999996, lr=0.5, tau=0.125,
@@ -114,9 +115,10 @@ class DQN:
 
 
     def create_normal_model(self, lr, activation, loss, hidden_layers, hidden_size):
-        '''Class-Function: Creates a Deep Neural Network which predicts Q-Values, when the class is initilized.
+        '''reates a Deep Neural Network which predicts Q-Values, when the class is initilized.
 
         Args:
+            lr (float): Previously defined learning rate
             activation (string): Previously defined Keras activation
             loss (string): Previously defined Keras loss
             hidden_layers (int): Number of hidden layers for the neural network
@@ -132,13 +134,14 @@ class DQN:
 
 
     def create_lstm_model(self, lr, activation, loss, lstm_size, hidden_size):
-        '''Class-Function: Creates an LSTM which predicts Q-Values, when the class is initilized.
+        '''Creates an LSTM which predicts Q-Values, when the class is initilized.
 
         Args:
+            lr (float): Previously defined learning rate
             activation (string): Previously defined Keras activation
             loss (string): Previously defined Keras loss
-            hidden_size (int): Size of all hidden layers
             lstm_size (int): Number of LSTM layers, when ``model_type=lstm``
+            hidden_size (int): Size of all hidden layers
         '''
         input_dim = (self.input_sequence, self.env.observation_space.shape[0])
         print(input_dim)
@@ -152,7 +155,7 @@ class DQN:
 
     def sequence_states_to_act(self, cur_state):
         '''
-        Class-Function: Uses the memory to create a input sequence of multiple steps for :meth:`agent_deep_q.act` (For example used when ``model_type=lstm``)
+        Uses the memory to create a input sequence of multiple steps for :meth:`agent_deep_q.act` (For example used when ``model_type=lstm``)
 
         Args:
             cur_state (array): State from current step
@@ -176,10 +179,12 @@ class DQN:
 
     def act(self, state, random_mode=False, test_mode=False):
         '''
-        Function, in which the agent decides an action, either from greedy-policy or from prediction. Use this function when iterating through each step.
+        Method in which the agent decides an action, either from greedy-policy or from prediction. Use this function when iterating through each step.
         
         Args:
             state (array): Current state at the step
+            random_mode (bool): If set to `True` the action will always be random
+            test_mode (bool): If set to `True` the action will always be chosen by the agent
 
         Returns:
             integer: Action that was chosen by the agent
@@ -238,7 +243,7 @@ class DQN:
 
     def sequence_states_for_replay(self,i):
         '''
-        Class-Function: Uses the memory to create a input sequence of multiple steps for :meth:`agent_deep_q.replay` (For example used when ``model_type=lstm``).
+        Uses the memory to create a input sequence of multiple steps for :meth:`agent_deep_q.replay` (For example used when ``model_type=lstm``).
         Note that this function is still inefficient and makes the learning process for the lstm pretty slow.
 
 

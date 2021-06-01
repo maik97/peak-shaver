@@ -10,7 +10,7 @@ df, power_dem_df, main_dataset = basic_dataset()
 def run_wahrsager(NAME,TYPE='NORMAL',num_outputs=1, dropout=0.1, num_hidden=3,lstm_size=256, num_past_periods=24,
                   activation_hidden='relu',activation_end='relu',lr=0.001,num_epochs=1000):
 
-    #try:
+
     lstm_dataset = lstmInputDataset(main_dataset, df, num_past_periods=num_past_periods)
     normal_predictions = wahrsager(lstm_dataset, power_dem_df,
         TYPE = TYPE, 
@@ -31,13 +31,11 @@ def run_wahrsager(NAME,TYPE='NORMAL',num_outputs=1, dropout=0.1, num_hidden=3,ls
         val_data_size     = 2000,
         num_epochs        = num_epochs,
         ).train()
-    #except Exception as e:
-    #   print(e)
 
 def parameter_tuning(num_runs=3):
 
     for i in range(num_runs):
-        '''
+        
         run_wahrsager('_test_standard')
 
         learning_rate_list = [0.0001,0.001,0.01] 
@@ -84,7 +82,6 @@ def parameter_tuning(num_runs=3):
         for seq in seq_list:
             run_wahrsager('_test_seq_{}'.format(seq), TYPE='SEQ', num_outputs=seq)
 
-        '''
         hidden_layers_list = [3]
         for hidden_layers in hidden_layers_list:
             run_wahrsager('_test-lstm_512_hidden_layers_{}'.format(hidden_layers), num_hidden=hidden_layers,lstm_size=512)

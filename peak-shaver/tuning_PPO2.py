@@ -88,20 +88,13 @@ def run_agent(name='', learning_rate=0.00025, gamma=0.99, n_steps=2500, ent_coef
     #dummy_env = DummyVecEnv([lambda: env])
     #testing(model, use_stable_b=True, env=env)
 
-
-#run_agent()
+#run_agent(name='Compare_Agents')
 
 
 def parameter_tuning():
 
     for i in range(1):
         
-        # Learning rate:
-        norm_list = [100,500,1000,2000,4000]
-        for norm in norm_list:
-            run_agent(name='norm{}'.format(norm), norm=norm)
-        #run_agent(name='lstm_policy')
-        '''
         run_agent(name='standard')
         
         # Learning rate:
@@ -140,6 +133,6 @@ def parameter_tuning():
                             ['norm_total_power','seq_max'], ['norm_total_power','normal','seq_max']]
         for lstm_inputs in lstm_inputs_list:
             run_agent(name='lstm_inputs_{}'.format(lstm_inputs), input_list=lstm_inputs)
-        '''
+        
 
 parameter_tuning()

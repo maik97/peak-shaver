@@ -88,12 +88,12 @@ def run_agent(name='',gamma=.9, lr=0.1, update_num=100, load_table=None,
     env.use_all_data()
     testing(agent)
 
+#run_agent(name='Compare_Agents')
 
 def parameter_tuning(num_runs=3):
 
     for i in range(num_runs):
-        run_agent(name='lstm_inputs_test-5',input_list=['norm_total_power','mean'])
-        '''
+        
         run_agent(name='Compare_Agents')
         
         # Learning rate:
@@ -118,11 +118,12 @@ def parameter_tuning(num_runs=3):
         
         # input_list:
         lstm_inputs_list = [['norm_total_power'],['norm_total_power','normal'],
-                            ['norm_total_power','seq_max'], ['norm_total_power','normal','seq_max']]
+                            ['norm_total_power','seq_max'], ['norm_total_power','normal','seq_max'],
+                            ['norm_total_power','mean']]
         i = 1
         for lstm_inputs in lstm_inputs_list:
             run_agent(name='lstm_inputs_test-{}'.format(i), input_list=lstm_inputs)
             i += 1
         
-        '''
+
 parameter_tuning()

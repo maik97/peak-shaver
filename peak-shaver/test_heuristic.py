@@ -25,7 +25,7 @@ from main.agent_heuristic import heurisitc
 def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
                  threshold_dem=50, deactivate_SMS=False, deactivate_LION=False,
                  num_past_periods=12,num_outputs=12,TYPE_LIST=['NORMAL'],seq_transform=['MAX'],
-                 max_SMS_SoC=25,max_LION_SoC=54):
+                 max_SMS_SoC=25,max_LION_SoC=54,no_pred=False):
 
     # Naming the agent:
     now = datetime.now()
@@ -46,7 +46,7 @@ def use_heuristic(HEURISTIC_TYPE='Perfekt-Pred', test_name='', epochs=1,
 
     
     # Import dataset and logger based on the common settings
-    df, power_dem_df, input_list = load_specific_sets(num_past_periods, num_outputs, TYPE_LIST, seq_transform)
+    df, power_dem_df, input_list = load_specific_sets(num_past_periods, num_outputs, TYPE_LIST, seq_transform, no_pred)
     logger, period_min           = load_logger(NAME, only_per_episode=False)
 
 
@@ -143,12 +143,12 @@ def test_lstm_types(threshold_dem=40,num_past_periods=24,num_outputs=24):
     use_heuristic('LSTM-Pred', test_name=name+'SEQ-MAX', TYPE_LIST=['SEQ'], seq_transform=['MAX'],threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
     use_heuristic('LSTM-Pred', test_name=name+'SEQ-MEAN', TYPE_LIST=['SEQ'], seq_transform=['MEAN'], threshold_dem=threshold_dem, num_past_periods=num_past_periods,num_outputs=num_outputs)
 
-def test_max_reward(threshold_dem=50,max_LION_SoC=54,max_SMS_SoC=25,deactivate_SMS=False,deactivate_LION=False):
+def test_max_reward(threshold_dem=50,max_LION_SoC=54,max_SMS_SoC=25,deactivate_SMS=False,deactivate_LION=False,no_pred=False):
     #threshold_dem = use_heuristic('Single-Value-Reward', test_name='find_reward_threshold', epochs=15, threshold_dem=threshold_dem)
     return use_heuristic(
     	'Single-Value', test_name='find_threshold', epochs=15, threshold_dem=threshold_dem,
     	max_LION_SoC=max_LION_SoC,max_SMS_SoC=max_SMS_SoC,
-    	deactivate_SMS=deactivate_SMS,deactivate_LION=deactivate_LION)
+    	deactivate_SMS=deactivate_SMS,deactivate_LION=deactivate_LION,no_pred=False)
 
 
 def main():
@@ -169,11 +169,6 @@ def main():
         #test_battery_activations(HEURISTIC_TYPE)
         #use_heuristic(HEURISTIC_TYPE, test_name='test_rewards', threshold_dem=100, deactivate_SMS=True, deactivate_LION=True)
 
-
-
-    list_lion = [test_max_reward(max_LION_SoC=value,deactivate_SMS=True)[1] for value in [10,15,20]]
-
-    list_sms = [test_max_reward(max_SMS_SoC=value,deactivate_LION=True)[1] for value in [10,15,20]]
 
     '''
     for num in [6,12,24]:

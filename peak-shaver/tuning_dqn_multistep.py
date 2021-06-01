@@ -27,7 +27,7 @@ def run_agent(name='', horizon=24, pre_trained_model=None):
     # Train every x number of steps:
     update_num       = 500
     # Number of epochs and steps:
-    epochs           = 250
+    epochs           = 100
 
 
     # Setup reward_maker
@@ -100,8 +100,7 @@ def run_agent(name='', horizon=24, pre_trained_model=None):
     env.use_all_data()
     testing(agent)
 
-run_agent(name='Compare_Agents')
-run_agent(name='Compare_Agents')
+#run_agent(name='Compare_Agents')
 
 def parameter_tuning(num_runs=3):
     
@@ -112,4 +111,4 @@ def parameter_tuning(num_runs=3):
             run_agent(name='horizon_{}'.format(horizon), horizon=horizon)
 
 
-#parameter_tuning()
+parameter_tuning()

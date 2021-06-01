@@ -44,7 +44,7 @@ class heurisitc:
 
     def global_single_value_for_max_peak(self, max_peak):
         '''
-        Class-Function: Uses the mean-value theorem to calculate at the end of each episode a new global SECG (should energy-consumption from the grid)
+        Uses the mean-value theorem to calculate at the end of each episode a new global SECG (should energy-consumption from the grid)
 
         Args:
             max_peak (float):Takes in max_peak at the end of each episode
@@ -70,7 +70,7 @@ class heurisitc:
 
     def global_single_value_for_reward(self, sum_reward, positivity_value=10000):
         '''
-        Class-Function: Uses the mean-value theorem to calculate a new SECG at the end of each episode, instead of minimizing the maximum peak, this function maximizes the sum of rewards.
+        Uses the mean-value theorem to calculate a new SECG at the end of each episode, instead of minimizing the maximum peak, this function maximizes the sum of rewards.
         
         Args:
             sum_reward (float): Takes in the sum of rewards after each episode
@@ -98,7 +98,7 @@ class heurisitc:
 
 
     def find_optimum_for_perfect_pred(self):
-        '''Class-Funtion: Prepares the SECG for each step, used when ``HEURISTIC_TYPE=Perfekt-Pred'``. Used before iterating through each step.'''
+        '''Prepares the SECG for each step, used when ``HEURISTIC_TYPE=Perfekt-Pred'``. Used before iterating through each step.'''
         
         print('Calculating optimal actions for perfect predictions...')
 
@@ -134,7 +134,7 @@ class heurisitc:
 
 
     def find_solution_for_imperfect_pred(self,LSTM_column):
-        '''Funtion to prepare the SECG for each step, used when ``HEURISTIC_TYPE='LSTM-Pred'``. Used before iterating through each step.
+        '''Method to prepare the SECG for each step, used when ``HEURISTIC_TYPE='LSTM-Pred'``. Used before iterating through each step.
 
         Args:
             LSTM_column (string): Name of the column in the passed dataframe `df`, this column has to contain the predictions you want to use.
@@ -172,7 +172,7 @@ class heurisitc:
 
     def find_practical_solution(self, LSTM_column):
         '''
-        Funtion to prepare the SECG for each step, used when ``HEURISTIC_TYPE='Practical'``. Used before iterating through each step.
+        Method to prepare the SECG for each step, used when ``HEURISTIC_TYPE='Practical'``. Used before iterating through each step.
 
         Args:
             LSTM_column (string): Name of the column in the passed dataframe `df`, this column has to contain the predictions you want to use.
@@ -206,8 +206,8 @@ class heurisitc:
         self.heuristic_zielnetzverbrauch = zielnetzverbrauch[::-1]
         self.current_step = 0
 
-    def act(self, SMS_PRIO = 0):
-        '''Function, in which the heuristic decides an action, based on HEURISTIC_TYPE previously set.
+    def act(self, SMS_PRIO=0):
+        '''Method in which the heuristic decides an action, based on HEURISTIC_TYPE previously set.
         
         Args:
             SMS_PRIO (float): Is either set to 0 or 1:
@@ -238,7 +238,7 @@ class heurisitc:
 
     def printer(self, i, max_i):
         '''
-        Helper function to print helpful information about the mean-value process at the process bar
+        HPrints helpful information about the mean-value process at the process bar
         
         Args:
             i (int): Current iteration step
@@ -254,7 +254,7 @@ class heurisitc:
 
     def calculate(self, epochs=1, LSTM_column='normal'):
         '''
-        Main function that tests the chosen heursitic
+        Main method that tests the chosen heursitic
 
         Args:
             epochs (int): Number of epochs. Note that this should be one for all heuristics except ``HEURISTIC_TYPE='Single-Value'`` and ``HEURISTIC_TYPE='Single-Value-Reward'``.
